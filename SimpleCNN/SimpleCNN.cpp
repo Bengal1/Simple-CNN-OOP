@@ -135,7 +135,8 @@ int main()
             imageNum++;
         }
         trainAccuracy[epoch] = accuracyCalculation(trainOutput, oneHotTrainLabels);
-        std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%" << " ; Loss: " << totalLoss << std::endl;
+        std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%" << 
+            " ; Loss: " << totalLoss << std::endl;
     }
 
     std::vector<Eigen::VectorXd> testOutput(numTestImages, Eigen::VectorXd(classes));

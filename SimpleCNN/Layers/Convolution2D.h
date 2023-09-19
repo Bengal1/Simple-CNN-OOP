@@ -4,6 +4,7 @@
 #include <random>
 #include <memory>
 #include <cassert>
+#include <Eigen/Dense>
 #include "../Activation.h"
 #include "../Optimizer.h"
 
