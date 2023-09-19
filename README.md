@@ -1,5 +1,5 @@
 # SimpleCNN-OOP
-This repository is an implementation of [*SimpleCNN*](https://github.com/Bengal1/Simple-CNN-Guide) in Object Oriented Programming (OOP) in C++ language.
+This repository is an implementation of [*SimpleCNN*](https://github.com/Bengal1/Simple-CNN-Guide) in Object Oriented Programming (OOP) in C++ language. *SimpleCNN* is a reposatory I have written for practical guidance for codeing a simple Convolutional Neural Network. 
 
 ## *MNIST Database*
 This network is trained on MNIST database, a simple gray-scale images of a writen one-digit numbers (0-9), such that the network gets an image and it's target to classify it as the correct number (class).
@@ -9,7 +9,7 @@ This network is trained on MNIST database, a simple gray-scale images of a write
 The MNIST database has 70,000 images, such that the training dataset is 60,000 images and the test dataset is 10,000 images.
 For more imformation on [MNIST Dataset](https://en.wikipedia.org/wiki/MNIST_database)
 
-#### *** here explain the MNIST LOader (.h)
+#### *** here explain the MNIST Loader (.h)
 
 ## *Simple CNN*
 Our Network is consist of 6 layers:
