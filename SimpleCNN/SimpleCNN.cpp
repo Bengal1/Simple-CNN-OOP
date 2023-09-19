@@ -1,9 +1,9 @@
 #pragma once 
 
 #include "Utils.h"
-#include "Convolution2D.h"
-#include "FullyConnected.h"
-#include "MaxPooling.h"
+#include "Layers/Convolution2D.h"
+#include "Layers/FullyConnected.h"
+#include "Layers/MaxPooling.h"
 #include "Activation.h"
 #include "MNISTLoader.h"
 #include "LossFunction.h"
@@ -31,8 +31,6 @@ public:
         _fc2(512, 10, std::make_unique<Softmax>())
     {}
 
-    ~SimpleCNN() {}
-
     Eigen::VectorXd ForwardPass(Eigen::MatrixXd& input) {
         /*Forward*/
         std::vector<Eigen::MatrixXd> outputConv1 = _conv1.forward(input);
@@ -44,19 +42,6 @@ public:
 
         return outputFc2;
     }
-
-    std::vector<Eigen::VectorXd> ForwardPassBatch(std::vector<Eigen::MatrixXd>& inputBatch) {
-        /*Forward*/
-        std::vector<std::vector<Eigen::MatrixXd>> outputConv1 = _conv1.forwardBatch(inputBatch);
-        std::vector<std::vector<Eigen::MatrixXd>> outputPool1 = _pool1.forwardBatch(outputConv1);
-        std::vector<std::vector<Eigen::MatrixXd>> outputConv2 = _conv2.forwardBatch(outputPool1);
-        std::vector<std::vector<Eigen::MatrixXd>> outputPool2 = _pool2.forwardBatch(outputConv2);
-        std::vector<Eigen::VectorXd> outputFc1 = _fc1.forwardBatch(outputPool2);
-        std::vector<Eigen::VectorXd> outputFc2 = _fc2.forwardBatch(outputFc1);
-
-        return outputFc2;
-    }
-
 
     void Backpropagation(Eigen::VectorXd lossGradient) {
         /*Backward*/
@@ -71,6 +56,18 @@ public:
         _fc1.updateParameters();
         _conv2.updateParameters();
         _conv1.updateParameters();
+    }
+
+    std::vector<Eigen::VectorXd> ForwardPassBatch(std::vector<Eigen::MatrixXd>& inputBatch) {
+        /*Forward*/
+        std::vector<std::vector<Eigen::MatrixXd>> outputConv1 = _conv1.forwardBatch(inputBatch);
+        std::vector<std::vector<Eigen::MatrixXd>> outputPool1 = _pool1.forwardBatch(outputConv1);
+        std::vector<std::vector<Eigen::MatrixXd>> outputConv2 = _conv2.forwardBatch(outputPool1);
+        std::vector<std::vector<Eigen::MatrixXd>> outputPool2 = _pool2.forwardBatch(outputConv2);
+        std::vector<Eigen::VectorXd> outputFc1 = _fc1.forwardBatch(outputPool2);
+        std::vector<Eigen::VectorXd> outputFc2 = _fc2.forwardBatch(outputFc1);
+
+        return outputFc2;
     }
 
     void BackpropagationBatch(std::vector<Eigen::VectorXd> lossGradientBatch) {
@@ -123,7 +120,6 @@ int main()
         Eigen::VectorXd outputEpoch(classes);
         std::cout << "\nepoch #" << (epoch + 1) << std::endl;
 
-        //double t_testLoss = 0.0;//TESTING
         int imageNum = 0;
         for (Eigen::MatrixXd image : trainImages) {
             /*Forward pass*/
@@ -137,14 +133,6 @@ int main()
             model.Backpropagation(lossGrad);
 
             imageNum++;
-
-            /*//TESTING
-            if (imageNum % 100 == 0 && imageNum != 0) {
-                accuracy = accuracyCalculation(trainOutput, oneHotTrainLabels);
-                std::cout << "[" << imageNum << "/60000] - " << "Train Accuracy: " << accuracy << "%" << " ; Loss: " << totalLoss - t_testLoss << std::endl;
-            }
-            t_testLoss = totalLoss;
-            //TESTING*/
         }
         trainAccuracy[epoch] = accuracyCalculation(trainOutput, oneHotTrainLabels);
         std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%" << " ; Loss: " << totalLoss << std::endl;
@@ -171,7 +159,38 @@ int main()
 
 
 
-//void trainModel() {}
+//void trainModel(const std::vector<Eigen::MatrixXd>& trainImages, const std::vector<Eigen::VectorXd>& oneHotTrainLabels, int epochs = 10) {
+//    int classes = 10;
+//    std::vector<Eigen::VectorXd> trainOutput(trainImages.size(), Eigen::VectorXd(classes));
+//
+//    std::cout << "\nStart training..." << std::endl;
+//
+//    /* Train */
+//    double totalLoss = 0.0;
+//    std::vector<double> trainAccuracy(epochs);
+//    for (int epoch = 0; epoch < epochs; epoch++) {
+//        double accuracy = 0.0;
+//        Eigen::VectorXd outputEpoch(classes);
+//        std::cout << "\nepoch #" << (epoch + 1) << std::endl;
+//
+//        int imageNum = 0;
+//        for (Eigen::MatrixXd image : trainImages) {
+//            /*Forward pass*/
+//            Eigen::VectorXd singleTrainOutput = model.ForwardPass(image);
+//            trainOutput[imageNum] = singleTrainOutput;
+//            /*Loss*/
+//            totalLoss += model.CEloss.calculateLoss(singleTrainOutput, oneHotTrainLabels[imageNum]);
+//            Eigen::VectorXd lossGrad = model.CEloss.calculateGradient(singleTrainOutput,
+//                oneHotTrainLabels[imageNum]);
+//            /*Backpropagation*/
+//            model.Backpropagation(lossGrad);
+//
+//            imageNum++;
+//        }
+//        trainAccuracy[epoch] = accuracyCalculation(trainOutput, oneHotTrainLabels);
+//        std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%" << " ; Loss: " << totalLoss << std::endl;
+//    }
+//}
 
 /*void trainModelBatch() {
     int epochs = 10, classes = 10, batchSize = 256;

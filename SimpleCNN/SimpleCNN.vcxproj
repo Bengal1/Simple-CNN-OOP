@@ -132,10 +132,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Activation.h" />
-    <ClInclude Include="Convolution2D.h" />
-    <ClInclude Include="FullyConnected.h" />
+    <ClInclude Include="Layers\Convolution2D.h" />
+    <ClInclude Include="Layers\FullyConnected.h" />
     <ClInclude Include="LossFunction.h" />
-    <ClInclude Include="MaxPooling.h" />
+    <ClInclude Include="Layers\MaxPooling.h" />
     <ClInclude Include="MNISTLoader.h" />
     <ClInclude Include="Optimizer.h" />
     <ClInclude Include="Utils.h" />

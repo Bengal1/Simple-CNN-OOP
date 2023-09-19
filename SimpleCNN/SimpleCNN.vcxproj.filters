@@ -38,13 +38,13 @@
     <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MaxPooling.h">
+    <ClInclude Include="Layers\MaxPooling.h">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="Convolution2D.h">
+    <ClInclude Include="Layers\Convolution2D.h">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="FullyConnected.h">
+    <ClInclude Include="Layers\FullyConnected.h">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
   </ItemGroup>
