@@ -1,5 +1,5 @@
 # SimpleCNN-OOP
-This repository is an implementation of [*SimpleCNN*](https://github.com/Bengal1/Simple-CNN-Guide) in Object Oriented Programming (OOP) in C++ language. *SimpleCNN* is a reposatory I have written for practical guidance for codeing a simple Convolutional Neural Network. 
+This repository is an implementation of [*SimpleCNN*](https://github.com/Bengal1/Simple-CNN-Guide) in Object Oriented Programming (OOP) in C++ language. *SimpleCNN* is a reposatory I have written as practical guidance for codeing a simple Convolutional Neural Network. 
 
 ## *MNIST Database*
 This network is trained on MNIST database, a simple gray-scale images of a writen one-digit numbers (0-9), such that the network gets an image and it's target to classify it as the correct number (class).
