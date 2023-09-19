@@ -32,11 +32,11 @@ The Simple CNN is implemented un C++ as Object Oriented Programming. In order to
 Every Layer apart of the fully connected can gets an input of 4-dimentions *(N,C,H,W)*, were *N* is the batch size, *C* is the number of the channels and *H,W* are height and width respectively, the resolution of the images.
 In order to write the *Simple CNN* network  in C++ we constructed:
 
-[**Convolution2d**](https://github.com/Bengal1/SimpleCNN-OOP/blob/master/SimpleCNN/Layers/Convolution2D.h) - Applies a 2D convolution over an input signal composed of singular or several data inputs.
+**Convolution2D** - Applies a 2D convolution over an input signal composed of singular or several data inputs. See [Convolution2D.h](https://github.com/Bengal1/SimpleCNN-OOP/blob/master/SimpleCNN/Layers/Convolution2D.h)
 
-[**MaxPooling**](https://github.com/Bengal1/SimpleCNN-OOP/blob/master/SimpleCNN/Layers/MaxPooling.h) - Applies a 2D max pooling over an input signal composed of singular or several data inputs.
+**MaxPooling** - Applies a 2D max pooling over an input signal composed of singular or several data inputs. See [MaxPooling.h](https://github.com/Bengal1/SimpleCNN-OOP/blob/master/SimpleCNN/Layers/MaxPooling.h)
 
-[**FullyConnected**](https://github.com/Bengal1/SimpleCNN-OOP/blob/master/SimpleCNN/Layers/FullyConnected.h) - Applies a linear transformation to the layer's input, *y=xA<sup>T</sup>+b*. In that case the input is 2-dimentions, *(N,H)* with the same notations above.
+**FullyConnected** - Applies a linear transformation to the layer's input, *y=xA<sup>T</sup>+b*. In that case the input is 2-dimentions, *(N,H)* with the same notations above. See [FullyConnected.h](https://github.com/Bengal1/SimpleCNN-OOP/blob/master/SimpleCNN/Layers/FullyConnected.h)
 
 
 
