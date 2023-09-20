@@ -4,6 +4,7 @@
 #include <random>
 #include <memory>
 #include <cassert>
+#include <Eigen/Dense>
 #include "../Optimizer.h"
 #include "../Activation.h"
 
@@ -23,6 +24,7 @@ private:
 
 	Eigen::VectorXd _input; //flatten
 	Eigen::VectorXd _output;
+	//Eigen::VectorXd _preAvtivationOutput;
 	Eigen::MatrixXd _weightsGradient;
 	Eigen::VectorXd _biasGradient;
 
@@ -32,8 +34,9 @@ private:
 	std::vector<Eigen::MatrixXd> _weightsGradBatch;
 	std::vector<Eigen::VectorXd> _biasGradBatch;
 
-	std::unique_ptr<AdamOptimizer> _optimizer;
 	std::unique_ptr<Activation> _activation;
+	std::unique_ptr<AdamOptimizer> _optimizer;
+
 
 public:
 	FullyConnected(int inputSize, int outputSize, std::unique_ptr<Activation> activationFunction, int batchSize = 1)
@@ -46,7 +49,7 @@ public:
 		_biasGradient.resize(_outputSize);
 
 		if (_activation == nullptr) {
-			_activation.reset(new ReLU()); //Default Activation function
+			//_activation.reset(new ReLU()); //Default Activation function
 		}
 		if (_batchSize == 1) {
 			_input.resize(_inputSize);
@@ -59,7 +62,6 @@ public:
 		else {
 			//throw invalid_argument("Invalid constructor arguments. All values must be greater than zero.");
 			std::cerr << "Non-positive Batch size is not valid! " << _batchSize << std::endl;
-			//~FullyConnected(); //Error
 		}
 	}
 
@@ -127,28 +129,29 @@ public:
 	}
 
 	Eigen::VectorXd backward(Eigen::VectorXd& lossGradient) { //Vector to vector
+		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradient, _output);
 		// Calculate the gradient w.r.t the input
 		Eigen::VectorXd inputGradient = _weights.transpose() * 
 			_activation->computeGradient(lossGradient, _output);
 
 		// Calculate the gradient w.r.t the parameters
-		_weightsGradient = lossGradient * _input.transpose();
-		_biasGradient = lossGradient;
+		_weightsGradient = dLoss_dPreActivation * _input.transpose();
+		_biasGradient = dLoss_dPreActivation;
 
 		return inputGradient;
 	}
 
 	std::vector<Eigen::MatrixXd> backward(Eigen::VectorXd& lossGradient, bool input3D) {  //Vector to 3D output
-
+		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradient, _output);
 		// Calculate the gradient w.r.t the input
-		Eigen::VectorXd flatInputGradient = _weights.transpose() * 
-			_activation->computeGradient(lossGradient, _output);
+		Eigen::VectorXd flatInputGradient = _weights.transpose() * dLoss_dPreActivation;
 		std::vector<Eigen::MatrixXd> inputGradient = 
 			unflattenInputGradient(flatInputGradient);
 
 		// Calculate the gradient w.r.t the parameters
-		_weightsGradient = lossGradient * _input.transpose();
-		_biasGradient = lossGradient;
+		_weightsGradient = dLoss_dPreActivation * _input.transpose();
+		_biasGradient = dLoss_dPreActivation;
+
 
 		return inputGradient;
 	}
@@ -157,13 +160,13 @@ public:
 		std::vector<Eigen::VectorXd> inputGradBatch(_batchSize, Eigen::VectorXd::Zero(_inputSize));
 
 		for (int b = 0; b < _batchSize; b++) {
+			Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradientBatch[b], _outputBatch[b]);
 			// Calculate the gradient w.r.t the input
-			inputGradBatch[b] = _weights.transpose() * _activation->
-				computeGradient(lossGradientBatch[b], _outputBatch[b]);
+			inputGradBatch[b] = _weights.transpose() * dLoss_dPreActivation;
 
 			// Calculate the gradient w.r.t the parameters
-			_weightsGradient += lossGradientBatch[b] * _inputBatch[b].transpose();
-			_biasGradient += lossGradientBatch[b];
+			_weightsGradient += _inputBatch[b].transpose() * dLoss_dPreActivation;
+			_biasGradient += dLoss_dPreActivation;
 		}
 
 		return inputGradBatch;
@@ -174,14 +177,14 @@ public:
 			std::vector<Eigen::MatrixXd>(_inputChannels, Eigen::MatrixXd::Zero(_inputHeight, _inputWidth)));
 
 		for (int b = 0; b < _batchSize; b++) {
+			Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradientBatch[b], _outputBatch[b]);
 			// Calculate the gradient w.r.t the input
-			Eigen::VectorXd flatInputGradient = _weights.transpose() * _activation->
-				computeGradient(lossGradientBatch[b], _outputBatch[b]);
+			Eigen::VectorXd flatInputGradient = _weights.transpose() * dLoss_dPreActivation;
 			inputGradBatch[b] = unflattenInputGradient(flatInputGradient);
 
 			// Calculate the gradient w.r.t the parameters
-			_weightsGradient += lossGradientBatch[b] * _inputBatch[b].transpose();
-			_biasGradient += lossGradientBatch[b];
+			_weightsGradient += _inputBatch[b].transpose() * dLoss_dPreActivation;
+			_biasGradient += dLoss_dPreActivation;
 		}
 
 		return inputGradBatch;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include<vector>
-#include<Eigen/Dense>
+#include <vector>
+#include <Eigen/Dense>
 
 
 class Optimizer {
@@ -19,7 +19,7 @@ public:
 		:_learningRate(learningRate) {}
 
 
-	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, const int paramIndex) override {
+	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, const int paramIndex = 0) override {
 		parameters -= _learningRate * gradients;
 	}
 };
@@ -67,7 +67,7 @@ public:
 		parameters -= (lr_t * firstMomentEstimateHat.array() / (secondMomentEstimateHat.array().sqrt() + _epsilon)).matrix();
 	}
 
-	void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients, const int paramIndex = 0) { //bias version - overlaod
+	void updateStep(Eigen::VectorXd& parameters, Eigen::VectorXd& gradients, const int paramIndex = 0) { //bias version - overlaod
 
 		assert(parameters.size() == gradients.size());
 
@@ -87,10 +87,10 @@ public:
 private:
 	void initializeMoments(int rows, int cols) {
 		if (_numParams == -1) { //fully-Connected - weights and bias
-			_firstMomentEstimates.resize(1, Eigen::MatrixXd::Zero(rows, cols));
-			_secondMomentEstimates.resize(1, Eigen::MatrixXd::Zero(rows, cols));
-			_biasFirstMomentEstimates.resize(1, Eigen::VectorXd::Zero(rows));
-			_biasSecondMomentEstimates.resize(1, Eigen::VectorXd::Zero(rows));
+			_firstMomentEstimates.assign(1, Eigen::MatrixXd::Zero(rows, cols));
+			_secondMomentEstimates.assign(1, Eigen::MatrixXd::Zero(rows, cols));
+			_biasFirstMomentEstimates.assign(1, Eigen::VectorXd::Zero(rows));
+			_biasSecondMomentEstimates.assign(1, Eigen::VectorXd::Zero(rows));
 		}
 		else {
 			_firstMomentEstimates.resize(_numParams);

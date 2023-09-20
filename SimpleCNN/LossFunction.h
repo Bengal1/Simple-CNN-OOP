@@ -20,14 +20,14 @@ public:
 // Mean Squared Error (MSE) loss
 class MSE : public LossFunction {
 public:
-	MSE() {}
 
 	double calculateLoss(const Eigen::VectorXd& predictions, const Eigen::VectorXd& targets) const override {
 		assert(predictions.size() == targets.size());
 
+		int classNum = predictions.size();
 		double predictLoss = 0.0;
-		for (int j = 0; j < predictions.size(); ++j) {
-			double error = predictions[j] - targets[j];
+		for (int c = 0; c < classNum; c++) {
+			double error = predictions[c] - targets[c];
 			predictLoss += std::pow(error, 2.0);
 		}
 
@@ -48,18 +48,16 @@ public:
 // Cross-Entropy loss
 class CrossEntropy : public LossFunction {
 public:
-	CrossEntropy() {}
 
 	double calculateLoss(const Eigen::VectorXd& predictions,
 		const Eigen::VectorXd& targets) const override {
 		assert(predictions.size() == targets.size());
+		int classNum = predictions.size();
 
 		double loss = 0.0;
-		for (int p = 0; p < predictions.size(); p++) {
-			double probability = predictions(p);
-			double target = targets(p);
+		for (int c = 0; c < classNum; c++) {
 
-			loss += -target * std::log(std::max(probability, _epsilon));
+			loss -= targets(c) * std::log(std::max(predictions(c), _epsilon));
 		}
 
 		return loss;
@@ -81,17 +79,16 @@ public:
 	Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
 		const Eigen::VectorXd& targets) const override {
 		assert(predictions.size() == targets.size());
+		
+		int classNum = predictions.size();
+		Eigen::VectorXd gradientCE(classNum);
 
-		Eigen::VectorXd gradient(predictions.size());
+		for (int c = 0; c < classNum; c++) {
 
-		for (int p = 0; p < predictions.size(); p++) {
-			double probability = predictions(p);
-			double target = targets(p);
-
-			gradient(p) = (probability - target) / (probability * (1.0 - probability) + _epsilon);
+			gradientCE(c) = -targets(c) / (predictions(c) + _epsilon);
 		}
 
-		return gradient;
+		return gradientCE;
 	}
 
 	std::vector<Eigen::VectorXd> calculateGradientBatch(const std::vector<Eigen::VectorXd>& predictionBatch,
@@ -99,7 +96,8 @@ public:
 		assert(predictionBatch.size() == targetBatch.size());
 
 		int batchSize = predictionBatch.size();
-		std::vector<Eigen::VectorXd> gradientBatch(batchSize);
+		int classNum = predictionBatch[0].size();
+		std::vector<Eigen::VectorXd> gradientBatch(batchSize, Eigen::VectorXd(classNum));
 
 		for (int b = 0; b < batchSize; b++) {
 			gradientBatch[b] = calculateGradient(predictionBatch[b], targetBatch[b]);
