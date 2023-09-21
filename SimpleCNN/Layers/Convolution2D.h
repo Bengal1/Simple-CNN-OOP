@@ -133,10 +133,11 @@ public:
 		return outputBatch;
 	}
 
-	std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(std::vector<std::vector<Eigen::MatrixXd>>& inputBatch) {
+	std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(std::vector<std::
+		vector<Eigen::MatrixXd>>& inputBatch) {
 		int batchSize = inputBatch.size();
-		std::vector<std::vector<Eigen::MatrixXd>> outputBatch(batchSize, std::vector<Eigen::MatrixXd>(_numFilters,
-			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
+		std::vector<std::vector<Eigen::MatrixXd>> outputBatch(batchSize, std::vector<Eigen::MatrixXd>(
+			_numFilters,Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
 
 		_input3DBatch = inputBatch;
 
@@ -153,14 +154,17 @@ public:
 
 		assert(lossGradient.size() == _numFilters);
 
+		
 		for (int c = 0; c < _inputChannels; c++) {
 			for (int f = 0; f < _numFilters; f++) {
+				Eigen::MatrixXd dLoss_dPreActivation = _activation->computeGradient(lossGradient[f], 
+					_preActivationOutput[0][f]);
 				// Calculate the gradient w.r.t the parameters
 				if (_inputChannels == 1) {
-					_filtersGradient[f] = Convolve2D(_input, lossGradient[f]);
+					_filtersGradient[f] = Convolve2D(_input, dLoss_dPreActivation);
 				}
 				else if (_inputChannels > 1) {
-					_filtersGradient[f] += Convolve2D(_input3D[c], lossGradient[f]);
+					_filtersGradient[f] += Convolve2D(_input3D[c], dLoss_dPreActivation);
 				}
 				// Calculate the gradient w.r.t the input
 				calculateInputGradient(lossGradient[f], _filters[f],
@@ -173,8 +177,8 @@ public:
 
 	std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(std::vector<std::vector<Eigen::MatrixXd>>& lossGradientBatch) {
 		int batchSize = lossGradientBatch.size();
-		std::vector<std::vector<Eigen::MatrixXd>> inputGradBatch(batchSize, std::vector<Eigen::MatrixXd>(_inputChannels,
-			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
+		std::vector<std::vector<Eigen::MatrixXd>> inputGradBatch(batchSize, std::vector<Eigen::MatrixXd>(
+			_inputChannels, Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
 
 		for (int b = 0; b < batchSize; b++) {
 			for (int c = 0; c < _inputChannels; c++) {
@@ -243,14 +247,15 @@ private:
 		const int inputWidth = input.cols();
 		const int filterHeight = kernel.rows();
 		const int filterWidth = kernel.cols();
-		const int outputHeight = inputHeight - filterHeight + 1;
-		const int outputWidth = inputWidth - filterWidth + 1;
+		const int outputHeight = (inputHeight - filterHeight) / _stride + 1;
+		const int outputWidth = (inputWidth - filterWidth) / _stride + 1;
 
 		Eigen::MatrixXd output(outputHeight, outputWidth);
 
 		for (int h = 0; h < outputHeight; h++) {
 			for (int w = 0; w < outputWidth; w++) {
-				output(h, w) = (input.block(h, w, filterHeight, filterWidth).cwiseProduct(kernel)).sum();
+				output(h, w) = (input.block(h * _stride, w * _stride, filterHeight, 
+					filterWidth).cwiseProduct(kernel)).sum();
 			}
 		}
 

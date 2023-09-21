@@ -138,7 +138,7 @@ int main()
             if (imageNum % 10000 == 0) {
                 //t_bLossVar = totalLoss - t_bLossVar;
                 //double t_accVar = accuracyCalculation(trainOutput, oneHotTrainLabels);
-                std::cout << "[" << imageNum << "/60000] - " << std::endl;//<< "Train Accuracy: " << t_accVar << "%" << ";  Batch loss: " << t_bLossVar << std::endl;
+                std::cout << "[" << imageNum << "/60000]" << std::endl;//<< "Train Accuracy: " << t_accVar << "%" << ";  Batch loss: " << t_bLossVar << std::endl;
                 //t_bLossVar = totalLoss;
             }
             //TESTING*/
