@@ -60,7 +60,7 @@ public:
 			loss -= targets(c) * std::log(std::max(predictions(c), _epsilon));
 		}
 
-		return loss;
+		return loss/classNum;
 	}
 
 	double calculateLossBatch(const std::vector<Eigen::VectorXd>& predictionBatch,

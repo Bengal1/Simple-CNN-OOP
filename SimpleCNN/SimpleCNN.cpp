@@ -112,8 +112,9 @@ int main()
     std::cout << "\nStart training..." << std::endl;
 
     /* Train */
-    double totalLoss = 0.0;
+    std::vector<double> epochLoss(epochs);
     std::vector<double> trainAccuracy(epochs);
+    
     for (int epoch = 0; epoch < epochs; epoch++) {
         double accuracy = 0.0;
         Eigen::VectorXd outputEpoch(classes);
@@ -126,7 +127,7 @@ int main()
             Eigen::VectorXd singleTrainOutput = model.ForwardPass(image);
             trainOutput[imageNum] = singleTrainOutput;
             /*Loss*/
-            totalLoss += model.CEloss.calculateLoss(singleTrainOutput, oneHotTrainLabels[imageNum]);
+            epochLoss[epoch] += model.CEloss.calculateLoss(singleTrainOutput, oneHotTrainLabels[imageNum]);
             Eigen::VectorXd lossGrad = model.CEloss.calculateGradient(singleTrainOutput,
                 oneHotTrainLabels[imageNum]);
             /*Backpropagation*/
@@ -134,17 +135,17 @@ int main()
 
             imageNum++;
             //TESTING
-            if (imageNum % 10000 == 0) {
+            if (imageNum % 5000 == 0) {
                 //t_bLossVar = totalLoss - t_bLossVar;
                 //double t_accVar = accuracyCalculation(trainOutput, oneHotTrainLabels);
-                std::cout << "[" << imageNum << "/60000]" << std::endl;//<< "Train Accuracy: " << t_accVar << "%" << ";  Batch loss: " << t_bLossVar << std::endl;
+                std::cout << "[" << imageNum << "/60000] " << "; Loss = " << epochLoss[epoch] << std::endl;//<< "Train Accuracy: " << t_accVar << "%" << ";  Batch loss: " << t_bLossVar << std::endl;
                 //t_bLossVar = totalLoss;
             }
             //TESTING*/
         }
         trainAccuracy[epoch] = accuracyCalculation(trainOutput, oneHotTrainLabels);
         std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%" << 
-            " ; Loss: " << totalLoss << std::endl;
+            " ; Epoch Loss: " << epochLoss[epoch] << std::endl;
     }
 
     std::vector<Eigen::VectorXd> testOutput(numTestImages, Eigen::VectorXd(classes));

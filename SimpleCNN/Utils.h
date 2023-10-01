@@ -18,3 +18,7 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 
 	return correct / dataSize * 100;
 }
+
+void exportTrainingData(void) {}
+
+void storeModelData(void) {}
