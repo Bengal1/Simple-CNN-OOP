@@ -35,10 +35,12 @@ private:
 	std::unique_ptr<ReLU> _activation;
 
 public:
-	Convolution2D(int inputHeight, int inputWidth, int inputChannels, int numFilters, int kernelSize,
-		int batchSize = 1, int stride = 1, int padding = 0)
-		: _inputHeight(inputHeight), _inputWidth(inputWidth), _inputChannels(inputChannels), _numFilters(numFilters),
-		_kernelSize(kernelSize), _batchSize(batchSize), _stride(stride), _padding(padding),
+	Convolution2D(int inputHeight, int inputWidth, int inputChannels, 
+		int numFilters, int kernelSize,int batchSize = 1, int stride = 1, 
+		int padding = 0)
+		: _inputHeight(inputHeight), _inputWidth(inputWidth), _inputChannels(inputChannels), 
+		_numFilters(numFilters), _kernelSize(kernelSize), _batchSize(batchSize), 
+		_stride(stride), _padding(padding),
 		_optimizer(std::make_unique<AdamOptimizer>(numFilters)),
 		_activation(std::make_unique<ReLU>())
 	{

@@ -91,7 +91,6 @@ int main()
 {
     int epochs = 10, classes = 10;
 
-    // Create an instance of the CNN model
     SimpleCNN model;
 
     /* Load MNIST dataset */

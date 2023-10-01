@@ -25,21 +25,26 @@ private:
     std::vector<std::tuple<int, int, int, int>> _inputGradientMapBatch;
 
 public:
-    MaxPooling(int inputHeight, int inputWidth, int inputChannels, int poolSize, int batchSize = 1, int stride = 2)
-        : _inputHeight(inputHeight), _inputWidth(inputWidth), _inputChannels(inputChannels), _kernelSize(poolSize),
+    MaxPooling(int inputHeight, int inputWidth, int inputChannels, 
+        int poolSize, int batchSize = 1, int stride = 2)
+        : _inputHeight(inputHeight), _inputWidth(inputWidth), 
+        _inputChannels(inputChannels), _kernelSize(poolSize),
         _stride(stride), _batchSize(batchSize)
     {
         // Calculate output dimensions
         _outputHeight = (_inputHeight - _kernelSize) / _stride + 1;
         _outputWidth = (_inputWidth - _kernelSize) / _stride + 1;
         if (_batchSize == 1) {
-            _output.assign(_inputChannels, Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
-            _inputGradientMap.reserve(_inputChannels * _outputHeight * _outputWidth);
+            _output.assign(_inputChannels, Eigen::MatrixXd::Zero(
+                _outputHeight, _outputWidth));
+            _inputGradientMap.reserve(_inputChannels * _outputHeight * 
+                _outputWidth);
         }
         else if (_batchSize > 1) {
             _outputBatch.assign(_batchSize, std::vector<Eigen::MatrixXd>(_inputChannels,
                 Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
-            _inputGradientMapBatch.reserve(_batchSize * _inputChannels * _outputHeight * _outputWidth);
+            _inputGradientMapBatch.reserve(_batchSize * _inputChannels * 
+                _outputHeight * _outputWidth);
         }
     }
 
@@ -49,7 +54,8 @@ public:
         for (int c = 0; c < _inputChannels; c++) {
             for (int h = 0; h < _outputHeight; h++) {
                 for (int w = 0; w < _outputWidth; w++) {
-                    _output[c](h, w) = (input[c].block(h * _stride, w * _stride, _kernelSize, _kernelSize)).maxCoeff(&row, &col);
+                    _output[c](h, w) = (input[c].block(h * _stride, w * _stride, 
+                        _kernelSize, _kernelSize)).maxCoeff(&row, &col);
                     _inputGradientMap.push_back({ c, row, col });
                 }
             }
@@ -58,7 +64,8 @@ public:
         return _output;
     }
 
-    std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(const std::vector<std::vector<Eigen::MatrixXd>>& inputBatch) {
+    std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(const std::vector<
+        std::vector<Eigen::MatrixXd>>& inputBatch) {
         Eigen::Index row, col;
 
         int batchSize = inputBatch.size();
@@ -66,8 +73,8 @@ public:
             for (int c = 0; c < _inputChannels; c++) {
                 for (int h = 0; h < _outputHeight; h++) {
                     for (int w = 0; w < _outputWidth; w++) {
-                        _outputBatch[b][c](h, w) = (inputBatch[b][c].block(h * _stride, w * _stride,
-                            _kernelSize, _kernelSize)).maxCoeff(&row, &col);
+                        _outputBatch[b][c](h, w) = (inputBatch[b][c].block(h * _stride, 
+                            w * _stride, _kernelSize, _kernelSize)).maxCoeff(&row, &col);
                         _inputGradientMapBatch.push_back({ b, c, row, col });
                     }
                 }
@@ -77,10 +84,13 @@ public:
         return _outputBatch;
     }
 
-    std::vector<Eigen::MatrixXd> backward(const std::vector<Eigen::MatrixXd>& lossGradient) {
-        std::vector<Eigen::MatrixXd> inputGradient(_inputChannels, Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+    std::vector<Eigen::MatrixXd> backward(const std::vector<
+        Eigen::MatrixXd>& lossGradient) {
+        std::vector<Eigen::MatrixXd> inputGradient(_inputChannels, 
+            Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
-        assert(_inputGradientMap.size() == lossGradient.size() * lossGradient[0].rows() * lossGradient[0].cols());
+        assert(_inputGradientMap.size() == lossGradient.size() * 
+            lossGradient[0].rows() * lossGradient[0].cols());
 
         for (int c = 0; c < _inputChannels; c++) {
             for (int h = 0; h < _outputHeight; h++) {
@@ -101,12 +111,15 @@ public:
         return inputGradient;
     }
 
-    std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(const std::vector<std::vector<Eigen::MatrixXd>>& lossGradientBatch) {
-        std::vector<std::vector<Eigen::MatrixXd>> inputGradientBatch(_batchSize, std::vector<Eigen::MatrixXd>(_inputChannels,
+    std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(const std::vector<
+        std::vector<Eigen::MatrixXd>>& lossGradientBatch) {
+        std::vector<std::vector<Eigen::MatrixXd>> inputGradientBatch(_batchSize, 
+            std::vector<Eigen::MatrixXd>(_inputChannels,
             Eigen::MatrixXd::Zero(_inputHeight, _inputWidth)));
 
-        assert(_inputGradientMapBatch.size() == lossGradientBatch.size() * lossGradientBatch[0].size() *
-            lossGradientBatch[0][0].rows() * lossGradientBatch[0][0].cols());
+        assert(_inputGradientMapBatch.size() == lossGradientBatch.size() * 
+            lossGradientBatch[0].size() * lossGradientBatch[0][0].rows() * 
+            lossGradientBatch[0][0].cols());
 
         int batchSize = lossGradientBatch.size();
         for (int b = 0; b < batchSize; b++) {

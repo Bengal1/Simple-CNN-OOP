@@ -39,9 +39,12 @@ private:
 
 
 public:
-	FullyConnected(int inputSize, int outputSize, std::unique_ptr<Activation> activationFunction, int batchSize = 1)
-		:_inputSize(inputSize), _outputSize(outputSize), _inputChannels(0), _batchSize(batchSize),
-		_optimizer(std::make_unique<AdamOptimizer>(-1)), _activation(std::move(activationFunction))
+	FullyConnected(int inputSize, int outputSize, std::unique_ptr<Activation> 
+		activationFunction, int batchSize = 1)
+		:_inputSize(inputSize), _outputSize(outputSize), _inputChannels(0), 
+		_batchSize(batchSize),
+		_optimizer(std::make_unique<AdamOptimizer>(-1)), 
+		_activation(std::move(activationFunction))
 	{
 		initializeWeights();
 
@@ -60,8 +63,8 @@ public:
 			_outputBatch.assign(_batchSize, Eigen::VectorXd::Zero(_outputSize));
 		}
 		else {
-			//throw invalid_argument("Invalid constructor arguments. All values must be greater than zero.");
-			std::cerr << "Non-positive Batch size is not valid! " << _batchSize << std::endl;
+			std::cerr << "Non-positive Batch size is not valid! " << 
+				_batchSize << std::endl;
 		}
 	}
 
