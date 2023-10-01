@@ -1,22 +1,29 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <Eigen/Dense>
 
 
 double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 	const std::vector<Eigen::VectorXd>& oneHotTargets) {
-	double correct = 0, dataSize = modelOutput.size();
-	Eigen::Index maxIndex, correctIndex;
+	if (modelOutput.size() != oneHotTargets.size()) {
+		std::cerr << "Error: Input vectors have different sizes." << std::endl;
+		return 0.0;
+	}
+	
+	double correctPredictions = 0; 
+	int dataSize = modelOutput.size();
+	Eigen::Index predictedClass, trueClass;
 
 	for (int i = 0; i < dataSize; i++) {
-		modelOutput[i].maxCoeff(&maxIndex);
-		oneHotTargets[i].maxCoeff(&correctIndex);
-		if (maxIndex == correctIndex)
-			correct++;
+		modelOutput[i].maxCoeff(&predictedClass);
+		oneHotTargets[i].maxCoeff(&trueClass);
+		if (predictedClass == trueClass)
+			correctPredictions++;
 	}
 
-	return correct / dataSize * 100;
+	return correctPredictions / static_cast<double>(dataSize) * 100.0;
 }
 
 void exportTrainingData(void) {}

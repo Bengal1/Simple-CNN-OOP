@@ -48,7 +48,7 @@ public:
     Eigen::VectorXd computeGradient(const Eigen::VectorXd& lossGradient, 
         const Eigen::VectorXd& layerOutput) const override {
         Eigen::VectorXd reluGradient = Eigen::VectorXd::Zero(layerOutput.size());
-
+        //dReLU_dx = 0 if neg; 1 if pos
         reluGradient = (layerOutput.array() > 0.0).select(lossGradient, 0.0);
 
         return reluGradient;
@@ -113,7 +113,7 @@ public:
         size_t numClasses = layerOutput.size();
         Eigen::VectorXd softmaxGradient(numClasses);
         softmaxGradient.setZero();
-
+        //dSoftmax_dx = softmax(x) * (1 - softmax(x))
         softmaxGradient = (layerOutput.array() * (1.0 - layerOutput.array())).matrix().cwiseProduct(lossGradient);
         
         return softmaxGradient;

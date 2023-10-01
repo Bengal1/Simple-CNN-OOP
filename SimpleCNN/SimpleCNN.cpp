@@ -43,7 +43,7 @@ public:
         return outputFc2;
     }
 
-    void Backpropagation(Eigen::VectorXd lossGradient) {
+    void Backpropagation(Eigen::VectorXd& lossGradient) {
         /*Backward*/
         Eigen::VectorXd fc2BackGrad = _fc2.backward(lossGradient);
         std::vector<Eigen::MatrixXd> fc1BackGrad = _fc1.backward(fc2BackGrad, true);
@@ -70,7 +70,7 @@ public:
         return outputFc2;
     }
 
-    void BackpropagationBatch(std::vector<Eigen::VectorXd> lossGradientBatch) {
+    void BackpropagationBatch(std::vector<Eigen::VectorXd>& lossGradientBatch) {
         /*Backward*/
         std::vector<Eigen::VectorXd> fc2BackGrad = _fc2.backwardBatch(lossGradientBatch);
         std::vector<std::vector<Eigen::MatrixXd>> fc1BackGrad = _fc1.backwardBatch(fc2BackGrad, true);

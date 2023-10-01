@@ -80,7 +80,7 @@ public:
 		}
 	}
 
-	std::vector<Eigen::MatrixXd> forward(Eigen::MatrixXd& input, int batchNum = 0) {
+	std::vector<Eigen::MatrixXd> forward(Eigen::MatrixXd& input, const int batchNum = 0) {
 		std::vector<Eigen::MatrixXd> output(_numFilters,
 			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
 		Eigen::MatrixXd preActivationOut = Eigen::MatrixXd::Zero
@@ -100,7 +100,7 @@ public:
 		return output;
 	}
 
-	std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& multiInput, int batchNum = 0) {  //Overload for multi-channel input
+	std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& multiInput, const int batchNum = 0) {  //Overload for multi-channel input
 		std::vector<Eigen::MatrixXd> output(_numFilters,
 			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
 		Eigen::MatrixXd preActivationOut = Eigen::MatrixXd::Zero
