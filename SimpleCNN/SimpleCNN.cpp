@@ -120,7 +120,6 @@ int main()
         Eigen::VectorXd outputEpoch(classes);
         std::cout << "\nepoch #" << (epoch + 1) << std::endl;
 
-        //double t_bLossVar = 0.0;  //TESTING
         int imageNum = 0;
         for (Eigen::MatrixXd image : trainImages) {
             /*Forward pass*/
@@ -136,12 +135,9 @@ int main()
             imageNum++;
             //TESTING
             if (imageNum % 5000 == 0) {
-                //t_bLossVar = totalLoss - t_bLossVar;
-                //double t_accVar = accuracyCalculation(trainOutput, oneHotTrainLabels);
-                std::cout << "[" << imageNum << "/60000] " << "; Loss = " << epochLoss[epoch] << std::endl;//<< "Train Accuracy: " << t_accVar << "%" << ";  Batch loss: " << t_bLossVar << std::endl;
-                //t_bLossVar = totalLoss;
+                std::cout << "[" << imageNum << "/60000] " << "; Loss = " << epochLoss[epoch] << std::endl;
             }
-            //TESTING*/
+            //TESTING
         }
         trainAccuracy[epoch] = accuracyCalculation(trainOutput, oneHotTrainLabels);
         std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%" << 
