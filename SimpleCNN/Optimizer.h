@@ -48,7 +48,7 @@ public:
 		assert(parameters.size() == gradients.size());
 
 		if (!_timeStep) {
-			initializeMoments(parameters.rows(), parameters.cols());
+			_initializeMoments(parameters.rows(), parameters.cols());
 		}
 		if (!paramIndex) {
 			_timeStep++;
@@ -85,7 +85,7 @@ public:
 	}
 
 private:
-	void initializeMoments(int rows, int cols) {
+	void _initializeMoments(int rows, int cols) {
 		if (_numParams == -1) { //fully-Connected - weights and bias
 			_firstMomentEstimates.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_secondMomentEstimates.assign(1, Eigen::MatrixXd::Zero(rows, cols));

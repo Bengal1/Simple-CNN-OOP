@@ -47,5 +47,8 @@
     <ClInclude Include="Layers\FullyConnected.h">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
+    <ClInclude Include="BatchNormalization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -46,14 +46,11 @@ public:
 		_optimizer(std::make_unique<AdamOptimizer>(-1)), 
 		_activation(std::move(activationFunction))
 	{
-		initializeWeights();
+		_initializeWeights();
 
 		_weightsGradient.resize(_outputSize, _inputSize);
 		_biasGradient.resize(_outputSize);
 
-		if (_activation == nullptr) {
-			//_activation.reset(new ReLU()); //Default Activation function
-		}
 		if (_batchSize == 1) {
 			_input.resize(_inputSize);
 			_output.resize(_outputSize);
@@ -65,37 +62,41 @@ public:
 		else {
 			std::cerr << "Non-positive Batch size is not valid! " << 
 				_batchSize << std::endl;
+			exit(-1);
 		}
 	}
 
 	Eigen::VectorXd forward(const Eigen::VectorXd& input) {  //Vector to vector (from fully-connected)
 		if (!_inputChannels) {
-			_inputChannels = 1, _inputHeight = input.rows(),
+			_inputChannels = 1,
+				_inputHeight = input.rows(),
 				_inputWidth = input.cols();
-
-			assert(_inputSize == _inputHeight * _inputWidth);
 		}
-
+		
+		assert(_inputSize == _inputHeight * _inputWidth);
+		
 		if (_batchSize == 1) {
 			_input = input;
 		}
+		
 		Eigen::VectorXd preActivation = _weights * input + _bias;
-		_output = _activation->activate(preActivation);
+		_output = _activation->Activate(preActivation);
 
 		return _output;
 	}
 
 	Eigen::VectorXd forward(const std::vector<Eigen::MatrixXd>& input) { //3D input to vector (from convolutional)
 		if (!_inputChannels) {
-			_inputChannels = input.size(), _inputHeight = input[0].rows(),
+			_inputChannels = input.size(), 
+				_inputHeight = input[0].rows(),
 				_inputWidth = input[0].cols();
 		}
 
 		assert(_inputSize == _inputChannels * _inputHeight * _inputWidth);
 
-		_input = flattenData(input);
+		_input = _flattenData(input);
 		Eigen::VectorXd preActivation = _weights * _input + _bias;
-		_output = _activation->activate(preActivation);
+		_output = _activation->Activate(preActivation);
 
 		return _output;
 	}
@@ -103,7 +104,8 @@ public:
 	std::vector<Eigen::VectorXd> forwardBatch(std::vector<Eigen::VectorXd>& inputBatch) { //Vectors batch to vector batch (from fully-connected)
 
 		if (!_inputChannels) {
-			_inputChannels = 1, _inputHeight = inputBatch[0].rows(),
+			_inputChannels = 1, 
+				_inputHeight = inputBatch[0].rows(),
 				_inputWidth = inputBatch[0].cols();
 		}
 
@@ -124,7 +126,7 @@ public:
 		}
 
 		for (int b = 0; b < _batchSize; b++) {
-			_inputBatch[b] = flattenData(inputBatch[b]);
+			_inputBatch[b] = _flattenData(inputBatch[b]);
 			_outputBatch[b] = forward(_inputBatch[b]);
 		}
 
@@ -149,7 +151,7 @@ public:
 		// Calculate the gradient w.r.t the input
 		Eigen::VectorXd flatInputGradient = _weights.transpose() * dLoss_dPreActivation;
 		std::vector<Eigen::MatrixXd> inputGradient = 
-			unflattenInputGradient(flatInputGradient);
+			_unflattenInputGradient(flatInputGradient);
 
 		// Calculate the gradient w.r.t the parameters
 		_weightsGradient = dLoss_dPreActivation * _input.transpose();
@@ -183,7 +185,7 @@ public:
 			Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradientBatch[b], _outputBatch[b]);
 			// Calculate the gradient w.r.t the input
 			Eigen::VectorXd flatInputGradient = _weights.transpose() * dLoss_dPreActivation;
-			inputGradBatch[b] = unflattenInputGradient(flatInputGradient);
+			inputGradBatch[b] = _unflattenInputGradient(flatInputGradient);
 
 			// Calculate the gradient w.r.t the parameters
 			_weightsGradient += _inputBatch[b].transpose() * dLoss_dPreActivation;
@@ -203,26 +205,26 @@ public:
 	}
 
 private:
-	void initializeWeights() {
+	void _initializeWeights() {
 		_weights.resize(_outputSize, _inputSize);
 		_bias.resize(_outputSize);
 
 		// Setup random number generator and distribution for He initialization
 		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::normal_distribution<double> distribution(0, std::sqrt(2.0 / _weights.cols()));
+		std::mt19937 randomEngine(rd());
+		std::normal_distribution<double> distribution(0, std::sqrt(2.0 / _inputSize));
 
 		// Initialize weights
-		for (int i = 0; i < _weights.rows(); ++i) {
-			for (int j = 0; j < _weights.cols(); ++j) {
-				_weights(i, j) = distribution(gen);
+		for (int i = 0; i < _outputSize; ++i) {
+			for (int j = 0; j < _inputSize; ++j) {
+				_weights(i, j) = distribution(randomEngine);
 			}
 		}
 
 		_bias.setOnes(); //Initialize bias
 	}
 
-	Eigen::VectorXd flattenData(const std::vector<Eigen::MatrixXd>& data) {
+	Eigen::VectorXd _flattenData(const std::vector<Eigen::MatrixXd>& data) {
 		Eigen::VectorXd flattenData(_inputSize);
 
 		int rowIndex = 0;
@@ -240,7 +242,7 @@ private:
 
 	}
 
-	std::vector<Eigen::MatrixXd> unflattenInputGradient(const Eigen::VectorXd& flattenInputGradient) {
+	std::vector<Eigen::MatrixXd> _unflattenInputGradient(const Eigen::VectorXd& flattenInputGradient) {
 		std::vector<Eigen::MatrixXd> unflattenInputGradient(_inputChannels,
 			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
@@ -251,7 +253,6 @@ private:
 				}
 			}
 		}
-
 		return unflattenInputGradient;
 	}
 

@@ -32,7 +32,7 @@ public:
     {}
 
     Eigen::VectorXd ForwardPass(Eigen::MatrixXd& input) {
-        /*Forward*/
+        /*Forward propagation*/
         std::vector<Eigen::MatrixXd> outputConv1 = _conv1.forward(input);
         std::vector<Eigen::MatrixXd> outputPool1 = _pool1.forward(outputConv1);
         std::vector<Eigen::MatrixXd> outputConv2 = _conv2.forward(outputPool1);
@@ -59,7 +59,7 @@ public:
     }
 
     std::vector<Eigen::VectorXd> ForwardPassBatch(std::vector<Eigen::MatrixXd>& inputBatch) {
-        /*Forward*/
+        /*Forward propagation*/
         std::vector<std::vector<Eigen::MatrixXd>> outputConv1 = _conv1.forwardBatch(inputBatch);
         std::vector<std::vector<Eigen::MatrixXd>> outputPool1 = _pool1.forwardBatch(outputConv1);
         std::vector<std::vector<Eigen::MatrixXd>> outputConv2 = _conv2.forwardBatch(outputPool1);
@@ -169,7 +169,9 @@ int main()
 
 
 
-//void trainModel(const std::vector<Eigen::MatrixXd>& trainImages, const std::vector<Eigen::VectorXd>& oneHotTrainLabels, int epochs = 10) {
+
+
+//void trainSimpleCNN(const std::vector<Eigen::MatrixXd>& trainImages, const std::vector<Eigen::VectorXd>& oneHotTrainLabels, int epochs = 10) {
 //    int classes = 10;
 //    std::vector<Eigen::VectorXd> trainOutput(trainImages.size(), Eigen::VectorXd(classes));
 //
@@ -201,6 +203,11 @@ int main()
 //        std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%" << " ; Loss: " << totalLoss << std::endl;
 //    }
 //}
+
+/*void testSimpleCNN(int epochs) {
+    int epochs = 10, classes = 10, 
+
+}*/
 
 /*void trainModelBatch() {
     int epochs = 10, classes = 10, batchSize = 256;

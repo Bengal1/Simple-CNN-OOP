@@ -38,13 +38,14 @@ public:
 	Convolution2D(int inputHeight, int inputWidth, int inputChannels, 
 		int numFilters, int kernelSize,int batchSize = 1, int stride = 1, 
 		int padding = 0)
-		: _inputHeight(inputHeight), _inputWidth(inputWidth), _inputChannels(inputChannels), 
-		_numFilters(numFilters), _kernelSize(kernelSize), _batchSize(batchSize), 
-		_stride(stride), _padding(padding),
+		: _inputHeight(inputHeight), _inputWidth(inputWidth), 
+		_inputChannels(inputChannels), _numFilters(numFilters), 
+		_kernelSize(kernelSize), _batchSize(batchSize), _stride(stride), 
+		_padding(padding),
 		_optimizer(std::make_unique<AdamOptimizer>(numFilters)),
 		_activation(std::make_unique<ReLU>())
 	{
-		initializeFilters();
+		_initializeFilters();
 
 		_outputHeight = (_inputHeight - _kernelSize + 2 * _padding) / _stride + 1;
 		_outputWidth = (_inputWidth - _kernelSize + 2 * _padding) / _stride + 1;
@@ -54,66 +55,91 @@ public:
 				_input.resize(_inputHeight, _inputWidth);
 			}
 			else {
-				_input3D.assign(_batchSize, Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+				_input3D.assign(_batchSize, Eigen::MatrixXd::Zero(_inputHeight, 
+					_inputWidth));
 			}
-			_filtersGradient.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
+			_filtersGradient.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize, 
+				_kernelSize));
 			_preActivationOutput.assign(1, std::vector<Eigen::MatrixXd>(_numFilters,
 				Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
 		}
 		else if (_batchSize > 1) {
 			if (_inputChannels == 1) {
-				_input3D.assign(_batchSize, Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+				_input3D.assign(_batchSize, Eigen::MatrixXd::Zero(_inputHeight, 
+					_inputWidth));
 			}
 			else {
-				_input3DBatch.assign(_batchSize, std::vector<Eigen::MatrixXd>(_inputChannels,
-					Eigen::MatrixXd::Zero(_inputHeight, _inputWidth)));
+				_input3DBatch.assign(_batchSize, std::vector<Eigen::MatrixXd>(
+					_inputChannels, Eigen::MatrixXd::Zero(_inputHeight, _inputWidth)));
 			}
-			_filtersGradBatch.assign(_batchSize, std::vector<Eigen::MatrixXd>(_numFilters,
-				Eigen::MatrixXd::Zero(_kernelSize, _kernelSize)));
-			_preActivationOutput.assign(_batchSize, std::vector<Eigen::MatrixXd>(_numFilters,
-				Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
+			_filtersGradBatch.assign(_batchSize, std::vector<Eigen::MatrixXd>(
+				_numFilters, Eigen::MatrixXd::Zero(_kernelSize, _kernelSize)));
+			_preActivationOutput.assign(_batchSize, std::vector<Eigen::MatrixXd>(
+				_numFilters, Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
 		}
 		else {
-			std::cerr << "Non-positive Batch size is not valid! " << _batchSize << std::endl;
-			//std::cerr << "Setting Batch size to 1. " << _batchSize << std::endl;
-			//_batchSize = 1;
+			std::cerr << "Non-positive Batch size is not valid! " << _batchSize 
+				<< std::endl;
+			exit(-1);
 		}
 	}
 
-	std::vector<Eigen::MatrixXd> forward(Eigen::MatrixXd& input, const int batchNum = 0) {
+	std::vector<Eigen::MatrixXd> forward(Eigen::MatrixXd& input, 
+		const int batchNum = 0) {
 		std::vector<Eigen::MatrixXd> output(_numFilters,
 			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
 		Eigen::MatrixXd preActivationOut = Eigen::MatrixXd::Zero
 		(_outputHeight, _outputWidth);
+		
+		if (!_padding) {
+			_input = input;
+		}
+		else if (_padding > 0) {
+			_input = _padWithZeros(input);
+		}
+		else {
+			std::cerr << "Non-positive padding value is not valid! " << _padding 
+				<< std::endl;
+			exit(1);
+		}
+		
 
-		_input = input;
-
-		for (int f = 0; f < _numFilters; ++f) {
-			for (int c = 0; c < _inputChannels; ++c) {
-				preActivationOut += Convolve2D(input, _filters[f]);
+		for (int f = 0; f < _numFilters; f++) {
+			for (int c = 0; c < _inputChannels; c++) {
+				preActivationOut += _Convolve2D(input, _filters[f]);
 			}
 			_preActivationOutput[batchNum][f] = preActivationOut;
-			output[f] = _activation->activate(preActivationOut);
+			output[f] = _activation->Activate(preActivationOut);
 			preActivationOut.setZero();
 		}
 
 		return output;
 	}
-
+	
 	std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& multiInput, const int batchNum = 0) {  //Overload for multi-channel input
 		std::vector<Eigen::MatrixXd> output(_numFilters,
 			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
-		Eigen::MatrixXd preActivationOut = Eigen::MatrixXd::Zero
-		(_outputHeight, _outputWidth);
-		_input3D = multiInput;
-		_input.resize(0, 0);
+		Eigen::MatrixXd preActivationOut = Eigen::MatrixXd::Zero(_outputHeight, 
+			_outputWidth);
+		
+		if (!_padding) {
+			_input3D = multiInput;
+		}
+		else if (_padding > 0) {
+			_input3D = _padWithZeros(multiInput);
+		}
+		else {
+			std::cerr << "Non-positive padding value is not valid! " << _padding 
+				<< std::endl;
+			exit(1);
+		}
 
-		for (int f = 0; f < _numFilters; ++f) {
-			for (int c = 0; c < _inputChannels; ++c) {
-				preActivationOut += Convolve2D(multiInput[c], _filters[f]);
+		for (int f = 0; f < _numFilters; f++) {
+			for (int c = 0; c < _inputChannels; c++) {
+				preActivationOut += _Convolve2D(multiInput[c], _filters[f]);
 			}
 			_preActivationOutput[batchNum][f] = preActivationOut;
-			output[f] = _activation->activate(preActivationOut);
+			output[f] = _activation->Activate(preActivationOut);
 			preActivationOut.setZero();
 		}
 
@@ -123,8 +149,8 @@ public:
 	std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(std::vector<Eigen::MatrixXd>& inputBatch) {
 		int batchSize = inputBatch.size();
 		std::vector<std::vector<Eigen::MatrixXd>> outputBatch(batchSize,
-			std::vector<Eigen::MatrixXd>(_numFilters, Eigen::MatrixXd::Zero(_outputHeight,
-				_outputWidth)));
+			std::vector<Eigen::MatrixXd>(_numFilters, Eigen::MatrixXd::Zero(
+				_outputHeight, _outputWidth)));
 
 		_input3D = inputBatch;
 
@@ -138,8 +164,9 @@ public:
 	std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(std::vector<std::
 		vector<Eigen::MatrixXd>>& inputBatch) {
 		int batchSize = inputBatch.size();
-		std::vector<std::vector<Eigen::MatrixXd>> outputBatch(batchSize, std::vector<Eigen::MatrixXd>(
-			_numFilters,Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
+		std::vector<std::vector<Eigen::MatrixXd>> outputBatch(batchSize, 
+			std::vector<Eigen::MatrixXd>(_numFilters,Eigen::MatrixXd::Zero(
+				_outputHeight, _outputWidth)));
 
 		_input3DBatch = inputBatch;
 
@@ -159,17 +186,18 @@ public:
 		
 		for (int c = 0; c < _inputChannels; c++) {
 			for (int f = 0; f < _numFilters; f++) {
-				Eigen::MatrixXd dLoss_dPreActivation = _activation->computeGradient(lossGradient[f], 
-					_preActivationOutput[0][f]);
+				Eigen::MatrixXd dLoss_dPreActivation = _activation->computeGradient(
+					lossGradient[f], _preActivationOutput[0][f]);
 				// Calculate the gradient w.r.t the parameters
 				if (_inputChannels == 1) {
-					_filtersGradient[f] = Convolve2D(_input, dLoss_dPreActivation);
+					_filtersGradient[f] = _Convolve2D(_input, dLoss_dPreActivation);
 				}
 				else if (_inputChannels > 1) {
-					_filtersGradient[f] += Convolve2D(_input3D[c], dLoss_dPreActivation);
+					_filtersGradient[f] += _Convolve2D(_input3D[c], 
+						dLoss_dPreActivation);
 				}
 				// Calculate the gradient w.r.t the input
-				calculateInputGradient(lossGradient[f], _filters[f],
+				_calculateInputGradient(lossGradient[f], _filters[f],
 					_preActivationOutput[0][f], inputGradient[c]);
 			}
 		}
@@ -179,21 +207,24 @@ public:
 
 	std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(std::vector<std::vector<Eigen::MatrixXd>>& lossGradientBatch) {
 		int batchSize = lossGradientBatch.size();
-		std::vector<std::vector<Eigen::MatrixXd>> inputGradBatch(batchSize, std::vector<Eigen::MatrixXd>(
-			_inputChannels, Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
+		std::vector<std::vector<Eigen::MatrixXd>> inputGradBatch(batchSize, 
+			std::vector<Eigen::MatrixXd>(_inputChannels, Eigen::MatrixXd::Zero(
+				_outputHeight, _outputWidth)));
 
 		for (int b = 0; b < batchSize; b++) {
 			for (int c = 0; c < _inputChannels; c++) {
 				for (int f = 0; f < _numFilters; f++) {
 					// Calculate the gradient w.r.t the parameters
 					if (_inputChannels == 1) {
-						_filtersGradient[f] += Convolve2D(_input, lossGradientBatch[b][f]);
+						_filtersGradient[f] += _Convolve2D(_input3D[b],
+							lossGradientBatch[b][f]);
 					}
 					else if (_inputChannels > 1) {
-						_filtersGradient[f] += Convolve2D(_input3DBatch[b][c], lossGradientBatch[b][f]);
+						_filtersGradient[f] += _Convolve2D(_input3DBatch[b][c], 
+							lossGradientBatch[b][f]);
 					}
 					// Calculate the gradient w.r.t the input
-					calculateInputGradient(lossGradientBatch[b][f], _filters[f],
+					_calculateInputGradient(lossGradientBatch[b][f], _filters[f],
 						_preActivationOutput[b][f], inputGradBatch[b][c]);
 				}
 			}
@@ -223,28 +254,30 @@ public:
 	}
 
 private:
-	void initializeFilters() {
+	void _initializeFilters() {
 		_filters.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
 
 		// Setup random number generator and distribution for He initialization
 		std::random_device rd;
-		std::mt19937 generator(rd());
-		std::normal_distribution<double> distribution(0.0, std::sqrt(2.0 / (_kernelSize * _kernelSize)));
+		std::mt19937 randomEngine(rd());
+		std::normal_distribution<double> distribution(0.0, std::sqrt(2.0 / 
+			(_kernelSize * _kernelSize)));
 
-		for (int i = 0; i < _numFilters; ++i) {
+		for (int f = 0; f < _numFilters; f++) {
 			Eigen::MatrixXd filter(_kernelSize, _kernelSize);
 
 			// Initialize filters
 			for (int row = 0; row < _kernelSize; row++) {
 				for (int col = 0; col < _kernelSize; col++) {
-					filter(row, col) = distribution(generator);
+					filter(row, col) = distribution(randomEngine);
 				}
 			}
-			_filters[i] = filter;
+			_filters[f] = filter;
 		}
 	}
 
-	Eigen::MatrixXd Convolve2D(const Eigen::MatrixXd& input, const Eigen::MatrixXd& kernel) {
+	Eigen::MatrixXd _Convolve2D(const Eigen::MatrixXd& input, 
+		const Eigen::MatrixXd& kernel) {
 		const int inputHeight = input.rows();
 		const int inputWidth = input.cols();
 		const int filterHeight = kernel.rows();
@@ -256,28 +289,38 @@ private:
 
 		for (int h = 0; h < outputHeight; h++) {
 			for (int w = 0; w < outputWidth; w++) {
-				output(h, w) = (input.block(h * _stride, w * _stride, filterHeight, 
-					filterWidth).cwiseProduct(kernel)).sum();
+				output(h, w) = (input.block(h * _stride, w * _stride, 
+					filterHeight, filterWidth).cwiseProduct(kernel)).sum();
 			}
 		}
 
 		return output;
 	}
 
-	void calculateInputGradient(const Eigen::MatrixXd& lossGradientChannel, const Eigen::MatrixXd& filter,
-		Eigen::MatrixXd preActivationOut, Eigen::MatrixXd& inputGradChannel) {
-		Eigen::MatrixXd dOutput_dInput = _activation->computeGradient(lossGradientChannel, preActivationOut);
+	void _calculateInputGradient(const Eigen::MatrixXd& lossGradientChannel, 
+		const Eigen::MatrixXd& filter, Eigen::MatrixXd preActivationOut, 
+		Eigen::MatrixXd& inputGradChannel) {
+		Eigen::MatrixXd dOutput_dInput = _activation->computeGradient(
+			lossGradientChannel, preActivationOut);
+		Eigen::MatrixXd reversedFilter = filter.reverse();
 
 		// Iterate through positions and calculate the input gradient
-		for (int i = 0; i < _outputHeight; ++i) {
-			for (int j = 0; j < _outputWidth; ++j) {
-				for (int k = 0; k < _kernelSize; ++k) {
-					for (int l = 0; l < _kernelSize; ++l) {
+		for (int i = 0; i < _outputHeight; i++) {
+			for (int j = 0; j < _outputWidth; j++) {
+				for (int k = 0; k < _kernelSize; k++) {
+					for (int l = 0; l < _kernelSize; l++) {
 						int inputRow = i + k;
 						int inputCol = j + l;
 
-						if (inputRow >= 0 && inputRow < _inputHeight && inputCol >= 0 && inputCol < _inputWidth) {
-							inputGradChannel(inputRow, inputCol) += dOutput_dInput(i, j) * filter(k, l);
+						if (inputRow > 0 && inputRow < _inputHeight && 
+							inputCol > 0 && inputCol < _inputWidth) {
+							inputGradChannel(inputRow, inputCol) += 
+								dOutput_dInput(i, j) * filter(k, l);
+						}
+						else if (inputRow == 0 || inputRow == _inputHeight - 1 && 
+							inputCol == 0 && inputCol == _inputWidth - 1) {
+							inputGradChannel(inputRow, inputCol) += 
+								dOutput_dInput(i, j) * reversedFilter(k, l);
 						}
 					}
 				}
@@ -285,7 +328,9 @@ private:
 		}
 	}
 
-	Eigen::MatrixXd padWithZeros(const Eigen::MatrixXd& input, int irregularPad = 0) {
+	Eigen::MatrixXd _padWithZeros(const Eigen::MatrixXd& input, 
+		int irregularPad = 0) {
+		
 		int padding;
 		if (irregularPad)
 			padding = irregularPad;
@@ -294,11 +339,34 @@ private:
 
 		int padInputHeight = _inputHeight + 2 * padding;
 		int padInputWidth = _inputWidth + 2 * padding;
-		Eigen::MatrixXd paddedInput = Eigen::MatrixXd::Zero(padInputHeight, padInputWidth);
+		Eigen::MatrixXd paddedInput = Eigen::MatrixXd::Zero(padInputHeight, 
+			padInputWidth);
 
-		paddedInput.block(_padding, _padding, padInputHeight, padInputWidth) = input;
+		paddedInput.block(_padding, _padding, padInputHeight, 
+			padInputWidth) = input;
 
 
+		return paddedInput;
+	}
+
+	std::vector<Eigen::MatrixXd> _padWithZeros(const std::vector<
+		Eigen::MatrixXd>& input, int irregularPad = 0) {
+		int padding;
+		if (irregularPad)
+			padding = irregularPad;
+		else
+			padding = _padding;
+
+		int padInputHeight = _inputHeight + 2 * padding;
+		int padInputWidth = _inputWidth + 2 * padding;
+		std::vector<Eigen::MatrixXd> paddedInput(_inputChannels, 
+			Eigen::MatrixXd::Zero(padInputHeight, padInputWidth));
+
+		for (int c = 0; c < _inputChannels; c++) {
+			paddedInput[c].block(_padding, _padding, padInputHeight, 
+				padInputWidth) = input[c];
+		}
+		
 		return paddedInput;
 	}
 

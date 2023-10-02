@@ -8,7 +8,7 @@
 
 class Activation {
 public:
-    virtual Eigen::VectorXd activate(const Eigen::VectorXd& preActivationOutput) const = 0;
+    virtual Eigen::VectorXd Activate(const Eigen::VectorXd& preActivationOutput) const = 0;
     virtual Eigen::VectorXd computeGradient(const Eigen::VectorXd& lossGradient, 
         const Eigen::VectorXd& layerOutput) const = 0;
     virtual ~Activation() {}
@@ -18,21 +18,21 @@ public:
 class ReLU : public Activation {
 public:
 
-    Eigen::VectorXd activate(const Eigen::VectorXd& preActivationOutput) const override {
+    Eigen::VectorXd Activate(const Eigen::VectorXd& preActivationOutput) const override {
         
         Eigen::VectorXd activationResult = preActivationOutput.cwiseMax(0.0);
         
         return activationResult;
     }
 
-    Eigen::MatrixXd activate(const Eigen::MatrixXd& preActivationOutput) const {  //Overload for matrices
+    Eigen::MatrixXd Activate(const Eigen::MatrixXd& preActivationOutput) const {  //Overload for matrices
         
         Eigen::MatrixXd activationResult = preActivationOutput.cwiseMax(0.0);
         
         return activationResult;
     }
 
-    std::vector<Eigen::MatrixXd> activate(const std::vector<Eigen::MatrixXd>& preActivationOutput) const {  //Overload for 3D tensors
+    std::vector<Eigen::MatrixXd> Activate(const std::vector<Eigen::MatrixXd>& preActivationOutput) const {  //Overload for 3D tensors
         int numChannels = preActivationOutput.size();
         std::vector<Eigen::MatrixXd> activationResult(numChannels,
             Eigen::MatrixXd::Zero(preActivationOutput[0].rows(), preActivationOutput[0].cols()));
@@ -79,7 +79,7 @@ public:
 class Softmax : public Activation {
 public:
 
-    Eigen::VectorXd activate(const Eigen::VectorXd& preActivationOutput) const override { //Overload for vectors
+    Eigen::VectorXd Activate(const Eigen::VectorXd& preActivationOutput) const override { //Overload for vectors
         Eigen::VectorXd activationResult = Eigen::VectorXd::Zero(preActivationOutput.size());
 
         Eigen::VectorXd exppreActivationOutput = preActivationOutput.array().exp();
@@ -88,7 +88,7 @@ public:
         return activationResult;
     }
 
-    Eigen::MatrixXd activate(const Eigen::MatrixXd& preActivationOutput) const {
+    Eigen::MatrixXd Activate(const Eigen::MatrixXd& preActivationOutput) const {
         Eigen::MatrixXd activationResult = Eigen::MatrixXd::Zero(preActivationOutput.rows(), preActivationOutput.cols());
 
         Eigen::MatrixXd exppreActivationOutput = preActivationOutput.array().exp();
@@ -97,7 +97,7 @@ public:
         return activationResult;
     }
 
-    std::vector<Eigen::VectorXd> activate(const std::vector<Eigen::VectorXd>& preActivationOutput) const {  //Overload for vector batch
+    std::vector<Eigen::VectorXd> Activate(const std::vector<Eigen::VectorXd>& preActivationOutput) const {  //Overload for vector batch
         int numChannels = preActivationOutput.size();
         std::vector<Eigen::VectorXd> activationResult(numChannels, Eigen::VectorXd::Zero(preActivationOutput[0].size()));
 

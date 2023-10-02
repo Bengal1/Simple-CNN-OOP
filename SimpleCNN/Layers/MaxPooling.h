@@ -95,13 +95,13 @@ public:
         for (int c = 0; c < _inputChannels; c++) {
             for (int h = 0; h < _outputHeight; h++) {
                 for (int w = 0; w < _outputWidth; w++) {
-                    /*int channel, row col;
-                    getDataLocation(channel, row, col);*/
-                    std::tuple<int, int, int> currentLocation = _inputGradientMap.front();
+                    int channel, row, col;
+                    _getDataLocation(channel, row, col);
+                    /*std::tuple<int, int, int> currentLocation = _inputGradientMap.front();
                     int channel = std::get<0>(currentLocation);
                     int row = std::get<1>(currentLocation);
                     int col = std::get<2>(currentLocation);
-                    _inputGradientMap.erase(_inputGradientMap.begin());
+                    _inputGradientMap.erase(_inputGradientMap.begin());*/
 
                     inputGradient[channel](row, col) = lossGradient[c](h, w);
                 }
@@ -127,7 +127,7 @@ public:
                 for (int h = 0; h < _outputHeight; h++) {
                     for (int w = 0; w < _outputWidth; w++) {
                         /*int batch, channel, row col;
-                        getDataLocation(batch, channel, row, col);*/
+                        _getDataLocation(batch, channel, row, col);*/
                         std::tuple<int, int, int, int> currentLocation = _inputGradientMapBatch.front();
                         int batch = std::get<0>(currentLocation);
                         int channel = std::get<1>(currentLocation);
@@ -145,7 +145,7 @@ public:
     }
 
 private:
-    void getDataLocation(int& dataChannel, int& dataRow, int& dataColumn) {
+    void _getDataLocation(int& dataChannel, int& dataRow, int& dataColumn) {
         std::tuple<int, int, int> currentLocation = _inputGradientMap.front();
         dataChannel = std::get<0>(currentLocation);
         dataRow = std::get<1>(currentLocation);
@@ -153,7 +153,7 @@ private:
         _inputGradientMap.erase(_inputGradientMap.begin());
     }
 
-    void getDataLocation(int& dataBatch, int& dataChannel, int& dataRow, int& dataColumn) {
+    void _getDataLocation(int& dataBatch, int& dataChannel, int& dataRow, int& dataColumn) {
         std::tuple<int, int, int, int> currentLocation = _inputGradientMapBatch.front();
         dataBatch = std::get<0>(currentLocation);
         dataChannel = std::get<1>(currentLocation);

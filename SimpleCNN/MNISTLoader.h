@@ -28,11 +28,11 @@ public:
         _testImagesFile(testImagesFile), _testLabelsFile(testLabelsFile) {}
 
     bool loadTrainData() {
-        return loadImages(_trainImagesFile, _trainLabelsFile, _trainImages, _trainLabels, true);
+        return _loadImages(_trainImagesFile, _trainLabelsFile, _trainImages, _trainLabels, true);
     }
 
     bool loadTestData() {
-        return loadImages(_testImagesFile, _testLabelsFile, _testImages, _testLabels, false);
+        return _loadImages(_testImagesFile, _testLabelsFile, _testImages, _testLabels, false);
     }
 
     const std::vector<Eigen::MatrixXd>& getTrainImages() const {
@@ -45,21 +45,21 @@ public:
 
     const std::vector<Eigen::VectorXd>& getOneHotTrainLabels() {
         if (_oneHotTrainLabels.empty()) {
-            createOneHotLabels(_trainLabels, _oneHotTrainLabels);
+            _createOneHotLabels(_trainLabels, _oneHotTrainLabels);
         }
         return _oneHotTrainLabels;
     }
 
     const std::vector<Eigen::VectorXd>& getOneHotTestLabels() {
         if (_oneHotTestLabels.empty()) {
-            createOneHotLabels(_testLabels, _oneHotTestLabels);
+            _createOneHotLabels(_testLabels, _oneHotTestLabels);
         }
         return _oneHotTestLabels;
     }
 
 private:
 
-    bool loadImages(const std::string& imagesFile, const std::string& labelsFile,
+    bool _loadImages(const std::string& imagesFile, const std::string& labelsFile,
         std::vector<Eigen::MatrixXd>& images, std::vector<uint8_t>& labels, bool isTrain) {
         std::ifstream fImages(imagesFile, std::ios::binary);
 
@@ -134,7 +134,7 @@ private:
         return true;
     }
 
-    void createOneHotLabels(const std::vector<uint8_t>& labels, std::vector<Eigen::VectorXd>& oneHotLabels) {
+    void _createOneHotLabels(const std::vector<uint8_t>& labels, std::vector<Eigen::VectorXd>& oneHotLabels) {
         oneHotLabels.clear();
         for (uint8_t label : labels) {
             Eigen::VectorXd oneHot = Eigen::VectorXd::Zero(10);
