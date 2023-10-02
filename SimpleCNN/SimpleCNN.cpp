@@ -133,6 +133,7 @@ int main()
             model.Backpropagation(lossGrad);
 
             imageNum++;
+
             //TESTING
             if (imageNum % 5000 == 0) {
                 std::cout << "[" << imageNum << "/60000] " << "; Loss = " << epochLoss[epoch] << std::endl;
