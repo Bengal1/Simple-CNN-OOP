@@ -10,7 +10,6 @@ The MNIST database has 70,000 images, such that the training dataset is 60,000 i
 
 For more imformation on [MNIST Dataset](https://en.wikipedia.org/wiki/MNIST_database).
 
-#### *** here explain the MNIST Loader (.h)
 
 ## *Simple CNN*
 Our Network is consist of 6 layers:
