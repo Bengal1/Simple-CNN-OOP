@@ -126,16 +126,17 @@ public:
             for (int c = 0; c < _inputChannels; c++) {
                 for (int h = 0; h < _outputHeight; h++) {
                     for (int w = 0; w < _outputWidth; w++) {
-                        /*int batch, channel, row col;
-                        _getDataLocation(batch, channel, row, col);*/
-                        std::tuple<int, int, int, int> currentLocation = _inputGradientMapBatch.front();
+                        int batch, channel, row, col;
+                        _getDataLocation(batch, channel, row, col);
+                        /*std::tuple<int, int, int, int> currentLocation = _inputGradientMapBatch.front();
                         int batch = std::get<0>(currentLocation);
                         int channel = std::get<1>(currentLocation);
                         int row = std::get<2>(currentLocation);
                         int col = std::get<3>(currentLocation);
-                        _inputGradientMapBatch.erase(_inputGradientMapBatch.begin());
+                        _inputGradientMapBatch.erase(_inputGradientMapBatch.begin());*/
 
-                        inputGradientBatch[batch][channel](row, col) = lossGradientBatch[b][c](h, w);
+                        inputGradientBatch[batch][channel](row, col) = 
+                            lossGradientBatch[b][c](h, w);
                     }
                 }
             }
@@ -153,8 +154,10 @@ private:
         _inputGradientMap.erase(_inputGradientMap.begin());
     }
 
-    void _getDataLocation(int& dataBatch, int& dataChannel, int& dataRow, int& dataColumn) {
-        std::tuple<int, int, int, int> currentLocation = _inputGradientMapBatch.front();
+    void _getDataLocation(int& dataBatch, int& dataChannel, int& dataRow, 
+        int& dataColumn) {
+        std::tuple<int, int, int, int> currentLocation = 
+            _inputGradientMapBatch.front();
         dataBatch = std::get<0>(currentLocation);
         dataChannel = std::get<1>(currentLocation);
         dataRow = std::get<2>(currentLocation);

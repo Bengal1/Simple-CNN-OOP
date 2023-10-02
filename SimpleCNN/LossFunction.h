@@ -21,7 +21,8 @@ public:
 class MSE : public LossFunction {
 public:
 
-	double calculateLoss(const Eigen::VectorXd& predictions, const Eigen::VectorXd& targets) const override {
+	double calculateLoss(const Eigen::VectorXd& predictions, 
+		const Eigen::VectorXd& targets) const override {
 		assert(predictions.size() == targets.size());
 
 		int classNum = predictions.size();
@@ -39,7 +40,7 @@ public:
 		assert(predictions.size() == targets.size());
 
 		Eigen::VectorXd gradients = predictions - targets;
-		gradients = (gradients / predictions.size());  // Normalize by the number of samples in the batch
+		gradients = (gradients / predictions.size());  
 
 		return gradients;
 	}
@@ -91,16 +92,19 @@ public:
 		return gradientCE;
 	}
 
-	std::vector<Eigen::VectorXd> calculateGradientBatch(const std::vector<Eigen::VectorXd>& predictionBatch,
-		const std::vector<Eigen::VectorXd>& targetBatch) const {
+	std::vector<Eigen::VectorXd> calculateGradientBatch(const 
+		std::vector<Eigen::VectorXd>& predictionBatch, const 
+		std::vector<Eigen::VectorXd>& targetBatch) const {
 		assert(predictionBatch.size() == targetBatch.size());
 
 		int batchSize = predictionBatch.size();
 		int classNum = predictionBatch[0].size();
-		std::vector<Eigen::VectorXd> gradientBatch(batchSize, Eigen::VectorXd(classNum));
+		std::vector<Eigen::VectorXd> gradientBatch(batchSize, 
+			Eigen::VectorXd(classNum));
 
 		for (int b = 0; b < batchSize; b++) {
-			gradientBatch[b] = calculateGradient(predictionBatch[b], targetBatch[b]);
+			gradientBatch[b] = calculateGradient(predictionBatch[b], 
+				targetBatch[b]);
 		}
 
 		return gradientBatch;

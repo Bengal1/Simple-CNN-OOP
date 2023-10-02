@@ -134,7 +134,8 @@ public:
 	}
 
 	Eigen::VectorXd backward(Eigen::VectorXd& lossGradient) { //Vector to vector
-		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradient, _output);
+		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(
+			lossGradient, _output);
 		// Calculate the gradient w.r.t the input
 		Eigen::VectorXd inputGradient = _weights.transpose() * 
 			_activation->computeGradient(lossGradient, _output);
@@ -147,9 +148,11 @@ public:
 	}
 
 	std::vector<Eigen::MatrixXd> backward(Eigen::VectorXd& lossGradient, bool input3D) {  //Vector to 3D output
-		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradient, _output);
+		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(
+			lossGradient, _output);
 		// Calculate the gradient w.r.t the input
-		Eigen::VectorXd flatInputGradient = _weights.transpose() * dLoss_dPreActivation;
+		Eigen::VectorXd flatInputGradient = _weights.transpose() * 
+			dLoss_dPreActivation;
 		std::vector<Eigen::MatrixXd> inputGradient = 
 			_unflattenInputGradient(flatInputGradient);
 
@@ -162,10 +165,12 @@ public:
 	}
 
 	std::vector<Eigen::VectorXd> backwardBatch(std::vector<Eigen::VectorXd>& lossGradientBatch) { //Vectors batch to vector batch (from fully-connected)
-		std::vector<Eigen::VectorXd> inputGradBatch(_batchSize, Eigen::VectorXd::Zero(_inputSize));
+		std::vector<Eigen::VectorXd> inputGradBatch(_batchSize, 
+			Eigen::VectorXd::Zero(_inputSize));
 
 		for (int b = 0; b < _batchSize; b++) {
-			Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradientBatch[b], _outputBatch[b]);
+			Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(
+				lossGradientBatch[b], _outputBatch[b]);
 			// Calculate the gradient w.r.t the input
 			inputGradBatch[b] = _weights.transpose() * dLoss_dPreActivation;
 
@@ -179,12 +184,15 @@ public:
 
 	std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(std::vector<Eigen::VectorXd>& lossGradientBatch, bool input3D) { //Vector batch to 3D output batch
 		std::vector<std::vector<Eigen::MatrixXd>> inputGradBatch(_batchSize,
-			std::vector<Eigen::MatrixXd>(_inputChannels, Eigen::MatrixXd::Zero(_inputHeight, _inputWidth)));
+			std::vector<Eigen::MatrixXd>(_inputChannels, Eigen::MatrixXd::Zero(
+				_inputHeight, _inputWidth)));
 
 		for (int b = 0; b < _batchSize; b++) {
-			Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(lossGradientBatch[b], _outputBatch[b]);
+			Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(
+				lossGradientBatch[b], _outputBatch[b]);
 			// Calculate the gradient w.r.t the input
-			Eigen::VectorXd flatInputGradient = _weights.transpose() * dLoss_dPreActivation;
+			Eigen::VectorXd flatInputGradient = _weights.transpose() * 
+				dLoss_dPreActivation;
 			inputGradBatch[b] = _unflattenInputGradient(flatInputGradient);
 
 			// Calculate the gradient w.r.t the parameters
@@ -212,7 +220,8 @@ private:
 		// Setup random number generator and distribution for He initialization
 		std::random_device rd;
 		std::mt19937 randomEngine(rd());
-		std::normal_distribution<double> distribution(0, std::sqrt(2.0 / _inputSize));
+		std::normal_distribution<double> distribution(0, std::sqrt(2.0 / 
+			_inputSize));
 
 		// Initialize weights
 		for (int i = 0; i < _outputSize; ++i) {
@@ -229,12 +238,14 @@ private:
 
 		int rowIndex = 0;
 		for (const auto& matrix : data) {
-			Eigen::Map<const Eigen::VectorXd> matrixMap(matrix.data(), matrix.size());
+			Eigen::Map<const Eigen::VectorXd> matrixMap(matrix.data(), 
+				matrix.size());
 			flattenData.block(rowIndex, 0, matrixMap.size(), 1) = matrixMap;
 			rowIndex += matrixMap.size();
 
 			if (rowIndex > _inputSize) {
-				std::cerr << "Row index exceeded the limit of input size, " << _inputSize << std::endl;
+				std::cerr << "Row index exceeded the limit of input size, " << 
+					_inputSize << std::endl;
 				break; //Error
 			}
 		}
@@ -242,14 +253,16 @@ private:
 
 	}
 
-	std::vector<Eigen::MatrixXd> _unflattenInputGradient(const Eigen::VectorXd& flattenInputGradient) {
+	std::vector<Eigen::MatrixXd> _unflattenInputGradient(const Eigen::VectorXd& 
+		flattenInputGradient) {
 		std::vector<Eigen::MatrixXd> unflattenInputGradient(_inputChannels,
 			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
 		for (int c = 0; c < _inputChannels; c++) {
 			for (int h = 0; h < _inputHeight; h++) {
 				for (int w = 0; w < _inputWidth; w++) {
-					unflattenInputGradient[c](h, w) = flattenInputGradient[c + h + w];
+					unflattenInputGradient[c](h, w) = 
+						flattenInputGradient[c + h + w];
 				}
 			}
 		}

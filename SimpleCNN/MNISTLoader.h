@@ -28,11 +28,13 @@ public:
         _testImagesFile(testImagesFile), _testLabelsFile(testLabelsFile) {}
 
     bool loadTrainData() {
-        return _loadImages(_trainImagesFile, _trainLabelsFile, _trainImages, _trainLabels, true);
+        return _loadImages(_trainImagesFile, _trainLabelsFile, 
+            _trainImages, _trainLabels, true);
     }
 
     bool loadTestData() {
-        return _loadImages(_testImagesFile, _testLabelsFile, _testImages, _testLabels, false);
+        return _loadImages(_testImagesFile, _testLabelsFile, 
+            _testImages, _testLabels, false);
     }
 
     const std::vector<Eigen::MatrixXd>& getTrainImages() const {
@@ -134,7 +136,8 @@ private:
         return true;
     }
 
-    void _createOneHotLabels(const std::vector<uint8_t>& labels, std::vector<Eigen::VectorXd>& oneHotLabels) {
+    void _createOneHotLabels(const std::vector<uint8_t>& labels, 
+        std::vector<Eigen::VectorXd>& oneHotLabels) {
         oneHotLabels.clear();
         for (uint8_t label : labels) {
             Eigen::VectorXd oneHot = Eigen::VectorXd::Zero(10);
