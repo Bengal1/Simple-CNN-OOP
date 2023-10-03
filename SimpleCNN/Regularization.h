@@ -81,7 +81,7 @@ public:
             double dInputMean = dInputNormalized.sum();
             Eigen::MatrixXd varianceGradientScaling = (-0.5 * dInputNormalized.array() * inputMeanDeviation.array() * invStd * invStd * invStd).matrix();
 
-            inputGradient[c] = dInputNormalized - (dInputMean / (_channelHeight * _channelWidth)) + (inputMeanDeviation.array() * varianceGradientScaling.array());
+            inputGradient[c] = dInputNormalized.array() - (dInputMean / (_channelHeight * _channelWidth)) + (inputMeanDeviation.array() * varianceGradientScaling.array());
         }
         return inputGradient;
     }
