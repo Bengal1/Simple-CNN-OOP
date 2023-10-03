@@ -97,11 +97,6 @@ public:
                 for (int w = 0; w < _outputWidth; w++) {
                     int channel, row, col;
                     _getDataLocation(channel, row, col);
-                    /*std::tuple<int, int, int> currentLocation = _inputGradientMap.front();
-                    int channel = std::get<0>(currentLocation);
-                    int row = std::get<1>(currentLocation);
-                    int col = std::get<2>(currentLocation);
-                    _inputGradientMap.erase(_inputGradientMap.begin());*/
 
                     inputGradient[channel](row, col) = lossGradient[c](h, w);
                 }
@@ -128,12 +123,6 @@ public:
                     for (int w = 0; w < _outputWidth; w++) {
                         int batch, channel, row, col;
                         _getDataLocation(batch, channel, row, col);
-                        /*std::tuple<int, int, int, int> currentLocation = _inputGradientMapBatch.front();
-                        int batch = std::get<0>(currentLocation);
-                        int channel = std::get<1>(currentLocation);
-                        int row = std::get<2>(currentLocation);
-                        int col = std::get<3>(currentLocation);
-                        _inputGradientMapBatch.erase(_inputGradientMapBatch.begin());*/
 
                         inputGradientBatch[batch][channel](row, col) = 
                             lossGradientBatch[b][c](h, w);

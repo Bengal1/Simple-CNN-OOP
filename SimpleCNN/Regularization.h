@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <random>
 #include <Eigen/Dense>
 #include "Optimizer.h"
 
@@ -31,7 +32,11 @@ public:
         : _epsilon(epsilon), _initialized(false), 
         _optimizer(std::make_unique<AdamOptimizer>(-2)) {}
 
-    void Forward(std::vector<Eigen::MatrixXd>& input, bool training = true) {
+    std::vector<Eigen::MatrixXd> Forward(std::vector<Eigen::MatrixXd>& input, 
+        bool training = true) {
+        std::vector<Eigen::MatrixXd> outputBN(_numChannels, 
+            Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
+        
         if (!_initialized) {
             _InitializeParameters(input);
         }
@@ -41,10 +46,11 @@ public:
         for (int c = 0; c < _numChannels; ++c) {
             // Calculate mean and variance for each channel
             double channelMean = input[c].sum() / (_channelHeight * _channelWidth);
-            double channelVariance = (input[c].array() - channelMean).square().sum() / (_channelHeight * _channelWidth - 1);
+            double channelVariance = (input[c].array() - channelMean).square().sum() / 
+                (_channelHeight * _channelWidth - 1);
 
             if (training) {
-                // Update running mean and variance using exponential moving average during training
+                // Update running mean and variance using exponential moving average
                 _runningMean[c] = 0.9 * _runningMean[c] + 0.1 * channelMean;
                 _runningVariance[c] = 0.9 * _runningVariance[c] + 0.1 * channelVariance;
             }
@@ -54,13 +60,16 @@ public:
             double varianceToUse = training ? channelVariance : _runningVariance[c];
 
             // Scale and shift using gamma and beta
-            input[c] = (_gamma[c] * (input[c].array() - meanToUse)) / (sqrt(varianceToUse) + _epsilon) + _beta[c];
+            outputBN[c] = (_gamma[c] * (input[c].array() - meanToUse)) / 
+                (sqrt(varianceToUse) + _epsilon) + _beta[c];
         }
+        return outputBN;
     }
 
-    std::vector<Eigen::MatrixXd> Backward(std::vector<Eigen::MatrixXd>& dInput) {
+    std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd>& dInput) {
 
-        std::vector<Eigen::MatrixXd> inputGradient(_numChannels, Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
+        std::vector<Eigen::MatrixXd> inputGradient(_numChannels, 
+            Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
 
         for (int c = 0; c < _numChannels; ++c) {
             // Gradient w.r.t. normalized input
@@ -73,15 +82,19 @@ public:
             double invStd = 1.0 / (sqrt(_runningVariance[c]) + _epsilon);
 
             // Gradient w.r.t. learnable gamma and beta
-            _dGamma(c) = (dNormalized.array() * (_input[c].array() - _runningMean[c])).sum();
+            _dGamma(c) = (dNormalized.array() * (_input[c].array() - 
+                _runningMean[c])).sum();
             _dBeta(c) = dNormalized.sum();
 
             // Gradient w.r.t. input
             Eigen::MatrixXd dInputNormalized = dNormalized * invStd;
             double dInputMean = dInputNormalized.sum();
-            Eigen::MatrixXd varianceGradientScaling = (-0.5 * dInputNormalized.array() * inputMeanDeviation.array() * invStd * invStd * invStd).matrix();
+            Eigen::MatrixXd varianceGradientScaling = (-0.5 * dInputNormalized.array() * 
+                inputMeanDeviation.array() * invStd * invStd * invStd).matrix();
 
-            inputGradient[c] = dInputNormalized.array() - (dInputMean / (_channelHeight * _channelWidth)) + (inputMeanDeviation.array() * varianceGradientScaling.array());
+            inputGradient[c] = dInputNormalized.array() - (dInputMean / (_channelHeight * 
+                _channelWidth)) + (inputMeanDeviation.array() * 
+                    varianceGradientScaling.array());
         }
         return inputGradient;
     }
@@ -112,5 +125,53 @@ private:
 
 
 class Dropout {
+private:
+    int _inputHeight;
+    int _inputWidth;
+    double _dropoutRate;
+    bool _isTraining;
 
+public:
+    Dropout(double dropoutRate = 0.5)
+        : _dropoutRate(dropoutRate), _isTraining(true), _inputHeight(0), 
+        _inputWidth(0) {}
+
+    Eigen::MatrixXd forward(const Eigen::MatrixXd& input) {
+        if (!_inputHeight) {
+            _inputHeight = input.rows();
+            _inputWidth = input.cols();
+        }
+        if (!_isTraining || _dropoutRate == 0.0) {
+            // No dropout
+            return input;
+        }
+        
+        // Create a random mask with values between -1 and 1
+        Eigen::MatrixXd dropoutMask = CreateRandomMask();//Eigen::MatrixXd::Random(input.rows(), input.cols());
+        double randomThreshold = 2 * _dropoutRate - 1;
+
+        // Apply dropout
+        dropoutMask = (dropoutMask.array() > randomThreshold).cast<double>();
+        return input.array() * dropoutMask.array() / (1.0 - _dropoutRate);
+    }
+
+    void SetTestMode() {
+        _isTraining = false;
+    }
+
+    void SetTrainingMode() {
+        _isTraining = true;
+    }
+
+private: 
+    Eigen::MatrixXd CreateRandomMask() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+        Eigen::MatrixXd randomMask = Eigen::MatrixXd::NullaryExpr(_inputHeight, 
+            _inputWidth,[&dist, &gen]() { return dist(gen); });
+
+        return randomMask;
+    }
 };

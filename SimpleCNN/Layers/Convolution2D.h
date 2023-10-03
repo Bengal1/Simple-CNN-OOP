@@ -6,6 +6,7 @@
 #include <cassert>
 #include "../Activation.h"
 #include "../Optimizer.h"
+#include "../Regularization.h"
 
 
 class Convolution2D {
@@ -33,6 +34,7 @@ private:
 
 	std::unique_ptr<AdamOptimizer> _optimizer;
 	std::unique_ptr<ReLU> _activation;
+	BatchNormalization _bn;
 
 public:
 	Convolution2D(int inputHeight, int inputWidth, int inputChannels, 
