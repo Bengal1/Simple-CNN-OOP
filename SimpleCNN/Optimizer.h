@@ -71,6 +71,13 @@ public:
 
 		assert(parameters.size() == gradients.size());
 
+		if (!_timeStep) { //in case of BatchNormalization
+			_initializeMoments(parameters.size(), parameters.size());
+		}
+		if (paramIndex) {
+			_timeStep++;
+		}
+
 		double biasCorrection1 = 1.0 - std::pow(_beta1, _timeStep);
 		double biasCorrection2 = 1.0 - std::pow(_beta2, _timeStep);
 		double lr_t = _learningRate * std::sqrt(biasCorrection2) / biasCorrection1;
@@ -86,11 +93,15 @@ public:
 
 private:
 	void _initializeMoments(int rows, int cols) {
-		if (_numParams == -1) { //fully-Connected - weights and bias
+		if (_numParams == -1) { //Fully-Connected - weights and bias
 			_firstMomentEstimates.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_secondMomentEstimates.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_biasFirstMomentEstimates.assign(1, Eigen::VectorXd::Zero(rows));
 			_biasSecondMomentEstimates.assign(1, Eigen::VectorXd::Zero(rows));
+		}
+		else if (_numParams == -2) { //BatchNormalization - 2 vectors
+			_biasFirstMomentEstimates.assign(2, Eigen::VectorXd::Zero(rows));
+			_biasSecondMomentEstimates.assign(2, Eigen::VectorXd::Zero(rows));
 		}
 		else {
 			_firstMomentEstimates.resize(_numParams);
