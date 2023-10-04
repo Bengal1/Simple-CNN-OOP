@@ -28,11 +28,11 @@ private:
 	Eigen::MatrixXd _weightsGradient;
 	Eigen::VectorXd _biasGradient;
 
-	std::vector<Eigen::VectorXd> _inputBatch;
+	std::vector<Eigen::VectorXd> _inputBatch; //faltten
 	std::vector<Eigen::VectorXd> _outputBatch;
 
-	std::vector<Eigen::MatrixXd> _weightsGradBatch;
-	std::vector<Eigen::VectorXd> _biasGradBatch;
+	//std::vector<Eigen::MatrixXd> _weightsGradBatch;
+	//std::vector<Eigen::VectorXd> _biasGradBatch;
 
 	std::unique_ptr<Activation> _activation;
 	std::unique_ptr<AdamOptimizer> _optimizer;
@@ -79,8 +79,8 @@ public:
 			_input = input;
 		}
 		
-		Eigen::VectorXd preActivation = _weights * input + _bias;
-		_output = _activation->Activate(preActivation);
+		Eigen::VectorXd preActivationOut = _weights * input + _bias;
+		_output = _activation->Activate(preActivationOut);
 
 		return _output;
 	}
@@ -95,8 +95,8 @@ public:
 		assert(_inputSize == _inputChannels * _inputHeight * _inputWidth);
 
 		_input = _flattenData(input);
-		Eigen::VectorXd preActivation = _weights * _input + _bias;
-		_output = _activation->Activate(preActivation);
+		Eigen::VectorXd preActivationOut = _weights * _input + _bias;
+		_output = _activation->Activate(preActivationOut);
 
 		return _output;
 	}
@@ -210,6 +210,16 @@ public:
 		// Reset gradients
 		_weightsGradient.setZero();
 		_biasGradient.setZero();
+	}
+
+	void SetTestMode() {
+		_weightsGradient.resize(0,0);
+		_biasGradient.resize(0);
+	}
+
+	void SetTrainingMode() {
+		_weightsGradient.setConstant(_outputSize, _inputSize, 0.0);
+		_biasGradient.setConstant(_outputSize, 0.0);
 	}
 
 private:

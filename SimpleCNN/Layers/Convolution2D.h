@@ -262,8 +262,9 @@ public:
 	}
 
 	void SetTestMode() {
+		_filtersGradient.clear();
+		_filtersGradBatch.clear();
 		_bn.SetTestMode();
-
 	}
 
 	void SetTrainingMode() {
