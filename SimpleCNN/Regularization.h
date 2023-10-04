@@ -37,6 +37,7 @@ public:
 
     std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& 
         input) {
+
         if (!_initialized) {
             _InitializeParameters(input);
         }
@@ -124,6 +125,8 @@ public:
 
     void SetTrainingMode() {
         _isTraining = true;
+        _dGamma.setConstant(_numChannels, 0.0);
+        _dBeta.setConstant(_numChannels, 0.0);
     }
 
 private:

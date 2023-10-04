@@ -219,23 +219,7 @@ public:
 				_outputHeight, _outputWidth)));
 
 		for (int b = 0; b < batchSize; b++) {
-			inputGradBatch[b] = backward(lossGradientBatch[b]);
-			/*for (int c = 0; c < _inputChannels; c++) {
-				for (int f = 0; f < _numFilters; f++) {
-					// Calculate the gradient w.r.t the parameters
-					if (_inputChannels == 1) {
-						_filtersGradient[f] += _Convolve2D(_input3D[b],
-							lossGradientBatch[b][f]);
-					}
-					else if (_inputChannels > 1) {
-						_filtersGradient[f] += _Convolve2D(_input3DBatch[b][c], 
-							lossGradientBatch[b][f]);
-					}
-					// Calculate the gradient w.r.t the input
-					_calculateInputGradient(lossGradientBatch[b][f], _filters[f],
-						_preActivationOutput[b][f], inputGradBatch[b][c]);
-				}
-			}*/
+			inputGradBatch[b] = backward(lossGradientBatch[b], b);
 		}
 
 		return inputGradBatch;
@@ -245,6 +229,7 @@ public:
 	void updateParameters() {
 		for (int f = 0; f < _numFilters; f++) {
 			_optimizer->updateStep(_filters[f], _filtersGradient[f], f);
+			_bn.updateParameters();
 			// Reset gradients
 			_filtersGradient[f].setZero();
 		}
@@ -259,6 +244,7 @@ public:
 				_filtersGradBatch[b][f].setZero();
 			}
 		}
+		_bn.updateParameters();
 	}
 
 	void SetTestMode() {
