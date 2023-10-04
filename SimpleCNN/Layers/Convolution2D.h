@@ -88,10 +88,8 @@ public:
 
 	std::vector<Eigen::MatrixXd> forward(Eigen::MatrixXd& input, 
 		const int batchNum = 0) {
-		std::vector<Eigen::MatrixXd> output(_numFilters,
+		std::vector<Eigen::MatrixXd> layerOutput(_numFilters,
 			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
-		Eigen::MatrixXd preActivationOut = Eigen::MatrixXd::Zero
-		(_outputHeight, _outputWidth);
 		
 		if (!_padding) {
 			_input = input;
@@ -107,22 +105,22 @@ public:
 		
 
 		for (int f = 0; f < _numFilters; f++) {
-			for (int c = 0; c < _inputChannels; c++) {
-				preActivationOut += _Convolve2D(input, _filters[f]);
-			}
-			_preActivationOutput[batchNum][f] = preActivationOut;
-			output[f] = _activation->Activate(preActivationOut);
-			preActivationOut.setZero();
+			_preActivationOutput[batchNum][f] += _Convolve2D(input, _filters[f]);
 		}
+		
+		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn.forward(
+			_preActivationOutput[batchNum]);
+		layerOutput = _activation->Activate(nornalizedOutput);
+		
+			
 
-		return output;
+		return layerOutput;
 	}
 	
-	std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& multiInput, const int batchNum = 0) {  //Overload for multi-channel input
-		std::vector<Eigen::MatrixXd> output(_numFilters,
+	std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& multiInput, 
+		const int batchNum = 0) {  //Overload for multi-channel input
+		std::vector<Eigen::MatrixXd> layerOutput(_numFilters,
 			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
-		Eigen::MatrixXd preActivationOut = Eigen::MatrixXd::Zero(_outputHeight, 
-			_outputWidth);
 		
 		if (!_padding) {
 			_input3D = multiInput;
@@ -138,17 +136,20 @@ public:
 
 		for (int f = 0; f < _numFilters; f++) {
 			for (int c = 0; c < _inputChannels; c++) {
-				preActivationOut += _Convolve2D(multiInput[c], _filters[f]);
+				_preActivationOutput[batchNum][f] += _Convolve2D(multiInput[c], _filters[f]);
 			}
-			_preActivationOutput[batchNum][f] = preActivationOut;
-			output[f] = _activation->Activate(preActivationOut);
-			preActivationOut.setZero();
 		}
+		
+		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn.forward(
+			_preActivationOutput[batchNum]);
+		layerOutput = _activation->Activate(nornalizedOutput);
+		
 
-		return output;
+		return layerOutput;
 	}
 
-	std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(std::vector<Eigen::MatrixXd>& inputBatch) {
+	std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(std::vector<Eigen::MatrixXd>& 
+		inputBatch) {
 		int batchSize = inputBatch.size();
 		std::vector<std::vector<Eigen::MatrixXd>> outputBatch(batchSize,
 			std::vector<Eigen::MatrixXd>(_numFilters, Eigen::MatrixXd::Zero(
@@ -179,27 +180,30 @@ public:
 		return outputBatch;
 	}
 
-	std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd>& lossGradient) {
+	std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd>& lossGradient, 
+		const int batchNum = 0) {
 		std::vector<Eigen::MatrixXd> inputGradient(_inputChannels,
 			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
 		assert(lossGradient.size() == _numFilters);
 
-		
+		std::vector<Eigen::MatrixXd> dLoss_dPreActivation = _activation->computeGradient(
+			lossGradient, _preActivationOutput[0]);
+		std::vector<Eigen::MatrixXd> dLoss_dBN = _bn.backward(dLoss_dPreActivation);
+
 		for (int c = 0; c < _inputChannels; c++) {
 			for (int f = 0; f < _numFilters; f++) {
-				Eigen::MatrixXd dLoss_dPreActivation = _activation->computeGradient(
-					lossGradient[f], _preActivationOutput[0][f]);
+				
 				// Calculate the gradient w.r.t the parameters
 				if (_inputChannels == 1) {
-					_filtersGradient[f] = _Convolve2D(_input, dLoss_dPreActivation);
+					_filtersGradient[f] += _Convolve2D(_input, dLoss_dBN[f]);
 				}
 				else if (_inputChannels > 1) {
 					_filtersGradient[f] += _Convolve2D(_input3D[c], 
-						dLoss_dPreActivation);
+						dLoss_dBN[f]);
 				}
 				// Calculate the gradient w.r.t the input
-				_calculateInputGradient(lossGradient[f], _filters[f],
+				_calculateInputGradient(dLoss_dPreActivation[f], _filters[f],
 					_preActivationOutput[0][f], inputGradient[c]);
 			}
 		}
@@ -207,14 +211,16 @@ public:
 		return inputGradient;
 	}
 
-	std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(std::vector<std::vector<Eigen::MatrixXd>>& lossGradientBatch) {
+	std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(
+		std::vector<std::vector<Eigen::MatrixXd>>& lossGradientBatch) {
 		int batchSize = lossGradientBatch.size();
 		std::vector<std::vector<Eigen::MatrixXd>> inputGradBatch(batchSize, 
 			std::vector<Eigen::MatrixXd>(_inputChannels, Eigen::MatrixXd::Zero(
 				_outputHeight, _outputWidth)));
 
 		for (int b = 0; b < batchSize; b++) {
-			for (int c = 0; c < _inputChannels; c++) {
+			inputGradBatch[b] = backward(lossGradientBatch[b]);
+			/*for (int c = 0; c < _inputChannels; c++) {
 				for (int f = 0; f < _numFilters; f++) {
 					// Calculate the gradient w.r.t the parameters
 					if (_inputChannels == 1) {
@@ -229,7 +235,7 @@ public:
 					_calculateInputGradient(lossGradientBatch[b][f], _filters[f],
 						_preActivationOutput[b][f], inputGradBatch[b][c]);
 				}
-			}
+			}*/
 		}
 
 		return inputGradBatch;
@@ -253,6 +259,15 @@ public:
 				_filtersGradBatch[b][f].setZero();
 			}
 		}
+	}
+
+	void SetTestMode() {
+		_bn.SetTestMode();
+
+	}
+
+	void SetTrainingMode() {
+		_bn.SetTrainingMode();
 	}
 
 private:
