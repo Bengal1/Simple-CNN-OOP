@@ -103,7 +103,6 @@ public:
 			exit(1);
 		}
 		
-
 		for (int f = 0; f < _numFilters; f++) {
 			_preActivationOutput[batchNum][f] += _Convolve2D(input, _filters[f]);
 		}
@@ -111,8 +110,6 @@ public:
 		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn.forward(
 			_preActivationOutput[batchNum]);
 		layerOutput = _activation->Activate(nornalizedOutput);
-		
-			
 
 		return layerOutput;
 	}
@@ -136,14 +133,14 @@ public:
 
 		for (int f = 0; f < _numFilters; f++) {
 			for (int c = 0; c < _inputChannels; c++) {
-				_preActivationOutput[batchNum][f] += _Convolve2D(multiInput[c], _filters[f]);
+				_preActivationOutput[batchNum][f] += _Convolve2D(multiInput[c], 
+					_filters[f]);
 			}
 		}
 		
 		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn.forward(
 			_preActivationOutput[batchNum]);
 		layerOutput = _activation->Activate(nornalizedOutput);
-		
 
 		return layerOutput;
 	}
@@ -254,6 +251,14 @@ public:
 	}
 
 	void SetTrainingMode() {
+		if (_batchSize == 1) {
+			_filtersGradient.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize,
+				_kernelSize));
+		}
+		else if (_batchSize > 1) {
+			_filtersGradBatch.assign(_batchSize, std::vector<Eigen::MatrixXd>(
+				_numFilters, Eigen::MatrixXd::Zero(_kernelSize, _kernelSize)));
+		}
 		_bn.SetTrainingMode();
 	}
 

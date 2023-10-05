@@ -17,6 +17,10 @@ private:
     FullyConnected _fc2;
     MaxPooling _pool1;
     MaxPooling _pool2;
+    //Regularization
+    Dropout _dropout1;
+    Dropout _dropout2;
+
 
 public:
     CrossEntropy CEloss;
@@ -29,14 +33,19 @@ public:
         _pool2(8, 8, 64, 2),
         _fc1(4 * 4 * 64, 512, std::make_unique<ReLU>()),
         _fc2(512, 10, std::make_unique<Softmax>())
+        , _dropout1(0.45), _dropout2(0.35)
     {}
 
     Eigen::VectorXd ForwardPass(Eigen::MatrixXd& input) {
         /*Forward propagation*/
         std::vector<Eigen::MatrixXd> outputConv1 = _conv1.forward(input);
         std::vector<Eigen::MatrixXd> outputPool1 = _pool1.forward(outputConv1);
+        outputPool1 = _dropout1.forward(outputPool1);
+        
         std::vector<Eigen::MatrixXd> outputConv2 = _conv2.forward(outputPool1);
         std::vector<Eigen::MatrixXd> outputPool2 = _pool2.forward(outputConv2);
+        outputPool2 = _dropout2.forward(outputPool2);
+        
         Eigen::VectorXd outputFc1 = _fc1.forward(outputPool2);
         Eigen::VectorXd outputFc2 = _fc2.forward(outputFc1);
 

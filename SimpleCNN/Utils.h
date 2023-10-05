@@ -7,6 +7,7 @@
 
 double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 	const std::vector<Eigen::VectorXd>& oneHotTargets) {
+	
 	if (modelOutput.size() != oneHotTargets.size()) {
 		std::cerr << "Error: Input vectors have different sizes." << std::endl;
 		return 0.0;

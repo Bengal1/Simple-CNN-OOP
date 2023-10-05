@@ -117,7 +117,8 @@ public:
 		return _outputBatch;
 	}
 
-	std::vector<Eigen::VectorXd> forwardBatch(std::vector<std::vector<Eigen::MatrixXd>>& inputBatch) { //3D input batch to vector batch (from convolutional)
+	std::vector<Eigen::VectorXd> forwardBatch(std::vector<std::vector<
+		Eigen::MatrixXd>>& inputBatch) { //3D input batch to vector batch (from convolutional)
 
 		if (!_inputChannels) {
 			_inputChannels = inputBatch[0].size(), 
@@ -164,7 +165,8 @@ public:
 		return inputGradient;
 	}
 
-	std::vector<Eigen::VectorXd> backwardBatch(std::vector<Eigen::VectorXd>& lossGradientBatch) { //Vectors batch to vector batch (from fully-connected)
+	std::vector<Eigen::VectorXd> backwardBatch(std::vector<Eigen::VectorXd>& 
+		lossGradientBatch) { //Vectors batch to vector batch (from fully-connected)
 		std::vector<Eigen::VectorXd> inputGradBatch(_batchSize, 
 			Eigen::VectorXd::Zero(_inputSize));
 
@@ -182,7 +184,8 @@ public:
 		return inputGradBatch;
 	}
 
-	std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(std::vector<Eigen::VectorXd>& lossGradientBatch, bool input3D) { //Vector batch to 3D output batch
+	std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(
+		std::vector<Eigen::VectorXd>& lossGradientBatch, bool input3D) { //Vector batch to 3D output batch
 		std::vector<std::vector<Eigen::MatrixXd>> inputGradBatch(_batchSize,
 			std::vector<Eigen::MatrixXd>(_inputChannels, Eigen::MatrixXd::Zero(
 				_inputHeight, _inputWidth)));

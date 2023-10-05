@@ -90,7 +90,8 @@ public:
             double invStd = 1.0 / (sqrt(_runningVariance[c]) + _epsilon);
 
             // Gradient w.r.t. learnable gamma and beta
-            _dGamma(c) = (dNormalized.array() * (_input[c].array() - _runningMean[c])).sum();
+            _dGamma(c) = (dNormalized.array() * (_input[c].array() - 
+                _runningMean[c])).sum();
             _dBeta(c) = dNormalized.sum();
 
             // Gradient w.r.t. input
@@ -151,13 +152,14 @@ class Dropout {
 private:
     int _inputHeight;
     int _inputWidth;
+    int _numChannels;
     double _dropoutRate;
     bool _isTraining;
 
 public:
     Dropout(double dropoutRate = 0.5)
         : _dropoutRate(dropoutRate), _isTraining(true), _inputHeight(0), 
-        _inputWidth(0) {}
+        _inputWidth(0), _numChannels(0){}
 
     Eigen::MatrixXd forward(const Eigen::MatrixXd& input) {
         if (!_inputHeight) {
@@ -176,6 +178,31 @@ public:
         // Apply dropout
         dropoutMask = (dropoutMask.array() > randomThreshold).cast<double>();
         return input.array() * dropoutMask.array() / (1.0 - _dropoutRate);
+    }
+
+    std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) {
+        if (!_numChannels) {
+            _numChannels = input.size();
+            _inputHeight = input[0].rows();
+            _inputWidth = input[0].cols();
+        }
+        if (!_isTraining || _dropoutRate == 0.0) {
+            // No dropout
+            return input;
+        }
+        std::vector<Eigen::MatrixXd> dropedOutInput(_numChannels, 
+            Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+        for (int c = 0; c < _numChannels; c++) {
+            // Create a random mask with values between -1 and 1
+            Eigen::MatrixXd dropoutMask = CreateRandomMask();
+            double randomThreshold = 2 * _dropoutRate - 1;
+
+            // Apply dropout
+            dropoutMask = (dropoutMask.array() > randomThreshold).cast<double>();
+            dropedOutInput[c] = input[c].array() * dropoutMask.array() / (1.0 - 
+                _dropoutRate);
+        }
+        return dropedOutInput;
     }
 
     void SetTestMode() {

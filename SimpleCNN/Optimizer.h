@@ -15,7 +15,7 @@ class SGD : public Optimizer {
 private:
 	double _learningRate;
 public:
-	SGD(double learningRate)
+	SGD(double learningRate = 0.01)
 		:_learningRate(learningRate) {}
 
 
