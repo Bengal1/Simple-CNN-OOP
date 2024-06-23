@@ -53,3 +53,9 @@ In order to write the *Simple CNN* network  in C++ we constructed:
 
 [Adam: A Method for Stochastic Optimization](https://arxiv.org/abs/1412.6980)
 
+
+### TODO:
+* initialization - He, Xavier, ...
+* model in depth
+* activation functions in depth
+* loss function in depth
