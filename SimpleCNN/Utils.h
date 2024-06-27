@@ -22,6 +22,11 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 		oneHotTargets[i].maxCoeff(&trueClass);
 		if (predictedClass == trueClass)
 			correctPredictions++;
+		/*else { //TESTING
+			std::cout << modelOutput[i] << std::endl;
+			std::cout << oneHotTargets[i] <<  std::endl;
+			std::cout << "trueClass : " << trueClass << " ; predictedClass : " << predictedClass << std::endl << std::endl;
+		} //TESTING*/
 	}
 
 	return correctPredictions / static_cast<double>(dataSize) * 100.0;

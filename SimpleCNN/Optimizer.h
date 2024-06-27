@@ -3,10 +3,13 @@
 #include <vector>
 #include <Eigen/Dense>
 
+enum {FullyConnectedMode = -1, 
+	BatchNormalizationMode = -2};
 
 class Optimizer {
 public:
-	virtual void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, const int paramIndex = 0) = 0;
+	virtual void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd&
+		gradients, const int paramIndex = 0) = 0;
 	virtual ~Optimizer() {}
 };
 
@@ -15,12 +18,36 @@ class SGD : public Optimizer {
 private:
 	double _learningRate;
 public:
-	SGD(double learningRate = 0.01)
+	SGD(double learningRate = 0.001)
 		:_learningRate(learningRate) {}
 
+	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, 
+		const int paramIndex = 0) override 
+	{ // Matrices version
 
-	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, const int paramIndex = 0) override {
+		assert(parameters.size() == gradients.size());
+
 		parameters -= _learningRate * gradients;
+	}
+
+	void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients)
+	{ // Vectors vertion
+
+		assert(parameters.size() == gradients.size());
+
+		parameters -= _learningRate * gradients;
+	}
+
+	void updateStep(std::vector<Eigen::MatrixXd>& parameters, const std::vector
+		<Eigen::MatrixXd>& gradients)
+	{ // 3D Matrices version
+
+		assert(parameters.size() == gradients.size());
+		int channels = parameters.size();
+
+		for (int c = 0; c < channels; c++) {
+			updateStep(parameters[c], gradients[c]);
+		}
 	}
 };
 
@@ -34,17 +61,20 @@ private:
 	const int _numParams;
 	size_t _timeStep;
 
-	std::vector<Eigen::MatrixXd> _firstMomentEstimates;
-	std::vector<Eigen::MatrixXd> _secondMomentEstimates;
-	std::vector<Eigen::VectorXd> _biasFirstMomentEstimates;
-	std::vector<Eigen::VectorXd> _biasSecondMomentEstimates;
+	std::vector<Eigen::MatrixXd> _firstMomentEstimate;
+	std::vector<Eigen::MatrixXd> _secondMomentEstimate;
+	std::vector<Eigen::VectorXd> _firstMomentEstimateVector;
+	std::vector<Eigen::VectorXd> _secondMomentEstimateVector;
 
 public:
-	AdamOptimizer(int numParams, double learningRate = 0.01, double beta1 = 0.9, double beta2 = 0.999, double epsilon = 1e-10)
-		: _numParams(numParams), _learningRate(learningRate), _beta1(beta1), _beta2(beta2), _epsilon(epsilon), _timeStep(0) {}
+	AdamOptimizer(int numParams, double learningRate = 0.001, double beta1 = 0.9, 
+		double beta2 = 0.999, double epsilon = 1.0e-10)
+		: _numParams(numParams), _learningRate(learningRate), _beta1(beta1), 
+		_beta2(beta2), _epsilon(epsilon), _timeStep(0) {}
 
-	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, const int paramIndex = 0) override {
-
+	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, 
+		const int paramIndex = 0) override 
+	{
 		assert(parameters.size() == gradients.size());
 
 		if (!_timeStep) {
@@ -57,24 +87,31 @@ public:
 		double biasCorrection1 = 1.0 - std::pow(_beta1, _timeStep);
 		double biasCorrection2 = 1.0 - std::pow(_beta2, _timeStep);
 		double lr_t = _learningRate * std::sqrt(biasCorrection2) / biasCorrection1;
+		
+		// calculate moments - m_t, v_t
+		_firstMomentEstimate[paramIndex] = _beta1 * _firstMomentEstimate[paramIndex].
+			array() + (1 - _beta1) * gradients.array();
+		_secondMomentEstimate[paramIndex] = _beta2 * _secondMomentEstimate[paramIndex].
+			array() + (1 - _beta2) * gradients.array().square();
 
-		_firstMomentEstimates[paramIndex] = _beta1 * _firstMomentEstimates[paramIndex].array() + (1 - _beta1) * gradients.array();
-		_secondMomentEstimates[paramIndex] = _beta2 * _secondMomentEstimates[paramIndex].array() + (1 - _beta2) * gradients.array().square();
+		Eigen::MatrixXd firstMomentEstimateHat = _firstMomentEstimate[paramIndex] 
+			/ biasCorrection1;
+		Eigen::MatrixXd secondMomentEstimateHat = _secondMomentEstimate[paramIndex] 
+			/ biasCorrection2;
 
-		Eigen::MatrixXd firstMomentEstimateHat = _firstMomentEstimates[paramIndex] / biasCorrection1;
-		Eigen::MatrixXd secondMomentEstimateHat = _secondMomentEstimates[paramIndex] / biasCorrection2;
-
-		parameters -= (lr_t * firstMomentEstimateHat.array() / (secondMomentEstimateHat.array().sqrt() + _epsilon)).matrix();
+		parameters -= (lr_t * firstMomentEstimateHat.array() / 
+			(secondMomentEstimateHat.array().sqrt() + _epsilon)).matrix();
 	}
 
-	void updateStep(Eigen::VectorXd& parameters, Eigen::VectorXd& gradients, const int paramIndex = 0) { //bias version - overlaod
-
+	void updateStep(Eigen::VectorXd& parameters, Eigen::VectorXd& gradients, 
+		const int paramIndex = 0) 
+	{ //Vector version - overlaod
 		assert(parameters.size() == gradients.size());
 
-		if (!_timeStep) { //in case of BatchNormalization
+		if (!_timeStep) { 
 			_initializeMoments(parameters.size(), parameters.size());
 		}
-		if (paramIndex) {
+		if (!paramIndex && _numParams != FullyConnectedMode) {
 			_timeStep++;
 		}
 
@@ -82,34 +119,39 @@ public:
 		double biasCorrection2 = 1.0 - std::pow(_beta2, _timeStep);
 		double lr_t = _learningRate * std::sqrt(biasCorrection2) / biasCorrection1;
 
-		_biasFirstMomentEstimates[paramIndex] = _beta1 * _biasFirstMomentEstimates[paramIndex].array() + (1 - _beta1) * gradients.array();
-		_biasSecondMomentEstimates[paramIndex] = _beta2 * _biasSecondMomentEstimates[paramIndex].array() + (1 - _beta2) * gradients.array().square();
+		_firstMomentEstimateVector[paramIndex] = _beta1 * _firstMomentEstimateVector[paramIndex].
+			array() + (1 - _beta1) * gradients.array();
+		_secondMomentEstimateVector[paramIndex] = _beta2 * _secondMomentEstimateVector[paramIndex].
+			array() + (1 - _beta2) * gradients.array().square();
 
-		Eigen::VectorXd firstMomentEstimateHat = _biasFirstMomentEstimates[paramIndex] / biasCorrection1;
-		Eigen::VectorXd secondMomentEstimateHat = _biasSecondMomentEstimates[paramIndex] / biasCorrection2;
+		Eigen::VectorXd firstMomentEstimateHat = _firstMomentEstimateVector[paramIndex] 
+			/ biasCorrection1;
+		Eigen::VectorXd secondMomentEstimateHat = _secondMomentEstimateVector[paramIndex] 
+			/ biasCorrection2;
 
-		parameters -= (lr_t * firstMomentEstimateHat.array() / (secondMomentEstimateHat.array().sqrt() + _epsilon)).matrix();
+		parameters -= (lr_t * firstMomentEstimateHat.array() / 
+			(secondMomentEstimateHat.array().sqrt() + _epsilon)).matrix();
 	}
 
 private:
 	void _initializeMoments(int rows, int cols) {
-		if (_numParams == -1) { //Fully-Connected - weights and bias
-			_firstMomentEstimates.assign(1, Eigen::MatrixXd::Zero(rows, cols));
-			_secondMomentEstimates.assign(1, Eigen::MatrixXd::Zero(rows, cols));
-			_biasFirstMomentEstimates.assign(1, Eigen::VectorXd::Zero(rows));
-			_biasSecondMomentEstimates.assign(1, Eigen::VectorXd::Zero(rows));
+		if (_numParams == FullyConnectedMode) { //Fully-Connected - weights and bias
+			_firstMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));
+			_secondMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));
+			_firstMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
+			_secondMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
 		}
-		else if (_numParams == -2) { //BatchNormalization - 2 vectors
-			_biasFirstMomentEstimates.assign(2, Eigen::VectorXd::Zero(rows));
-			_biasSecondMomentEstimates.assign(2, Eigen::VectorXd::Zero(rows));
+		else if (_numParams == BatchNormalizationMode) { //BatchNormalization - 2 vectors
+			_firstMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
+			_secondMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
 		}
-		else {
-			_firstMomentEstimates.resize(_numParams);
-			_secondMomentEstimates.resize(_numParams);
+		else { //Convolution2D - filters
+			_firstMomentEstimate.resize(_numParams);
+			_secondMomentEstimate.resize(_numParams);
 
 			for (int i = 0; i < _numParams; ++i) {
-				_firstMomentEstimates[i] = Eigen::MatrixXd::Zero(rows, cols);
-				_secondMomentEstimates[i] = Eigen::MatrixXd::Zero(rows, cols);
+				_firstMomentEstimate[i] = Eigen::MatrixXd::Zero(rows, cols);
+				_secondMomentEstimate[i] = Eigen::MatrixXd::Zero(rows, cols);
 			}
 		}
 	}

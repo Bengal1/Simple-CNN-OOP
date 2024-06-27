@@ -48,7 +48,8 @@ public:
         }
     }
 
-    std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) {
+    std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) 
+    {
         Eigen::Index row, col;
 
         for (int c = 0; c < _inputChannels; c++) {
@@ -65,7 +66,8 @@ public:
     }
 
     std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(const std::vector<
-        std::vector<Eigen::MatrixXd>>& inputBatch) {
+        std::vector<Eigen::MatrixXd>>& inputBatch) 
+    {
         Eigen::Index row, col;
 
         int batchSize = inputBatch.size();
@@ -85,7 +87,8 @@ public:
     }
 
     std::vector<Eigen::MatrixXd> backward(const std::vector<
-        Eigen::MatrixXd>& lossGradient) {
+        Eigen::MatrixXd>& lossGradient) 
+    {
         std::vector<Eigen::MatrixXd> inputGradient(_inputChannels, 
             Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
@@ -107,7 +110,8 @@ public:
     }
 
     std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(const std::vector<
-        std::vector<Eigen::MatrixXd>>& lossGradientBatch) {
+        std::vector<Eigen::MatrixXd>>& lossGradientBatch) 
+    {
         std::vector<std::vector<Eigen::MatrixXd>> inputGradientBatch(_batchSize, 
             std::vector<Eigen::MatrixXd>(_inputChannels,
             Eigen::MatrixXd::Zero(_inputHeight, _inputWidth)));
@@ -135,7 +139,8 @@ public:
     }
 
 private:
-    void _getDataLocation(int& dataChannel, int& dataRow, int& dataColumn) {
+    void _getDataLocation(int& dataChannel, int& dataRow, int& dataColumn) 
+    {
         std::tuple<int, int, int> currentLocation = _inputGradientMap.front();
         dataChannel = std::get<0>(currentLocation);
         dataRow = std::get<1>(currentLocation);
@@ -144,7 +149,8 @@ private:
     }
 
     void _getDataLocation(int& dataBatch, int& dataChannel, int& dataRow, 
-        int& dataColumn) {
+        int& dataColumn) 
+    {
         std::tuple<int, int, int, int> currentLocation = 
             _inputGradientMapBatch.front();
         dataBatch = std::get<0>(currentLocation);

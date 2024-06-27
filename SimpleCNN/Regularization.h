@@ -31,9 +31,9 @@ private:
 
 public:
     BatchNormalization()
-        : _epsilon(1e-5), _initialized(false), _isTraining(true), 
+        : _epsilon(1e-8), _initialized(false), _isTraining(true), 
         _numChannels(0),_channelHeight(0), _channelWidth(0),
-        _optimizer(std::make_unique<AdamOptimizer>(-2)) {}
+        _optimizer(std::make_unique<AdamOptimizer>(-2)){}
 
     std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& 
         input) {
@@ -45,13 +45,13 @@ public:
             Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
 
         _input = input;
-
-        for (size_t c = 0; c < _numChannels; c++) {
+        
+        for (int c = 0; c < _numChannels; c++) {
             // Calculate mean and variance for each channel
             double channelMean = input[c].sum() / (_channelHeight * 
                 _channelWidth);
             double channelVariance = (input[c].array() - channelMean).
-                square().sum() / (_channelHeight * _channelWidth - 1);
+                square().sum() / (_channelHeight * _channelWidth);
 
             if (_isTraining) {
                 // Update running mean and variance - exponential moving average
@@ -59,16 +59,17 @@ public:
                 _runningVariance[c] = 0.9 * _runningVariance[c] + 0.1 * 
                     channelVariance;
             }
-
-            // Normalize the channel using running mean and variance during inference
+            
+            // Normalizing the channel 
             double meanToUse = _isTraining ? channelMean : _runningMean[c];
             double varianceToUse = _isTraining ? channelVariance : 
                 _runningVariance[c];
 
             // Scale and shift using gamma and beta
-            outputBN[c] = (_gamma[c] * (input[c].array() - meanToUse)) / 
-                (std::sqrt(varianceToUse) + _epsilon) + _beta[c];  
+            outputBN[c] = _gamma[c] * ((input[c].array() - meanToUse) / 
+                (std::sqrt(varianceToUse) + _epsilon)) + _beta[c];
         }
+    
         return outputBN;
     }
 
@@ -78,7 +79,7 @@ public:
         std::vector<Eigen::MatrixXd> inputGradient(_numChannels, 
             Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
 
-        for (int c = 0; c < _numChannels; ++c) {
+        for (int c = 0; c < _numChannels; c++) {
             // Gradient w.r.t. normalized input
             Eigen::MatrixXd dNormalized = _gamma(c) * dInput[c].array();
 
@@ -93,7 +94,7 @@ public:
             _dGamma(c) = (dNormalized.array() * (_input[c].array() - 
                 _runningMean[c])).sum();
             _dBeta(c) = dNormalized.sum();
-
+            
             // Gradient w.r.t. input
             Eigen::MatrixXd dInputNormalized = dNormalized * invStd;
             double dInputMean = dInputNormalized.sum();
@@ -148,6 +149,75 @@ private:
 };
 
 
+class GradientNormClipping {
+private:
+    int _numChannels;
+    double _maxValue;
+    bool _isTraining;
+
+public:
+    GradientNormClipping(double maxValue = 1.5) 
+        : _maxValue(maxValue),  _numChannels(0),
+        _isTraining(true){}
+
+
+    Eigen::MatrixXd ClipGradient(const Eigen::MatrixXd& gradient)
+    { // Matrix gradient
+
+        if (!_isTraining || _maxValue == 0.0) {
+            // No clipping
+            return gradient;
+        }
+
+        double gradientNorm = gradient.norm();
+        Eigen::MatrixXd clippedGradient = gradient * (_maxValue / gradientNorm);
+
+        return clippedGradient;
+    }
+
+    std::vector<Eigen::MatrixXd> ClipGradient(const std::vector<Eigen::MatrixXd>& gradient) 
+    { // 3D Tensor gradient
+
+        if (!_numChannels) {
+            _numChannels = gradient.size();
+        }
+        if (!_isTraining || _maxValue == 0.0) {
+            // No clipping
+            return gradient;
+        }
+
+        std::vector<Eigen::MatrixXd> clippedGradient(_numChannels);
+        for (int c = 0; c < _numChannels; c++) {
+            double gradientNorm = gradient[c].norm();
+            clippedGradient[c] = gradient[c] * (_maxValue / gradientNorm);
+        }
+
+        return clippedGradient;
+    }
+};
+
+
+class WeightsRegularization {
+private:
+    int _degree;
+    double _lambda; //choose
+    double _learningRate; //choose
+
+public:
+    WeightsRegularization(int degree = 2, double lambda = 0.5, double learningRate = 0.01)
+        : _degree(degree), _lambda(lambda), _learningRate(learningRate){}
+
+    Eigen::MatrixXd Regulize(Eigen::MatrixXd& weights, Eigen::MatrixXd& dW) {
+        Eigen::MatrixXd regulizedWeights;
+
+        Eigen::MatrixXd dW_reg = weights * (_degree * _lambda);
+
+        regulizedWeights = weights - _learningRate * (dW + dW_reg);
+
+        return regulizedWeights;
+    }
+};
+
 class Dropout {
 private:
     int _inputHeight;
@@ -162,6 +232,7 @@ public:
         _inputWidth(0), _numChannels(0){}
 
     Eigen::MatrixXd forward(const Eigen::MatrixXd& input) {
+
         if (!_inputHeight) {
             _inputHeight = input.rows();
             _inputWidth = input.cols();
@@ -181,6 +252,7 @@ public:
     }
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) {
+
         if (!_numChannels) {
             _numChannels = input.size();
             _inputHeight = input[0].rows();
@@ -205,11 +277,13 @@ public:
         return dropedOutInput;
     }
 
-    void SetTestMode() {
+    void SetTestMode() 
+    {
         _isTraining = false;
     }
 
-    void SetTrainingMode() {
+    void SetTrainingMode() 
+    {
         _isTraining = true;
     }
 

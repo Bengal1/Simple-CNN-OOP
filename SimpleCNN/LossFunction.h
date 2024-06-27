@@ -9,7 +9,7 @@ class LossFunction {
 protected:
 	const double _epsilon;
 public:
-	LossFunction() :_epsilon(1e-15) {}
+	LossFunction() :_epsilon(1.0e-10) {}
 	virtual double calculateLoss(const Eigen::VectorXd& predictions,
 		const Eigen::VectorXd& targets) const = 0;
 	virtual Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
@@ -39,10 +39,10 @@ public:
 		const Eigen::VectorXd& targets) const override {
 		assert(predictions.size() == targets.size());
 
-		Eigen::VectorXd gradients = predictions - targets;
-		gradients = (gradients / predictions.size());  
+		Eigen::VectorXd gradientMSE = predictions - targets;
+		gradientMSE = (gradientMSE / predictions.size());
 
-		return gradients;
+		return gradientMSE;
 	}
 };
 
@@ -52,6 +52,7 @@ public:
 
 	double calculateLoss(const Eigen::VectorXd& predictions,
 		const Eigen::VectorXd& targets) const override {
+
 		assert(predictions.size() == targets.size());
 		int classNum = predictions.size();
 
@@ -66,6 +67,7 @@ public:
 
 	double calculateLossBatch(const std::vector<Eigen::VectorXd>& predictionBatch,
 		const std::vector<Eigen::VectorXd>& targetBatch) const {
+
 		assert(predictionBatch.size() == targetBatch.size());
 
 		int batchSize = predictionBatch.size();
@@ -79,6 +81,7 @@ public:
 
 	Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
 		const Eigen::VectorXd& targets) const override {
+
 		assert(predictions.size() == targets.size());
 		
 		int classNum = predictions.size();
@@ -86,15 +89,16 @@ public:
 
 		for (int c = 0; c < classNum; c++) {
 
-			gradientCE(c) = -targets(c) / (predictions(c) + _epsilon);
+			gradientCE(c) = -targets(c) / (predictions(c) +_epsilon);
 		}
-
+		
 		return gradientCE;
 	}
 
 	std::vector<Eigen::VectorXd> calculateGradientBatch(const 
 		std::vector<Eigen::VectorXd>& predictionBatch, const 
 		std::vector<Eigen::VectorXd>& targetBatch) const {
+
 		assert(predictionBatch.size() == targetBatch.size());
 
 		int batchSize = predictionBatch.size();

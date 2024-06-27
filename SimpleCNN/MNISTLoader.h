@@ -70,9 +70,9 @@ private:
             return false;
         }
         if (isTrain)
-            std::cout << "Reading Train Data." << std::endl;
+            std::cout << "Reading Train Data From Source." << std::endl;
         else
-            std::cout << "Reading Test Data." << std::endl;
+            std::cout << "Reading Test Data From Source." << std::endl;
 
         uint32_t magicNumber, numImages, numRows, numCols;
         fImages.read(reinterpret_cast<char*>(&magicNumber), sizeof(magicNumber));
