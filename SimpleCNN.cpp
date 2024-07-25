@@ -180,8 +180,8 @@ int main()
     SimpleCNN model;
 
     /* Load MNIST dataset */
-    MNISTLoader loader("train-images.idx3-ubyte", "train-labels.idx1-ubyte",
-        "t10k-images.idx3-ubyte", "t10k-labels.idx1-ubyte");
+    MNISTLoader loader("MNIST/train-images.idx3-ubyte", "MNIST/train-labels.idx1-ubyte",
+        "MNIST/t10k-images.idx3-ubyte", "MNIST/t10k-labels.idx1-ubyte");
     if (!loader.loadTrainData() or !loader.loadTestData()) {
         std::cerr << "Error: Loading data failed." << std::endl;
         return -1;
