@@ -34,6 +34,7 @@ In order to write the *Simple CNN* network  in C++ we constructed:
 * ***MaxPooling*** - Applies a 2D max pooling over an input signal composed of singular or several data inputs. See [MaxPooling.h](https://github.com/Bengal1/SimpleCNN-OOP/blob/master/SimpleCNN/Layers/MaxPooling.h).
 * ***FullyConnected*** - Applies a linear transformation to the layer's input, *y=xA<sup>T</sup>+b*. In that case the input is 2-dimentions, *(N,H)* with the same notations above. See [FullyConnected.h](https://github.com/Bengal1/SimpleCNN-OOP/blob/master/SimpleCNN/Layers/FullyConnected.h).
 
+TODO:change links to files!!!
 
 
 **Dropout** - During training, randomly zeroes some of the elements of the input tensor with a given probability *p* using samples from a Bernoulli distribution. Each channel will be zeroed out independently on every forward call.
