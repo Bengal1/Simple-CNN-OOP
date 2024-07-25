@@ -62,7 +62,6 @@ public:
         
         std::vector<Eigen::MatrixXd> pool1BackGrad = _pool1.backward(conv2BackGrad);
         _conv1.backward(pool1BackGrad);
-
     }
 };
 
@@ -71,7 +70,7 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 
     if (modelOutput.size() != oneHotTargets.size()) {
         std::cerr << "Error: Input vectors have different sizes." << std::endl;
-        return 0.0;
+        exit(-1);
     }
 
     double correctPredictions = 0;

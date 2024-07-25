@@ -16,9 +16,10 @@ private:
 	const int _inputChannels;
 	const int _numFilters;
 	const int _kernelSize;
+	const int _batchSize;
+
 	const int _stride;
 	const int _padding;
-	const int _batchSize;
 
 	int _outputHeight;
 	int _outputWidth;
@@ -153,6 +154,11 @@ public:
 					_filtersGradient[f] += _Convolve2D(_input3D[c],
 						dLoss_dBN[f]);
 				}
+				else{
+					std::cerr << "Non-positive number of channels is not valid! " 
+					<< _inputChannels << std::endl;
+					exit(-1);
+				} 
 				// Calculate the gradient w.r.t the input
 				_calculateInputGradient(dLoss_dPreActivation[f], _filters[f],
 					_preActivationOutput[batchNum][f], inputGradient[c]);

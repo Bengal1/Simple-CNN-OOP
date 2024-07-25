@@ -70,7 +70,7 @@ public:
 			_input = input;
 		}
 
-		Eigen::VectorXd preActivationOut = _weights * input + _bias;
+		Eigen::VectorXd preActivationOut = _weights * _input + _bias;
 		_output = _activation->Activate(preActivationOut);
 
 		return _output;
@@ -157,7 +157,8 @@ public:
 	}
 
 private:
-	void _initializeWeights() {
+	void _initializeWeights() 
+	{
 		_weights.resize(_outputSize, _inputSize);
 		_bias.resize(_outputSize);
 
@@ -187,8 +188,8 @@ private:
 		_biasGradient.setZero();
 	}
 
-	Eigen::VectorXd _flattenData(const std::vector<Eigen::MatrixXd>& data) const {
-
+	Eigen::VectorXd _flattenData(const std::vector<Eigen::MatrixXd>& data) const 
+	{ //flatten 3D Tensor to a Vector
 		Eigen::VectorXd flattenData(_inputSize);
 
 		int rowIndex = 0;
@@ -204,12 +205,12 @@ private:
 				break; //Error
 			}
 		}
-		return flattenData;
 
+		return flattenData;
 	}
 
-	Eigen::VectorXd _flattenData(const Eigen::MatrixXd& data) const {
-
+	Eigen::VectorXd _flattenData(const Eigen::MatrixXd& data) const 
+	{
 		Eigen::VectorXd flattenData(_inputSize);
 
 		int rowIndex = 0;
@@ -228,7 +229,8 @@ private:
 	}
 
 	std::vector<Eigen::MatrixXd> _unflattenInputGradient(const Eigen::VectorXd&
-		flattenInputGradient) const {
+		flattenInputGradient) const 
+	{
 
 		std::vector<Eigen::MatrixXd> unflattenInputGradient(_inputChannels,
 			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
@@ -237,11 +239,11 @@ private:
 			for (int h = 0; h < _inputHeight; h++) {
 				for (int w = 0; w < _inputWidth; w++) {
 					unflattenInputGradient[c](h, w) =
-						flattenInputGradient[c + h + w];
+						flattenInputGradient[c * _inputSize/_inputChannels + 
+						h * _inputHeight + w];
 				}
 			}
 		}
 		return unflattenInputGradient;
 	}
-
 };

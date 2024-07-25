@@ -82,7 +82,7 @@ private:
         fImages.read(reinterpret_cast<char*>(&numRows), sizeof(numRows));
         fImages.read(reinterpret_cast<char*>(&numCols), sizeof(numCols));
 
-        magicNumber = _byteswap_ulong(magicNumber);  //check: '_byteswap_ulong' 
+        magicNumber = _byteswap_ulong(magicNumber);
         numImages = _byteswap_ulong(numImages);
         numRows = _byteswap_ulong(numRows);
         numCols = _byteswap_ulong(numCols);
@@ -101,7 +101,7 @@ private:
                 for (size_t c = 0; c < numCols; ++c) {
                     uint8_t pixelValue = 0;
                     fImages.read(reinterpret_cast<char*>(&pixelValue), sizeof(pixelValue));
-                    imageMatrix(r, c) = static_cast<float>(pixelValue) / 255.0; // Normalize to [0, 1]
+                    imageMatrix(r, c) = static_cast<float>(pixelValue) / 255.0;
                 }
             }
             images[i] = imageMatrix;
