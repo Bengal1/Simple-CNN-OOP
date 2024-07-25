@@ -70,7 +70,7 @@ public:
 		}
 	}
 
-	std::vector<Eigen::MatrixXd> forward(Eigen::MatrixXd& input,
+	std::vector<Eigen::MatrixXd> forward(const Eigen::MatrixXd& input,
 		const int batchNum = 0)
 	{
 		std::vector<Eigen::MatrixXd> layerOutput(_numFilters,
@@ -98,7 +98,7 @@ public:
 		return layerOutput;
 	}
 
-	std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& multiInput,
+	std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& multiInput,
 		const int batchNum = 0)
 	{ //Overload for multi-channel input
 		std::vector<Eigen::MatrixXd> layerOutput(_numFilters,
@@ -159,8 +159,7 @@ public:
 				_preActivationOutput[batchNum][f].setZero();
 			}
 		}
-
-		updateParameters();
+		_updateParameters();
 
 		return inputGradient;
 	}
@@ -223,7 +222,7 @@ private:
 	}
 
 
-	void updateParameters()
+	void _updateParameters()
 	{
 		for (int f = 0; f < _numFilters; f++) {
 			_optimizer->updateStep(_filters[f], _filtersGradient[f], f);

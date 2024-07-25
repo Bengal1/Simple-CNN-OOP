@@ -109,7 +109,7 @@ public:
 		_weightsGradient = _weightsGradient + dW_reg;
 		_biasGradient = _biasGradient + db_reg;
 		*/
-		updateParameters();
+		_updateParameters();
 
 		// Calculate the gradient w.r.t the input
 		Eigen::VectorXd inputGradient = _weights.transpose() * dLoss_dPreActivation;
@@ -133,7 +133,7 @@ public:
 		_weightsGradient = _weightsGradient + dW_reg;
 		_biasGradient = _biasGradient + db_reg;
 		*/
-		updateParameters();
+		_updateParameters();
 
 		// Calculate the gradient w.r.t the input
 		Eigen::VectorXd flatInputGradient = _weights.transpose() *
@@ -177,7 +177,7 @@ private:
 		_bias.setZero(); //Initialize bias
 	}
 
-	void updateParameters()
+	void _updateParameters()
 	{
 		// Update weights and biases
 		_optimizer->updateStep(_weights, _weightsGradient);

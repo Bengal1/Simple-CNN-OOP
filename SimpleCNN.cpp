@@ -7,6 +7,8 @@
 #include "Regularization.hpp"
 #include <math.h>
 
+const int classes = 10;
+
 class SimpleCNN {
 private:
     //Layers
@@ -34,7 +36,7 @@ public:
         _dropout1(0.35), _dropout2(0.25)
     {}
 
-    Eigen::VectorXd ForwardPass(Eigen::MatrixXd& input) {
+    Eigen::VectorXd ForwardPass(const Eigen::MatrixXd& input) {
         /*Forward propagation*/
         std::vector<Eigen::MatrixXd> outputConv1 = _conv1.forward(input);
         std::vector<Eigen::MatrixXd> outputPool1 = _pool1.forward(outputConv1);
@@ -88,7 +90,6 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 
 void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
 {
-    int classes = 10;
     /* Load MNIST Train dataset */
     const std::vector<Eigen::MatrixXd>& trainImages =
         dataLoader.getTrainImages();
@@ -104,12 +105,11 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
     double totalLoss = 0.0;
     std::vector<double> trainAccuracy(epochs);
     for (int epoch = 0; epoch < epochs; epoch++) {
-        double accuracy = 0.0;
         Eigen::VectorXd outputEpoch(classes);
         std::cout << "\nepoch #" << (epoch + 1) << std::endl;
 
         int imageNum = 0;
-        for (Eigen::MatrixXd image : trainImages) {
+        for (const auto image : trainImages) {
             /*Forward pass*/
             Eigen::VectorXd singleTrainOutput = model.ForwardPass(image);
             trainOutput[imageNum] = singleTrainOutput;
@@ -148,7 +148,6 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
 
 void testSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model)
 {
-    int classes = 10;
     /* Load MNIST Test dataset */
     const std::vector<Eigen::MatrixXd>& testImages = dataLoader.getTestImages();
     const std::vector<Eigen::VectorXd>& oneHotTestLabels =
