@@ -1,4 +1,3 @@
-//#include "Utils.h"
 #include "Layers/Convolution2D.hpp"
 #include "Layers/FullyConnected.hpp"
 #include "Layers/MaxPooling.hpp"
@@ -175,7 +174,7 @@ void testSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model)
 
 int main()
 {
-    int epochs = 5;
+    int epochs = 1;
 
     SimpleCNN model;
 
