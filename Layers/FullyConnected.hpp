@@ -235,9 +235,9 @@ private:
 		std::vector<Eigen::MatrixXd> unflattenInputGradient(_inputChannels,
 			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
-		for (int c = 0; c < _inputChannels; c++) {
-			for (int h = 0; h < _inputHeight; h++) {
-				for (int w = 0; w < _inputWidth; w++) {
+		for (int c = 0; c < _inputChannels; ++c) {
+			for (int h = 0; h < _inputHeight; ++h) {
+				for (int w = 0; w < _inputWidth; ++w) {
 					unflattenInputGradient[c](h, w) =
 						flattenInputGradient[c * _inputSize/_inputChannels + 
 						h * _inputHeight + w];

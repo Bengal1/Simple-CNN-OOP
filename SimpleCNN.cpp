@@ -77,7 +77,7 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
     int dataSize = modelOutput.size();
     Eigen::Index predictedClass, trueClass;
 
-    for (int i = 0; i < dataSize; i++) {
+    for (int i = 0; i < dataSize; ++i) {
         modelOutput[i].maxCoeff(&predictedClass);
         oneHotTargets[i].maxCoeff(&trueClass);
         if (predictedClass == trueClass)
@@ -103,7 +103,7 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
 
     double totalLoss = 0.0;
     std::vector<double> trainAccuracy(epochs);
-    for (int epoch = 0; epoch < epochs; epoch++) {
+    for (int epoch = 0; epoch < epochs; ++epoch) {
         Eigen::VectorXd outputEpoch(classes);
         std::cout << "\nepoch #" << (epoch + 1) << std::endl;
 

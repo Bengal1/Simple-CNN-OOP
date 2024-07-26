@@ -43,7 +43,7 @@ public:
             Eigen::MatrixXd::Zero(preActivationOutput[0].rows(),
                 preActivationOutput[0].cols()));
 
-        for (int c = 0; c < numChannels; c++) {
+        for (int c = 0; c < numChannels; ++c) {
             activationResult[c] = preActivationOutput[c].cwiseMax(0.0);
         }
 
@@ -80,7 +80,7 @@ public:
         std::vector<Eigen::MatrixXd> reluGradient(numChannels,
             Eigen::MatrixXd::Zero(layerOutput[0].rows(), layerOutput[0].cols()));
 
-        for (int c = 0; c < numChannels; c++) {
+        for (int c = 0; c < numChannels; ++c) {
             reluGradient[c] = ((layerOutput[c].array() > 0.0).select(lossGradient[c],
                 0.0)).matrix();
         }
@@ -126,7 +126,7 @@ public:
             Eigen::VectorXd::Zero(preActivationOutput[0].size()));
 
 
-        for (int c = 0; c < numChannels; c++) {
+        for (int c = 0; c < numChannels; ++c) {
             Eigen::VectorXd expPreActivationOutput =
                 preActivationOutput[c].array().exp();
             activationResult[c] = expPreActivationOutput.array() /
@@ -168,7 +168,7 @@ public:
         std::vector<Eigen::VectorXd> softmaxGradient(numChannels,
             Eigen::VectorXd::Zero(numClasses));
 
-        for (int c = 0; c < numChannels; c++) {
+        for (int c = 0; c < numChannels; ++c) {
             softmaxGradient[c] = (layerOutput[c].array() * (1.0 - layerOutput[c].
                 array())).matrix().cwiseProduct(lossGradient[c]);
         }

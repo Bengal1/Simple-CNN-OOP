@@ -27,7 +27,7 @@ public:
 
 		int classNum = predictions.size();
 		double predictLoss = 0.0;
-		for (int c = 0; c < classNum; c++) {
+		for (int c = 0; c < classNum; ++c) {
 			double error = predictions[c] - targets[c];
 			predictLoss += std::pow(error, 2.0);
 		}
@@ -57,7 +57,7 @@ public:
 		int classNum = predictions.size();
 
 		double loss = 0.0;
-		for (int c = 0; c < classNum; c++) {
+		for (int c = 0; c < classNum; ++c) {
 
 			loss -= targets(c) * std::log(std::max(predictions(c), _epsilon));
 		}
@@ -73,7 +73,7 @@ public:
 		int classNum = predictions.size();
 		Eigen::VectorXd gradientCE(classNum);
 
-		for (int c = 0; c < classNum; c++) {
+		for (int c = 0; c < classNum; ++c) {
 
 			gradientCE(c) = -targets(c) / (predictions(c) + _epsilon);
 		}

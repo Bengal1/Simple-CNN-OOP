@@ -47,7 +47,7 @@ public:
 
         _input = input;
 
-        for (int c = 0; c < _numChannels; c++) {
+        for (int c = 0; c < _numChannels; ++c) {
             // Calculate mean and variance for each channel
             double channelMean = input[c].sum() / (_channelHeight *
                 _channelWidth);
@@ -80,7 +80,7 @@ public:
         std::vector<Eigen::MatrixXd> inputGradient(_numChannels,
             Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
 
-        for (int c = 0; c < _numChannels; c++) {
+        for (int c = 0; c < _numChannels; ++c) {
             // Gradient w.r.t. normalized input
             Eigen::MatrixXd dNormalized = _gamma(c) * dInput[c].array();
 
@@ -195,7 +195,7 @@ public:
         }
         std::vector<Eigen::MatrixXd> dropedOutInput(_numChannels,
             Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
-        for (int c = 0; c < _numChannels; c++) {
+        for (int c = 0; c < _numChannels; ++c) {
             // Create a random mask with values between -1 and 1
             Eigen::MatrixXd dropoutMask = CreateRandomMask();
             double randomThreshold = 2 * _dropoutRate - 1;

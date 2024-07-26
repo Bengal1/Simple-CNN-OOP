@@ -47,9 +47,9 @@ public:
     {
         Eigen::Index row, col;
 
-        for (int c = 0; c < _inputChannels; c++) {
-            for (int h = 0; h < _outputHeight; h++) {
-                for (int w = 0; w < _outputWidth; w++) {
+        for (int c = 0; c < _inputChannels; ++c) {
+            for (int h = 0; h < _outputHeight; ++h) {
+                for (int w = 0; w < _outputWidth; ++w) {
                     _output[c](h, w) = (input[c].block(h * _stride, w * _stride,
                         _kernelSize, _kernelSize)).maxCoeff(&row, &col);
                     _inputGradientMap.push_back({ c, row, col });
@@ -69,9 +69,9 @@ public:
         assert(_inputGradientMap.size() == lossGradient.size() *
             lossGradient[0].rows() * lossGradient[0].cols());
 
-        for (int c = 0; c < _inputChannels; c++) {
-            for (int h = 0; h < _outputHeight; h++) {
-                for (int w = 0; w < _outputWidth; w++) {
+        for (int c = 0; c < _inputChannels; ++c) {
+            for (int h = 0; h < _outputHeight; ++h) {
+                for (int w = 0; w < _outputWidth; ++w) {
                     int channel, row, col;
                     _getDataLocation(channel, row, col);
 
