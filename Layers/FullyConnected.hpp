@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FULLYCONNECTED_HPP
+#define FULLYCONNECTED_HPP
 
 #include <iostream>
 #include <random>
@@ -9,11 +10,13 @@
 #include "../Activation.hpp"
 #include "../Regularization.hpp"
 
+#include <mutex>
+
 
 class FullyConnected {
 private:
-	const int _inputSize;
-	const int _outputSize;
+	const size_t _inputSize;
+	const size_t _outputSize;
 	//const int _batchSize;
 
 	size_t _inputChannels;
@@ -33,8 +36,8 @@ private:
 
 
 public:
-	FullyConnected(int inputSize, int outputSize, std::unique_ptr<Activation>
-		activationFunction, int batchSize = 1)
+	FullyConnected(int inputSize, int outputSize, 
+	std::unique_ptr<Activation> activationFunction)
 		:_inputSize(inputSize), _outputSize(outputSize), _inputChannels(0),
 		_optimizer(std::make_unique<AdamOptimizer>(-1)),
 		_activation(std::move(activationFunction))
@@ -50,7 +53,8 @@ public:
 
 	Eigen::VectorXd forward(const Eigen::VectorXd& input)
 	{ //Vector to vector (from fully-connected)
-		if (!_inputChannels) {
+		
+		if (!_inputChannels) { // initialize input dimensions
 			_inputChannels = 1;
 			_inputHeight = input.rows();
 			_inputWidth = input.cols();
@@ -68,7 +72,8 @@ public:
 
 	Eigen::VectorXd forward(const std::vector<Eigen::MatrixXd>& input)
 	{ //3D input to vector (from convolutional)
-		if (!_inputChannels) {
+
+		if (!_inputChannels) { // initialize input dimensions
 			_inputChannels = input.size();
 			_inputHeight = input[0].rows();
 			_inputWidth = input[0].cols();
@@ -128,8 +133,8 @@ public:
 		// Calculate the gradient w.r.t the input
 		Eigen::VectorXd flatInputGradient = _weights.transpose() *
 			dLoss_dPreActivation;
-		std::vector<Eigen::MatrixXd> inputGradient =
-			_unflattenInputGradient(flatInputGradient);
+		std::vector<Eigen::MatrixXd> inputGradient = _unflattenData(
+			flatInputGradient);
 
 		return inputGradient;
 	}
@@ -182,11 +187,11 @@ private:
 	{ //flatten 3D Tensor to a Vector
 		Eigen::VectorXd flattenData(_inputSize);
 
-		int rowIndex = 0;
+		size_t rowIndex = 0;
 		for (const auto& matrix : data) {
 			Eigen::Map<const Eigen::VectorXd> matrixMap(matrix.data(),
 				matrix.size());
-			flattenData.block(rowIndex, 0, matrixMap.size(), 1) = matrixMap;
+			flattenData.segment(rowIndex, matrixMap.size()) = matrixMap;
 			rowIndex += matrixMap.size();
 
 			if (rowIndex > _inputSize) {
@@ -199,41 +204,28 @@ private:
 		return flattenData;
 	}
 
-	/*Eigen::VectorXd _flattenData(const Eigen::MatrixXd& data) const 
-	{
-		Eigen::VectorXd flattenData(_inputSize);
+	std::vector<Eigen::MatrixXd> _unflattenData(const Eigen::VectorXd& flattenedData) 
+	const { //reconstruct a 3D Tensor from a flattened Vector
+        std::vector<Eigen::MatrixXd> unflattenedData;
+        unflattenedData.reserve(_inputChannels);
 
-		int rowIndex = 0;
-		Eigen::Map<const Eigen::VectorXd> matrixMap(data.data(),
-			data.size());
-		flattenData.block(rowIndex, 0, matrixMap.size(), 1) = matrixMap;
-		rowIndex += matrixMap.size();
-
-		if (rowIndex > _inputSize) {
-			std::cerr << "Row index exceeded the limit of input size, " <<
-				_inputSize << std::endl; //Error
-		}
-
-		return flattenData;
-
-	}*/
-
-	std::vector<Eigen::MatrixXd> _unflattenInputGradient(const Eigen::VectorXd&
-		flattenInputGradient) const 
-	{
-
-		std::vector<Eigen::MatrixXd> unflattenInputGradient(_inputChannels,
-			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
-
-		for (int c = 0; c < _inputChannels; ++c) {
-			for (int h = 0; h < _inputHeight; ++h) {
-				for (int w = 0; w < _inputWidth; ++w) {
-					unflattenInputGradient[c](h, w) =
-						flattenInputGradient[c * _inputSize/_inputChannels + 
-						h * _inputHeight + w];
-				}
+        size_t index = 0;
+        for (int c = 0; c < _inputChannels; ++c) {
+            Eigen::Map<const Eigen::MatrixXd> matrixMap(flattenedData.data() 
+				+ index, _inputHeight, _inputWidth);
+            unflattenedData.emplace_back(matrixMap);
+            index += _inputHeight * _inputWidth;
+        
+			if (index > _inputSize) {
+					std::cerr << "Index exceeded the limit of flattened data size, " << 
+						_inputSize << std::endl;
+					break; // Error
 			}
 		}
-		return unflattenInputGradient;
+
+        return unflattenedData;
 	}
+	
 };
+
+#endif // FULLYCONNECTED_HPP

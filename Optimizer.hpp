@@ -1,4 +1,5 @@
-#pragma once
+#ifndef OPTIMIZER_HPP
+#define OPTIMIZER_HPP
 
 #include <vector>
 #include <Eigen/Dense>
@@ -56,7 +57,7 @@ private:
 	std::vector<Eigen::VectorXd> _secondMomentEstimateVector;
 
 public:
-	AdamOptimizer(int numParams, double learningRate = 1e-6, double beta1 = 0.9,
+	AdamOptimizer(int numParams, double learningRate = 1e-5, double beta1 = 0.9,
 		double beta2 = 0.999, double epsilon = 1.0e-8)
 		: _numParams(numParams), _learningRate(learningRate), _beta1(beta1),
 		_beta2(beta2), _epsilon(epsilon), _timeStep(0) {}
@@ -143,3 +144,5 @@ private:
 		}
 	}
 };
+
+#endif // OPTIMIZER_HPP

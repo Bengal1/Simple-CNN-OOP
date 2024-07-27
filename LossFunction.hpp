@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LOSSFUNCTION_HPP
+#define LOSSFUNCTION_HPP
 
 #include <cmath>
 #include <vector>
@@ -81,3 +82,5 @@ public:
 		return gradientCE;
 	}
 };
+
+#endif // LOSSFUNCTION_HPP

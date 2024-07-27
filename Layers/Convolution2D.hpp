@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CONVOLUTION2D_HPP
+#define CONVOLUTION2D_HPP
 
 #include <iostream>
 #include <random>
@@ -302,3 +303,5 @@ private:
 	}
 
 };
+
+#endif // CONVOLUTION2D_HPP

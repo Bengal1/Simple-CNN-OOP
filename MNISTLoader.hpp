@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MNISTLOADER_HPP
+#define MNISTLOADER_HPP
 
 #include <iostream>
 #include <fstream>
@@ -148,3 +149,6 @@ private:
         }
     }
 };
+
+
+#endif //MNISTLOADER_HPP

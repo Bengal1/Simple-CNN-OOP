@@ -1,5 +1,5 @@
-#pragma once
-
+#ifndef REGULARIZATION_HPP
+#define REGULARIZATION_HPP
 
 #include <iostream>
 #include <vector>
@@ -230,3 +230,5 @@ private:
         return randomMask;
     }
 };
+
+#endif // REGULARIZATION_HPP

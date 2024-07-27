@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MAXPOOLING_HPP
+#define MAXPOOLING_HPP
 
 #include <iostream>
 #include <vector>
@@ -47,14 +48,7 @@ public:
             
             _output[c] = _maxPoolChannel(input[c], c);
         } 
-            /*for (int h = 0; h < _outputHeight; ++h) {
-                for (int w = 0; w < _outputWidth; ++w) {
-                    _output[c](h, w) = (input[c].block(h * _stride, w * _stride,
-                        _kernelSize, _kernelSize)).maxCoeff(&row, &col);
-                    _inputGradientMap.push_back({ c, row, col });
-                }
-            }
-        }*/
+           
         return _output;
     }
 
@@ -91,11 +85,12 @@ private:
     
         for (int h = 0; h < _outputHeight; ++h) {
             for (int w = 0; w < _outputWidth; ++w) {
-                outputChannel(h, w) = (inputChannel.block(h * _stride, w * _stride,
-                    _kernelSize, _kernelSize)).maxCoeff(&row, &col);
+                outputChannel(h, w) = (inputChannel.block(h * _stride, w * 
+                    _stride, _kernelSize, _kernelSize)).maxCoeff(&row, &col);
                 _inputGradientMap.push_back({ channel, row, col });
             }
         }
+
         return outputChannel;
     }
 
@@ -109,3 +104,5 @@ private:
     }
 
 };
+
+#endif // MAXPOOLING_HPP
