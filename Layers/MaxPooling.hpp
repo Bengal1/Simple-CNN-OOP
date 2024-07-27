@@ -13,49 +13,48 @@ private:
 
     const int _kernelSize;
     const int _stride;
-    const int _batchSize;
 
     int _outputHeight;
     int _outputWidth;
 
     std::vector<Eigen::MatrixXd> _output;
-    
     std::vector<std::tuple<int, int, int>> _inputGradientMap;
 
 public:
     MaxPooling(int inputHeight, int inputWidth, int inputChannels,
-        int poolSize, int batchSize = 1, int stride = 2)
+        int poolSize, int stride = 2)
         : _inputHeight(inputHeight), _inputWidth(inputWidth),
         _inputChannels(inputChannels), _kernelSize(poolSize),
-        _stride(stride), _batchSize(batchSize)
+        _stride(stride)
     {
         // Calculate output dimensions
         _outputHeight = (_inputHeight - _kernelSize) / _stride + 1;
         _outputWidth = (_inputWidth - _kernelSize) / _stride + 1;
-        if (_batchSize == 1) {
-            _output.assign(_inputChannels, Eigen::MatrixXd::Zero(
-                _outputHeight, _outputWidth));
-            _inputGradientMap.reserve(_inputChannels * _outputHeight *
-                _outputWidth);
-        }
-        else {
-            exit(-1);
-        }
+        _output.assign(_inputChannels, Eigen::MatrixXd::Zero(
+            _outputHeight, _outputWidth));
+        _inputGradientMap.reserve(_inputChannels * _outputHeight *
+            _outputWidth);
+        
     }
 
-    std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input)
+    std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& input)
     {
         Eigen::Index row, col;
+        
+        assert(input.size() == _inputChannels);
 
         for (int c = 0; c < _inputChannels; ++c) {
-            for (int h = 0; h < _outputHeight; ++h) {
+            
+            _output[c] = _maxPoolChannel(input[c], c);
+        } 
+            /*for (int h = 0; h < _outputHeight; ++h) {
                 for (int w = 0; w < _outputWidth; ++w) {
                     _output[c](h, w) = (input[c].block(h * _stride, w * _stride,
                         _kernelSize, _kernelSize)).maxCoeff(&row, &col);
                     _inputGradientMap.push_back({ c, row, col });
                 }
             }
-        }
+        }*/
         return _output;
     }
 
@@ -84,6 +83,22 @@ public:
     }
 
 private:
+    Eigen::MatrixXd _maxPoolChannel(Eigen::MatrixXd& inputChannel, int channel)
+    {
+        Eigen::Index row = 0, col = 0;
+        Eigen::MatrixXd outputChannel = Eigen::MatrixXd::
+            Zero(_outputHeight, _outputWidth);
+    
+        for (int h = 0; h < _outputHeight; ++h) {
+            for (int w = 0; w < _outputWidth; ++w) {
+                outputChannel(h, w) = (inputChannel.block(h * _stride, w * _stride,
+                    _kernelSize, _kernelSize)).maxCoeff(&row, &col);
+                _inputGradientMap.push_back({ channel, row, col });
+            }
+        }
+        return outputChannel;
+    }
+
     void _getDataLocation(int& dataChannel, int& dataRow, int& dataColumn)
     {
         std::tuple<int, int, int> currentLocation = _inputGradientMap.front();

@@ -14,17 +14,17 @@ class FullyConnected {
 private:
 	const int _inputSize;
 	const int _outputSize;
-	const int _batchSize;
+	//const int _batchSize;
 
 	size_t _inputChannels;
 	size_t _inputHeight;
 	size_t _inputWidth;
 
-	Eigen::MatrixXd _weights;
-	Eigen::VectorXd _bias;
-
 	Eigen::VectorXd _input; //flatten/vector
 	Eigen::VectorXd _output;
+
+	Eigen::MatrixXd _weights;
+	Eigen::VectorXd _bias;
 	Eigen::MatrixXd _weightsGradient;
 	Eigen::VectorXd _biasGradient;
 
@@ -36,7 +36,6 @@ public:
 	FullyConnected(int inputSize, int outputSize, std::unique_ptr<Activation>
 		activationFunction, int batchSize = 1)
 		:_inputSize(inputSize), _outputSize(outputSize), _inputChannels(0),
-		_batchSize(batchSize),
 		_optimizer(std::make_unique<AdamOptimizer>(-1)),
 		_activation(std::move(activationFunction))
 	{
@@ -45,15 +44,8 @@ public:
 		_weightsGradient.resize(_outputSize, _inputSize);
 		_biasGradient.resize(_outputSize);
 
-		if (_batchSize == 1) {
-			_input.resize(_inputSize);
-			_output.resize(_outputSize);
-		}
-		else {
-			std::cerr << "Non-positive Batch size is not valid! " <<
-				_batchSize << std::endl;
-			exit(-1);
-		}
+		_input.resize(_inputSize);
+		_output.resize(_outputSize);
 	}
 
 	Eigen::VectorXd forward(const Eigen::VectorXd& input)
@@ -66,10 +58,8 @@ public:
 
 		assert(_inputSize == _inputHeight * _inputWidth);
 
-		if (_batchSize == 1) {
-			_input = input;
-		}
-
+		_input = input;
+		
 		Eigen::VectorXd preActivationOut = _weights * _input + _bias;
 		_output = _activation->Activate(preActivationOut);
 
@@ -209,7 +199,7 @@ private:
 		return flattenData;
 	}
 
-	Eigen::VectorXd _flattenData(const Eigen::MatrixXd& data) const 
+	/*Eigen::VectorXd _flattenData(const Eigen::MatrixXd& data) const 
 	{
 		Eigen::VectorXd flattenData(_inputSize);
 
@@ -226,7 +216,7 @@ private:
 
 		return flattenData;
 
-	}
+	}*/
 
 	std::vector<Eigen::MatrixXd> _unflattenInputGradient(const Eigen::VectorXd&
 		flattenInputGradient) const 

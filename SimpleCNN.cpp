@@ -33,7 +33,7 @@ public:
         _pool2(8, 8, 64, 2),
         _fc1(4 * 4 * 64, 512, std::make_unique<ReLU>()),
         _fc2(512, 10, std::make_unique<Softmax>()),
-        _dropout1(0.35), _dropout2(0.25)
+        _dropout1(0.45), _dropout2(0.35)
     {}
 
     Eigen::VectorXd ForwardPass(const Eigen::MatrixXd& input) {
@@ -75,7 +75,7 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 
     double correctPredictions = 0;
     int dataSize = modelOutput.size();
-    Eigen::Index predictedClass, trueClass;
+    Eigen::Index predictedClass = 0, trueClass = 0;
 
     for (int i = 0; i < dataSize; ++i) {
         modelOutput[i].maxCoeff(&predictedClass);
@@ -94,9 +94,8 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
         dataLoader.getTrainImages();
     const std::vector<Eigen::VectorXd>& oneHotTrainLabels =
         dataLoader.getOneHotTrainLabels();
-    int numTrainImages = dataLoader.numTrain;
 
-    std::vector<Eigen::VectorXd> trainOutput(numTrainImages,
+    std::vector<Eigen::VectorXd> trainOutput(dataLoader.numTrain,
         Eigen::VectorXd(classes));
 
     std::cout << "\nStart training..." << std::endl;
@@ -148,12 +147,12 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
 void testSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model)
 {
     /* Load MNIST Test dataset */
-    const std::vector<Eigen::MatrixXd>& testImages = dataLoader.getTestImages();
+    const std::vector<Eigen::MatrixXd>& testImages = 
+        dataLoader.getTestImages();
     const std::vector<Eigen::VectorXd>& oneHotTestLabels =
         dataLoader.getOneHotTestLabels();
-    int numTestImages = dataLoader.numTest;
 
-    std::vector<Eigen::VectorXd> testOutput(numTestImages,
+    std::vector<Eigen::VectorXd> testOutput(dataLoader.numTest,
         Eigen::VectorXd(classes));
 
     std::cout << "\nStart testing...\n" << std::endl;
