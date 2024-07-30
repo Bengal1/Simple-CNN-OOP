@@ -41,7 +41,7 @@ public:
         std::vector<Eigen::MatrixXd> outputConv1 = _conv1.forward(input);
         std::vector<Eigen::MatrixXd> outputPool1 = _pool1.forward(outputConv1);
         std::vector<Eigen::MatrixXd> outputDrop1 = _dropout1.forward(outputPool1);
-
+        
         std::vector<Eigen::MatrixXd> outputConv2 = _conv2.forward(outputDrop1);
         std::vector<Eigen::MatrixXd> outputPool2 = _pool2.forward(outputConv2);
         std::vector<Eigen::MatrixXd> outputDrop2 = _dropout2.forward(outputPool2);
@@ -87,7 +87,7 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
     return correctPredictions / static_cast<double>(dataSize) * 100.0;
 }
 
-void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
+void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, size_t epochs = 10)
 {
     /* Load MNIST Train dataset */
     const std::vector<Eigen::MatrixXd>& trainImages =
@@ -102,11 +102,11 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
 
     double totalLoss = 0.0;
     std::vector<double> trainAccuracy(epochs);
-    for (int epoch = 0; epoch < epochs; ++epoch) {
+    for (size_t epoch = 0; epoch < epochs; ++epoch) {
         Eigen::VectorXd outputEpoch(classes);
         std::cout << "\nepoch #" << (epoch + 1) << std::endl;
 
-        int imageNum = 0;
+        size_t imageNum = 0;
         for (const auto image : trainImages) {
             /*Forward pass*/
             Eigen::VectorXd singleTrainOutput = model.ForwardPass(image);
@@ -120,7 +120,7 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 10)
             model.Backpropagation(lossGrad);
 
             /*TEST*/
-            if (imageNum % 1000 == 0) {
+            if (imageNum % 200 == 0) {
                 std::cout << imageNum << ": " << std::endl;
                 std::cout << singleTrainOutput << std::endl << std::endl;
                 if (isnan(singleTrainOutput[0])) {
@@ -158,7 +158,7 @@ void testSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model)
     std::cout << "\nStart testing...\n" << std::endl;
 
     double testAccuracy = 0.0;
-    int imageNum = 0;
+    size_t imageNum = 0;
     for (Eigen::MatrixXd image : testImages) {
         Eigen::VectorXd singleTestOutput = model.ForwardPass(image);
         testOutput[imageNum] = singleTestOutput;
@@ -171,7 +171,7 @@ void testSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model)
 
 int main()
 {
-    int epochs = 1;
+    size_t epochs = 1;
 
     SimpleCNN model;
 
@@ -180,12 +180,12 @@ int main()
         "MNIST/t10k-images.idx3-ubyte", "MNIST/t10k-labels.idx1-ubyte");
     if (!loader.loadTrainData() or !loader.loadTestData()) {
         std::cerr << "Error: Loading data failed." << std::endl;
-        return -1;
+        return EXIT_FAILURE;
     }
 
     trainSimpleCNN(loader, model, epochs);
 
     testSimpleCNN(loader, model);
 
-    return 0;
+    return EXIT_SUCCESS;
 }

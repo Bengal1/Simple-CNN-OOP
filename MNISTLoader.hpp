@@ -22,8 +22,8 @@ private:
     std::vector<Eigen::VectorXd> _oneHotTestLabels;
 
 public:
-    int numTrain = 0;
-    int numTest = 0;
+    size_t numTrain = 0;
+    size_t numTest = 0;
 
     MNISTLoader(const std::string& trainImagesFile, const std::string& trainLabelsFile,
         const std::string& testImagesFile, const std::string& testLabelsFile) :

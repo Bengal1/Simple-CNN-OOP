@@ -8,15 +8,15 @@
 
 class MaxPooling {
 private:
-    const int _inputHeight;
-    const int _inputWidth;
-    const int _inputChannels;
-
-    const int _kernelSize;
+    const size_t _inputHeight;
+    const size_t _inputWidth;
+    const size_t _inputChannels;
+    const size_t _kernelSize;
+    
     const int _stride;
 
-    int _outputHeight;
-    int _outputWidth;
+    size_t _outputHeight;
+    size_t _outputWidth;
 
     std::vector<Eigen::MatrixXd> _output;
     std::vector<std::tuple<int, int, int>> _inputGradientMap;
@@ -44,7 +44,7 @@ public:
         
         assert(input.size() == _inputChannels);
 
-        for (int c = 0; c < _inputChannels; ++c) {
+        for (size_t c = 0; c < _inputChannels; ++c) {
             
             _output[c] = _maxPoolChannel(input[c], c);
         } 
@@ -62,9 +62,9 @@ public:
         assert(_inputGradientMap.size() == lossGradient.size() *
             lossGradient[0].rows() * lossGradient[0].cols());
 
-        for (int c = 0; c < _inputChannels; ++c) {
-            for (int h = 0; h < _outputHeight; ++h) {
-                for (int w = 0; w < _outputWidth; ++w) {
+        for (size_t c = 0; c < _inputChannels; ++c) {
+            for (size_t h = 0; h < _outputHeight; ++h) {
+                for (size_t w = 0; w < _outputWidth; ++w) {
                     int channel, row, col;
                     _getDataLocation(channel, row, col);
 
@@ -83,8 +83,8 @@ private:
         Eigen::MatrixXd outputChannel = Eigen::MatrixXd::
             Zero(_outputHeight, _outputWidth);
     
-        for (int h = 0; h < _outputHeight; ++h) {
-            for (int w = 0; w < _outputWidth; ++w) {
+        for (size_t h = 0; h < _outputHeight; ++h) {
+            for (size_t w = 0; w < _outputWidth; ++w) {
                 outputChannel(h, w) = (inputChannel.block(h * _stride, w * 
                     _stride, _kernelSize, _kernelSize)).maxCoeff(&row, &col);
                 _inputGradientMap.push_back({ channel, row, col });

@@ -8,22 +8,23 @@
 #include "../Activation.hpp"
 #include "../Optimizer.hpp"
 #include "../Regularization.hpp"
+#include <optional>
 
 
 class Convolution2D {
 private:
-	const int _inputHeight;
-	const int _inputWidth;
-	const int _inputChannels;
-	const int _numFilters;
-	const int _kernelSize;
+	const size_t _inputHeight;
+	const size_t _inputWidth;
+	const size_t _inputChannels;
+	const size_t _numFilters;
+	const size_t _kernelSize;
 	//const int _batchSize;
 
 	const int _stride;
 	const int _padding;
 
-	int _outputHeight;
-	int _outputWidth;
+	size_t _outputHeight;
+	size_t _outputWidth;
 
 	Eigen::MatrixXd _input;
 	std::vector<Eigen::MatrixXd> _input3D;
@@ -34,12 +35,11 @@ private:
 
 	std::unique_ptr<AdamOptimizer> _optimizer;
 	std::unique_ptr<ReLU> _activation;
-	BatchNormalization _bn;
+	std::optional<BatchNormalization> _bn;
 
 public:
-	Convolution2D(int inputHeight, int inputWidth, int inputChannels,
-		int numFilters, int kernelSize, int batchSize = 1, int stride = 1,
-		int padding = 0)
+	Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels,
+		size_t numFilters, size_t kernelSize,  int stride = 1, int padding = 0)
 		: _inputHeight(inputHeight), _inputWidth(inputWidth),
 		_inputChannels(inputChannels), _numFilters(numFilters),
 		_kernelSize(kernelSize), _stride(stride), _padding(padding),
@@ -62,6 +62,8 @@ public:
 			_kernelSize));
 		_preActivationOutput.assign(_numFilters,Eigen::MatrixXd::Zero
 		(_outputHeight, _outputWidth));
+
+		_bn.emplace(_numFilters,_outputHeight, _outputWidth);
 	}
 
 	std::vector<Eigen::MatrixXd> forward(const Eigen::MatrixXd& input)
@@ -80,14 +82,14 @@ public:
 				<< std::endl;
 			exit(-1);
 		}
-		for (int f = 0; f < _numFilters; ++f) {
+		for (size_t f = 0; f < _numFilters; ++f) {
 			_preActivationOutput[f] += _Convolve2D(input, _filters[f]);
 		}
 
-		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn.forward(
+		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn->forward(
 			_preActivationOutput);
 		layerOutput = _activation->Activate(nornalizedOutput);
-
+		
 		return layerOutput;
 	}
 
@@ -108,17 +110,17 @@ public:
 			exit(1);
 		}
 
-		for (int f = 0; f < _numFilters; ++f) {
-			for (int c = 0; c < _inputChannels; ++c) {
+		for (size_t f = 0; f < _numFilters; ++f) {
+			for (size_t c = 0; c < _inputChannels; ++c) {
 				_preActivationOutput[f] += _Convolve2D(multiInput[c],
 					_filters[f]);
 			}
 		}
 
-		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn.forward(
+		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn->forward(
 			_preActivationOutput);
 		layerOutput = _activation->Activate(nornalizedOutput);
-
+		
 		return layerOutput;
 	}
 
@@ -132,10 +134,10 @@ public:
 
 		std::vector<Eigen::MatrixXd> dLoss_dPreActivation = _activation->computeGradient(
 			lossGradient, _preActivationOutput);
-		std::vector<Eigen::MatrixXd> dLoss_dBN = _bn.backward(dLoss_dPreActivation);
+		std::vector<Eigen::MatrixXd> dLoss_dBN = _bn->backward(dLoss_dPreActivation);
 
-		for (int c = 0; c < _inputChannels; ++c) {
-			for (int f = 0; f < _numFilters; ++f) {
+		for (size_t c = 0; c < _inputChannels; ++c) {
+			for (size_t f = 0; f < _numFilters; ++f) {
 
 				// Calculate the gradient w.r.t the parameters
 				if (_inputChannels == 1) {
@@ -164,14 +166,14 @@ public:
 	void SetTestMode()
 	{
 		_filtersGradient.clear();
-		_bn.SetTestMode();
+		_bn->SetTestMode();
 	}
 
 	void SetTrainingMode()
 	{
 		_filtersGradient.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize,
 				_kernelSize));
-		_bn.SetTrainingMode();
+		_bn->SetTrainingMode();
 	}
 
 private:
@@ -184,12 +186,12 @@ private:
 		std::normal_distribution<double> distribution(0.0, std::sqrt(2.0 /
 			(_inputHeight * _inputWidth * _inputChannels)));
 
-		for (int f = 0; f < _numFilters; ++f) {
+		for (size_t f = 0; f < _numFilters; ++f) {
 			Eigen::MatrixXd filter(_kernelSize, _kernelSize);
 
 			// Initialize filters
-			for (int row = 0; row < _kernelSize; ++row) {
-				for (int col = 0; col < _kernelSize; ++col) {
+			for (size_t row = 0; row < _kernelSize; ++row) {
+				for (size_t col = 0; col < _kernelSize; ++col) {
 					filter(row, col) = distribution(randomEngine);
 				}
 			}
@@ -211,8 +213,8 @@ private:
 		Eigen::MatrixXd ConvolutionResult(outputHeight, outputWidth);
 		ConvolutionResult.setZero();
 
-		for (int h = 0; h < outputHeight; ++h) {
-			for (int w = 0; w < outputWidth; ++w) {
+		for (size_t h = 0; h < outputHeight; ++h) {
+			for (size_t w = 0; w < outputWidth; ++w) {
 				ConvolutionResult(h, w) = (input.block(h * _stride, w * _stride,
 					filterHeight, filterWidth).cwiseProduct(kernel)).sum();
 			}
@@ -224,12 +226,12 @@ private:
 
 	void _updateParameters()
 	{
-		for (int f = 0; f < _numFilters; ++f) {
+		for (size_t f = 0; f < _numFilters; ++f) {
 			_optimizer->updateStep(_filters[f], _filtersGradient[f], f);
 			// Reset gradients
 			_filtersGradient[f].setZero();
 		}
-		_bn.updateParameters();
+		_bn->updateParameters();
 	}
 
 	void _calculateInputGradient(const Eigen::MatrixXd& lossGradientChannel,
@@ -248,9 +250,9 @@ private:
 			dOutput_dInput.rows(), dOutput_dInput.cols()) = dOutput_dInput;
 
 		// Iterate through positions and calculate the gradient w.r.t input
-		for (int i = 0; i < _outputHeight; ++i) {
-            for (int j = 0; j < _outputWidth; ++j) {
-				inputGradChannel(i, j) += (padded_dOutput.block(i, j, _kernelSize, 
+		for (size_t h = 0; h < _outputHeight; ++h) {
+            for (size_t w = 0; w < _outputWidth; ++w) {
+				inputGradChannel(h, w) += (padded_dOutput.block(h, w, _kernelSize, 
 					_kernelSize).cwiseProduct(reversedKernel)).sum();
         	}
         }
@@ -294,7 +296,7 @@ private:
 		std::vector<Eigen::MatrixXd> paddedInput(_inputChannels,
 			Eigen::MatrixXd::Zero(padInputHeight, padInputWidth));
 
-		for (int c = 0; c < _inputChannels; ++c) {
+		for (size_t c = 0; c < _inputChannels; ++c) {
 			paddedInput[c].block(_padding, _padding, padInputHeight,
 				padInputWidth) = input[c];
 		}
