@@ -57,13 +57,13 @@ public:
 			_input.resize(_inputHeight, _inputWidth);
 		}
 		else {
-			_input3D.assign(_inputChannels, Eigen::MatrixXd::Zero(_inputHeight,
-				_inputWidth));
+			_input3D.assign(_inputChannels, 
+				Eigen::MatrixXd::Zero(_inputHeight,_inputWidth));
 		}
-		_filtersGradient.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize,
-			_kernelSize));
-		_preActivationOutput.assign(_numFilters,Eigen::MatrixXd::Zero
-		(_outputHeight, _outputWidth));
+		_filtersGradient.assign(_numFilters, 
+			Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
+		_preActivationOutput.assign(_numFilters,
+			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
 
 		_bn.emplace(_numFilters,_outputHeight, _outputWidth);
 	}
@@ -172,15 +172,16 @@ public:
 
 	void SetTrainingMode()
 	{
-		_filtersGradient.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize,
-				_kernelSize));
+		_filtersGradient.assign(_numFilters, 
+			Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
 		_bn->SetTrainingMode();
 	}
 
 private:
 	void _initializeFilters() 
 	{
-		_filters.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
+		_filters.assign(_numFilters, 
+			Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
 
 		// Setup random number generator and distribution for He initialization
 		std::random_device rd;

@@ -100,8 +100,8 @@ public:
                                         .transpose() * 2.0 / _numChannels).asDiagonal()) 
                                         + dLoss_dMean.replicate(1, _numChannels).transpose();
         // set dLoss_dInput
-        std::vector<Eigen::MatrixXd> dLoss_dInput(_numChannels, Eigen::MatrixXd::Zero(
-            _channelHeight,_channelWidth));
+        std::vector<Eigen::MatrixXd> dLoss_dInput(_numChannels, 
+            Eigen::MatrixXd::Zero(_channelHeight,_channelWidth));
 
         dLoss_dInput = _remapBatchesToChannels(dLoss_dBatches);
         
@@ -165,8 +165,8 @@ private:
 
     std::vector<Eigen::MatrixXd> _remapBatchesToChannels(Eigen::MatrixXd& batches)
     {
-        std::vector<Eigen::MatrixXd> remapedInput(_numChannels,Eigen::MatrixXd
-            ::Zero(_channelHeight, _channelWidth));
+        std::vector<Eigen::MatrixXd> remapedInput(_numChannels,
+            Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
 
         // Reshape each row of batch back into a matrix 
         for (size_t c = 0; c < _numChannels; ++c) {

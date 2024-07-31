@@ -33,8 +33,8 @@ public:
         // Calculate output dimensions
         _outputHeight = (_inputHeight - _kernelSize) / _stride + 1;
         _outputWidth = (_inputWidth - _kernelSize) / _stride + 1;
-        _output.assign(_inputChannels, Eigen::MatrixXd::Zero(
-            _outputHeight, _outputWidth));
+        _output.assign(_inputChannels, 
+            Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
         _inputGradientMap.reserve(_inputChannels * _outputHeight *
             _outputWidth);
         
