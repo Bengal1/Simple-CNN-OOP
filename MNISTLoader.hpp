@@ -26,9 +26,11 @@ public:
     size_t numTest = 0;
 
     MNISTLoader(const std::string& trainImagesFile, const std::string& trainLabelsFile,
-        const std::string& testImagesFile, const std::string& testLabelsFile) :
-        _trainImagesFile(trainImagesFile), _trainLabelsFile(trainLabelsFile),
-        _testImagesFile(testImagesFile), _testLabelsFile(testLabelsFile) {}
+        const std::string& testImagesFile, const std::string& testLabelsFile) 
+        :_trainImagesFile(trainImagesFile), 
+         _trainLabelsFile(trainLabelsFile),
+         _testImagesFile(testImagesFile),
+         _testLabelsFile(testLabelsFile) {}
 
     bool loadTrainData() {
         return _loadImages(_trainImagesFile, _trainLabelsFile,

@@ -36,10 +36,12 @@ private:
 
 public:
     BatchNormalization(size_t numChannels, size_t channelHeight, size_t channelWidth)
-        : _numChannels(numChannels), _channelHeight(channelHeight),  
-        _channelWidth(channelWidth), _featureSize(channelHeight * channelWidth), 
-        _epsilon(1e-8), _initialized(false), _isTraining(true),
-        _optimizer(std::make_unique<AdamOptimizer>(-2)) 
+        : _numChannels(numChannels),
+          _channelHeight(channelHeight),
+          _channelWidth(channelWidth), 
+          _featureSize(channelHeight * channelWidth), 
+          _epsilon(1e-8), _initialized(false), _isTraining(true),
+          _optimizer(std::make_unique<AdamOptimizer>(BatchNormalizationMode)) 
     {}
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>&
@@ -189,8 +191,11 @@ private:
 
 public:
     Dropout(double dropoutRate = 0.5)
-        : _dropoutRate(dropoutRate), _isTraining(true), _inputHeight(0),
-        _inputWidth(0), _numChannels(0) {}
+        : _dropoutRate(dropoutRate),
+          _inputHeight(0),
+          _inputWidth(0),
+          _numChannels(0), _isTraining(true) 
+        {}
 
     Eigen::MatrixXd forward(const Eigen::MatrixXd& input) 
     {

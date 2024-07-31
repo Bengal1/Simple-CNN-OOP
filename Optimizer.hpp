@@ -59,8 +59,11 @@ private:
 public:
 	AdamOptimizer(int numParams, double learningRate = 1e-5, double beta1 = 0.9,
 		double beta2 = 0.999, double epsilon = 1.0e-8)
-		: _numParams(numParams), _learningRate(learningRate), _beta1(beta1),
-		_beta2(beta2), _epsilon(epsilon), _timeStep(0) {}
+		: _numParams(numParams),
+		  _learningRate(learningRate),
+		  _beta1(beta1),
+		  _beta2(beta2),
+		  _epsilon(epsilon), _timeStep(0) {}
 
 	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients,
 		const int paramIndex = 0) override 

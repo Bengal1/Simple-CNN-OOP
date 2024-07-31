@@ -10,7 +10,7 @@
 #include "../Activation.hpp"
 #include "../Regularization.hpp"
 
-#include <mutex>
+//#include <mutex>
 
 
 class FullyConnected {
@@ -37,9 +37,11 @@ private:
 public:
 	FullyConnected(size_t inputSize, size_t outputSize, 
 	std::unique_ptr<Activation> activationFunction)
-		:_inputSize(inputSize), _outputSize(outputSize), _inputChannels(0),
-		_optimizer(std::make_unique<AdamOptimizer>(-1)),
-		_activation(std::move(activationFunction))
+		:_inputSize(inputSize),
+		 _outputSize(outputSize),
+		 _inputChannels(0),
+		 _optimizer(std::make_unique<AdamOptimizer>(FullyConnectedMode)),
+		 _activation(std::move(activationFunction))
 	{
 		_initializeWeights();
 

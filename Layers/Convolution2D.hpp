@@ -39,11 +39,14 @@ private:
 public:
 	Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels,
 		size_t numFilters, size_t kernelSize,  size_t stride = 1, size_t padding = 0)
-		: _inputHeight(inputHeight), _inputWidth(inputWidth),
-		_inputChannels(inputChannels), _numFilters(numFilters),
-		_kernelSize(kernelSize), _stride(stride), _padding(padding),
-		_optimizer(std::make_unique<AdamOptimizer>(numFilters)),
-		_activation(std::make_unique<ReLU>())
+		: _inputHeight(inputHeight), 
+		  _inputWidth(inputWidth),
+		  _inputChannels(inputChannels), 
+		  _numFilters(numFilters),
+		  _kernelSize(kernelSize),
+		  _stride(stride), _padding(padding),
+		  _optimizer(std::make_unique<AdamOptimizer>(numFilters)),
+		  _activation(std::make_unique<ReLU>())
 	{
 		_initializeFilters();
 
@@ -79,7 +82,7 @@ public:
 		else {
 			std::cerr << "Non-positive padding value is not valid! " << _padding
 				<< std::endl;
-			exit(-1);
+			exit(EXIT_FAILURE);
 		}
 		for (size_t f = 0; f < _numFilters; ++f) {
 			_preActivationOutput[f] += _Convolve2D(input, _filters[f]);
@@ -106,7 +109,7 @@ public:
 		else {
 			std::cerr << "Non-positive padding value is not valid! " << _padding
 				<< std::endl;
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		for (size_t f = 0; f < _numFilters; ++f) {
@@ -148,7 +151,7 @@ public:
 				else{
 					std::cerr << "Non-positive number of channels is not valid! " 
 					<< _inputChannels << std::endl;
-					exit(-1);
+					exit(EXIT_FAILURE);
 				} 
 				// Calculate the gradient w.r.t the input
 				_calculateInputGradient(dLoss_dPreActivation[f], _filters[f],

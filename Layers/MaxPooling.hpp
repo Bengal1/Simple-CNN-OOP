@@ -24,9 +24,11 @@ private:
 public:
     MaxPooling(size_t inputHeight, size_t inputWidth, size_t inputChannels,
         size_t poolSize, size_t stride = 2)
-        : _inputHeight(inputHeight), _inputWidth(inputWidth),
-        _inputChannels(inputChannels), _kernelSize(poolSize),
-        _stride(stride)
+        : _inputHeight(inputHeight),
+          _inputWidth(inputWidth),
+          _inputChannels(inputChannels),
+          _kernelSize(poolSize),
+          _stride(stride)
     {
         // Calculate output dimensions
         _outputHeight = (_inputHeight - _kernelSize) / _stride + 1;

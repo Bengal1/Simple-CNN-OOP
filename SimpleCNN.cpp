@@ -26,14 +26,14 @@ public:
     CrossEntropy CEloss;
 
 public:
-    SimpleCNN() :
-        _conv1(28, 28, 1, 32, 5),
-        _pool1(24, 24, 32, 2),
-        _conv2(12, 12, 32, 64, 5),
-        _pool2(8, 8, 64, 2),
-        _fc1(4 * 4 * 64, 512, std::make_unique<ReLU>()),
-        _fc2(512, 10, std::make_unique<Softmax>()),
-        _dropout1(0.45), _dropout2(0.35)
+    SimpleCNN() 
+    : _conv1(28, 28, 1, 32, 5),
+      _pool1(24, 24, 32, 2),
+      _conv2(12, 12, 32, 64, 5),
+      _pool2(8, 8, 64, 2),
+      _fc1(4 * 4 * 64, 512, std::make_unique<ReLU>()),
+      _fc2(512, 10, std::make_unique<Softmax>()),
+      _dropout1(0.45), _dropout2(0.35)
     {}
 
     Eigen::VectorXd ForwardPass(const Eigen::MatrixXd& input) {
@@ -70,7 +70,7 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 
     if (modelOutput.size() != oneHotTargets.size()) {
         std::cerr << "Error: Input vectors have different sizes." << std::endl;
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     double correctPredictions = 0;
@@ -125,7 +125,7 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, size_t epochs = 1
                 std::cout << singleTrainOutput << std::endl << std::endl;
                 if (isnan(singleTrainOutput[0])) {
                     std::cout << "\nimage No. : " << imageNum << std::endl;
-                    exit(-1);
+                    exit(EXIT_FAILURE);
                 }
             }
             if (imageNum % 10000 == 0 and imageNum != 0) {
