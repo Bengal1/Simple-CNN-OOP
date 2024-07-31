@@ -25,16 +25,16 @@ public:
 		:_learningRate(learningRate) {}
 
 	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients,
-		const int paramIndex = 0) override { // Matrices version
-
+		const int paramIndex = 0) override 
+	{ // Matrices version
 		assert(parameters.size() == gradients.size());
 
 		parameters -= _learningRate * gradients;
 	}
 
 	void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& 
-	gradients) const { // Vectors vertion
-
+	gradients) const 
+	{ // Vectors vertion
 		assert(parameters.size() == gradients.size());
 
 		parameters -= _learningRate * gradients;
@@ -63,8 +63,8 @@ public:
 		_beta2(beta2), _epsilon(epsilon), _timeStep(0) {}
 
 	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients,
-		const int paramIndex = 0) override {
-	
+		const int paramIndex = 0) override 
+	{
 		assert(parameters.size() == gradients.size());
 
 		if (!_timeStep) {
@@ -93,8 +93,8 @@ public:
 	}
 
 	void updateStep(Eigen::VectorXd& parameters, Eigen::VectorXd& gradients,
-		const int paramIndex = 0) { //Vector version - overlaod
-	
+		const int paramIndex = 0) 
+	{ //Vector version - overlaod
 		assert(parameters.size() == gradients.size());
 
 		if (!_timeStep) {
@@ -122,7 +122,8 @@ public:
 	}
 
 private:
-	void _initializeMoments(size_t rows, size_t cols) {
+	void _initializeMoments(size_t rows, size_t cols) 
+	{
 		if (_numParams == FullyConnectedMode) { //Fully-Connected - weights and bias
 			_firstMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_secondMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));

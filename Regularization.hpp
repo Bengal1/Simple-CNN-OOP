@@ -3,10 +3,9 @@
 
 #include <iostream>
 #include <vector>
-//#include <memory>
+#include <memory>
 #include <random>
 #include <Eigen/Dense>
-//#include <Eigen/Core>
 #include "Optimizer.hpp"
 
 
@@ -30,8 +29,7 @@ private:
     Eigen::VectorXd _dBeta;
 
     Eigen::MatrixXd _batchedInput;               // X - input in batches
-    Eigen::MatrixXd _normalizedBatch;       // X_hat - normalized batches
-    //Eigen::MatrixXd _scaledShiftedBatch;    // Y - after applying gamma and beta
+    Eigen::MatrixXd _normalizedBatch;            // X_hat - normalized batches
     std::vector<Eigen::MatrixXd> _input;
 
     std::unique_ptr<AdamOptimizer> _optimizer;
@@ -75,52 +73,41 @@ public:
         Eigen::MatrixXd dLoss_dY(_numChannels, _featureSize);
 
         dLoss_dY = _createBatchesFromChannels(dLoss_dOutput);
-        /*for (size_t c = 0; c < _numChannels; ++c) {
-            dLoss_dY.row(c) = Eigen::Map<const Eigen::VectorXd>(dLoss_dOutput[c].data(), 
-            _featureSize);
-        }*/
+        
         // Gradients w.r.t. gamma and beta
         _dGamma = (_normalizedBatch.array() * dLoss_dY.array()).colwise().sum();
         _dBeta = dLoss_dY.colwise().sum();
-        
         // Gradients w.r.t. normalized batch
         Eigen::MatrixXd dLoss_dXHat = (dLoss_dY.array().rowwise() * _gamma.transpose()
         .array()).matrix();
-        
         // Gradients w.r.t. variance
         Eigen::VectorXd dLoss_dVar = ((dLoss_dXHat.array() * (_batchedInput.rowwise() 
                                     - _mean.transpose()).array()).colwise().sum()
                                     .transpose() * -0.5 * (_variance.array() + 
                                     _epsilon).pow(-1.5));
-        
         // Gradients w.r.t. mean
         Eigen::VectorXd dLoss_dMean = (dLoss_dXHat.array().rowwise() * -(_variance.array() 
                                     + _epsilon).sqrt().cwiseInverse().transpose()).matrix()
                                     .colwise().sum().transpose() + (dLoss_dVar.array() * (-2.0 
                                     / _numChannels)).matrix().asDiagonal() * (_batchedInput.rowwise() 
                                     - _mean.transpose()).colwise().sum().transpose();
-        
         // Gradients w.r.t. input batch
         Eigen::MatrixXd dLoss_dBatches = (dLoss_dXHat.array().rowwise() * (_variance.array() 
                                         + _epsilon).sqrt().cwiseInverse().transpose()).matrix() 
                                         + ((_batchedInput.rowwise() - _mean.transpose()) * (dLoss_dVar
                                         .transpose() * 2.0 / _numChannels).asDiagonal()) 
                                         + dLoss_dMean.replicate(1, _numChannels).transpose();
-        
         // set dLoss_dInput
         std::vector<Eigen::MatrixXd> dLoss_dInput(_numChannels, Eigen::MatrixXd::Zero(
             _channelHeight,_channelWidth));
 
         dLoss_dInput = _remapBatchesToChannels(dLoss_dBatches);
-        /*for (size_t c = 0; c < _numChannels; ++c) {
-            dLoss_dInput[c] = Eigen::Map<Eigen::MatrixXd>(dLoss_dBatches
-            .row(c).data(), _channelHeight, _channelWidth);
-        }*/
         
         return dLoss_dInput;
     }
 
-    void updateParameters() {
+    void updateParameters() 
+    {
         // Update learnable parameters 
         _optimizer->updateStep(_gamma, _dGamma, 0);
         _optimizer->updateStep(_beta, _dBeta, 1);
@@ -205,8 +192,8 @@ public:
         : _dropoutRate(dropoutRate), _isTraining(true), _inputHeight(0),
         _inputWidth(0), _numChannels(0) {}
 
-    Eigen::MatrixXd forward(const Eigen::MatrixXd& input) {
-
+    Eigen::MatrixXd forward(const Eigen::MatrixXd& input) 
+    {
         if (!_inputHeight) {
             _inputHeight = input.rows();
             _inputWidth = input.cols();
@@ -225,8 +212,8 @@ public:
         return input.array() * dropoutMask.array() / (1.0 - _dropoutRate);
     }
 
-    std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) {
-
+    std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) 
+    {
         if (!_numChannels) {
             _numChannels = input.size();
             _inputHeight = input[0].rows();
@@ -262,7 +249,8 @@ public:
     }
 
 private:
-    Eigen::MatrixXd CreateRandomMask() {
+    Eigen::MatrixXd CreateRandomMask() 
+    {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<double> dist(0.0, 1.0);

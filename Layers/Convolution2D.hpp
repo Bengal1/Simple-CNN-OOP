@@ -175,7 +175,8 @@ public:
 	}
 
 private:
-	void _initializeFilters() {
+	void _initializeFilters() 
+	{
 		_filters.assign(_numFilters, Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
 
 		// Setup random number generator and distribution for He initialization
@@ -198,7 +199,8 @@ private:
 	}
 
 	Eigen::MatrixXd _Convolve2D(const Eigen::MatrixXd& input,
-		const Eigen::MatrixXd& kernel) const{
+		const Eigen::MatrixXd& kernel) const
+	{
 		const size_t inputHeight = input.rows();
 		const size_t inputWidth = input.cols();
 		const size_t filterHeight = kernel.rows();
@@ -259,8 +261,8 @@ private:
 	}
 
 	Eigen::MatrixXd _padWithZeros(const Eigen::MatrixXd& input,
-		size_t promptPadding = 0) const {
-		
+		size_t promptPadding = 0) const 
+	{	
 		size_t padding = 0;
 		
 		if (promptPadding)

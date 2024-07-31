@@ -23,7 +23,8 @@ class MSE : public LossFunction {
 public:
 
 	double calculateLoss(const Eigen::VectorXd& predictions,
-		const Eigen::VectorXd& targets) const override {
+		const Eigen::VectorXd& targets) const override 
+	{
 		assert(predictions.size() == targets.size());
 
 		size_t classNum = predictions.size();
@@ -37,7 +38,8 @@ public:
 	}
 
 	Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
-		const Eigen::VectorXd& targets) const override {
+		const Eigen::VectorXd& targets) const override 
+	{
 		assert(predictions.size() == targets.size());
 
 		Eigen::VectorXd gradientMSE = predictions - targets;
@@ -52,7 +54,8 @@ class CrossEntropy : public LossFunction {
 public:
 
 	double calculateLoss(const Eigen::VectorXd& predictions,
-		const Eigen::VectorXd& targets) const override {
+		const Eigen::VectorXd& targets) const override 
+	{
 
 		assert(predictions.size() == targets.size());
 		size_t classNum = predictions.size();
@@ -67,7 +70,8 @@ public:
 	}
 
 	Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
-		const Eigen::VectorXd& targets) const override {
+		const Eigen::VectorXd& targets) const override 
+	{
 
 		assert(predictions.size() == targets.size());
 

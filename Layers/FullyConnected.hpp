@@ -204,7 +204,8 @@ private:
 	}
 
 	std::vector<Eigen::MatrixXd> _unflattenData(const Eigen::VectorXd& flattenedData) 
-	const { //reconstruct a 3D Tensor from a flattened Vector
+	const 
+	{ //reconstruct a 3D Tensor from a flattened Vector
         std::vector<Eigen::MatrixXd> unflattenedData;
         unflattenedData.reserve(_inputChannels);
 

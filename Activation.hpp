@@ -21,8 +21,8 @@ class ReLU : public Activation {
 public:
 
     Eigen::VectorXd Activate(const Eigen::VectorXd& preActivationOutput)
-        const override {
-
+        const override 
+    {
         Eigen::VectorXd activationResult = preActivationOutput.cwiseMax(0.0);
 
         return activationResult;
