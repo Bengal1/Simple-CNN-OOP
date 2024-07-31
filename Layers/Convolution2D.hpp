@@ -18,10 +18,9 @@ private:
 	const size_t _inputChannels;
 	const size_t _numFilters;
 	const size_t _kernelSize;
-	//const int _batchSize;
 
-	const int _stride;
-	const int _padding;
+	const size_t _stride;
+	const size_t _padding;
 
 	size_t _outputHeight;
 	size_t _outputWidth;
@@ -39,7 +38,7 @@ private:
 
 public:
 	Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels,
-		size_t numFilters, size_t kernelSize,  int stride = 1, int padding = 0)
+		size_t numFilters, size_t kernelSize,  size_t stride = 1, size_t padding = 0)
 		: _inputHeight(inputHeight), _inputWidth(inputWidth),
 		_inputChannels(inputChannels), _numFilters(numFilters),
 		_kernelSize(kernelSize), _stride(stride), _padding(padding),
@@ -124,8 +123,7 @@ public:
 		return layerOutput;
 	}
 
-	std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd>& lossGradient,
-		const int batchNum = 0)
+	std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd>& lossGradient)
 	{
 		std::vector<Eigen::MatrixXd> inputGradient(_inputChannels,
 			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
@@ -201,14 +199,15 @@ private:
 
 	Eigen::MatrixXd _Convolve2D(const Eigen::MatrixXd& input,
 		const Eigen::MatrixXd& kernel) const{
-		const int inputHeight = input.rows();
-		const int inputWidth = input.cols();
-		const int filterHeight = kernel.rows();
-		const int filterWidth = kernel.cols();
+		const size_t inputHeight = input.rows();
+		const size_t inputWidth = input.cols();
+		const size_t filterHeight = kernel.rows();
+		const size_t filterWidth = kernel.cols();
 
 		assert(inputHeight > filterHeight and inputWidth > filterWidth);
-		const int outputHeight = (inputHeight - filterHeight) / _stride + 1;
-		const int outputWidth = (inputWidth - filterWidth) / _stride + 1;
+		
+		const size_t outputHeight = (inputHeight - filterHeight) / _stride + 1;
+		const size_t outputWidth = (inputWidth - filterWidth) / _stride + 1;
 
 		Eigen::MatrixXd ConvolutionResult(outputHeight, outputWidth);
 		ConvolutionResult.setZero();
@@ -243,8 +242,8 @@ private:
 		Eigen::MatrixXd reversedKernel = filter.reverse();
 
 		// Zero-pad dOutput_dInput to match inputGradChannel size
-    	int paddedHeight = dOutput_dInput.rows() + _kernelSize - 1;
-    	int paddedWidth = dOutput_dInput.cols() + _kernelSize - 1;
+    	size_t paddedHeight = dOutput_dInput.rows() + _kernelSize - 1;
+    	size_t paddedWidth = dOutput_dInput.cols() + _kernelSize - 1;
     	Eigen::MatrixXd padded_dOutput = Eigen::MatrixXd::Zero(paddedHeight, paddedWidth);
     	padded_dOutput.block((_kernelSize - 1) / 2, (_kernelSize - 1) / 2, 
 			dOutput_dInput.rows(), dOutput_dInput.cols()) = dOutput_dInput;
@@ -260,17 +259,17 @@ private:
 	}
 
 	Eigen::MatrixXd _padWithZeros(const Eigen::MatrixXd& input,
-		int promptPadding = 0) const {
+		size_t promptPadding = 0) const {
 		
-		int padding = 0;
+		size_t padding = 0;
 		
 		if (promptPadding)
 			padding = promptPadding;
 		else
 			padding = _padding;
 
-		int padInputHeight = _inputHeight + 2 * padding;
-		int padInputWidth = _inputWidth + 2 * padding;
+		size_t padInputHeight = _inputHeight + 2 * padding;
+		size_t padInputWidth = _inputWidth + 2 * padding;
 		Eigen::MatrixXd paddedInput = Eigen::MatrixXd::Zero(padInputHeight,
 			padInputWidth);
 
@@ -282,17 +281,17 @@ private:
 	}
 
 	std::vector<Eigen::MatrixXd> _padWithZeros(const std::vector<
-		Eigen::MatrixXd>& input, int promptPadding = 0) const
+		Eigen::MatrixXd>& input, size_t promptPadding = 0) const
 	{
-		int padding = 0;
+		size_t padding = 0;
 
 		if (promptPadding)
 			padding = promptPadding;
 		else
 			padding = _padding;
 
-		int padInputHeight = _inputHeight + 2 * padding;
-		int padInputWidth = _inputWidth + 2 * padding;
+		size_t padInputHeight = _inputHeight + 2 * padding;
+		size_t padInputWidth = _inputWidth + 2 * padding;
 		std::vector<Eigen::MatrixXd> paddedInput(_inputChannels,
 			Eigen::MatrixXd::Zero(padInputHeight, padInputWidth));
 

@@ -13,17 +13,17 @@ private:
     const size_t _inputChannels;
     const size_t _kernelSize;
     
-    const int _stride;
+    const size_t _stride;
 
     size_t _outputHeight;
     size_t _outputWidth;
 
     std::vector<Eigen::MatrixXd> _output;
-    std::vector<std::tuple<int, int, int>> _inputGradientMap;
+    std::vector<std::tuple<size_t, size_t, size_t>> _inputGradientMap;
 
 public:
-    MaxPooling(int inputHeight, int inputWidth, int inputChannels,
-        int poolSize, int stride = 2)
+    MaxPooling(size_t inputHeight, size_t inputWidth, size_t inputChannels,
+        size_t poolSize, size_t stride = 2)
         : _inputHeight(inputHeight), _inputWidth(inputWidth),
         _inputChannels(inputChannels), _kernelSize(poolSize),
         _stride(stride)
@@ -65,7 +65,7 @@ public:
         for (size_t c = 0; c < _inputChannels; ++c) {
             for (size_t h = 0; h < _outputHeight; ++h) {
                 for (size_t w = 0; w < _outputWidth; ++w) {
-                    int channel, row, col;
+                    size_t channel, row, col;
                     _getDataLocation(channel, row, col);
 
                     inputGradient[channel](row, col) = lossGradient[c](h, w);
@@ -77,7 +77,7 @@ public:
     }
 
 private:
-    Eigen::MatrixXd _maxPoolChannel(Eigen::MatrixXd& inputChannel, int channel)
+    Eigen::MatrixXd _maxPoolChannel(Eigen::MatrixXd& inputChannel, size_t channel)
     {
         Eigen::Index row = 0, col = 0;
         Eigen::MatrixXd outputChannel = Eigen::MatrixXd::
@@ -94,9 +94,9 @@ private:
         return outputChannel;
     }
 
-    void _getDataLocation(int& dataChannel, int& dataRow, int& dataColumn)
+    void _getDataLocation(size_t& dataChannel, size_t& dataRow, size_t& dataColumn)
     {
-        std::tuple<int, int, int> currentLocation = _inputGradientMap.front();
+        std::tuple<size_t, size_t, size_t> currentLocation = _inputGradientMap.front();
         dataChannel = std::get<0>(currentLocation);
         dataRow = std::get<1>(currentLocation);
         dataColumn = std::get<2>(currentLocation);

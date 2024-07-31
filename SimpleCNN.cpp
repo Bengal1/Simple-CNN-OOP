@@ -7,7 +7,7 @@
 #include "Regularization.hpp"
 #include <math.h>
 
-const int classes = 10;
+const size_t classes = 10;
 
 class SimpleCNN {
 private:
@@ -74,12 +74,12 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
     }
 
     double correctPredictions = 0;
-    int dataSize = modelOutput.size();
+    size_t dataSize = modelOutput.size();
     Eigen::Index predictedClass = 0, trueClass = 0;
 
-    for (int i = 0; i < dataSize; ++i) {
-        modelOutput[i].maxCoeff(&predictedClass);
-        oneHotTargets[i].maxCoeff(&trueClass);
+    for (size_t d = 0; d < dataSize; ++d) {
+        modelOutput[d].maxCoeff(&predictedClass);
+        oneHotTargets[d].maxCoeff(&trueClass);
         if (predictedClass == trueClass)
             correctPredictions++;
     }
@@ -120,7 +120,7 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, size_t epochs = 1
             model.Backpropagation(lossGrad);
 
             /*TEST*/
-            if (imageNum % 200 == 0) {
+            if (imageNum % 1000 == 0) {
                 std::cout << imageNum << ": " << std::endl;
                 std::cout << singleTrainOutput << std::endl << std::endl;
                 if (isnan(singleTrainOutput[0])) {

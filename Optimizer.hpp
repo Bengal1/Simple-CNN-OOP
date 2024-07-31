@@ -122,7 +122,7 @@ public:
 	}
 
 private:
-	void _initializeMoments(int rows, int cols) {
+	void _initializeMoments(size_t rows, size_t cols) {
 		if (_numParams == FullyConnectedMode) { //Fully-Connected - weights and bias
 			_firstMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_secondMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));

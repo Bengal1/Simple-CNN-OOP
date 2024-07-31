@@ -17,13 +17,12 @@ class FullyConnected {
 private:
 	const size_t _inputSize;
 	const size_t _outputSize;
-	//const int _batchSize;
 
 	size_t _inputChannels;
 	size_t _inputHeight;
 	size_t _inputWidth;
 
-	Eigen::VectorXd _input; //flatten/vector
+	Eigen::VectorXd _flatInput;
 	Eigen::VectorXd _output;
 
 	Eigen::MatrixXd _weights;
@@ -36,7 +35,7 @@ private:
 
 
 public:
-	FullyConnected(int inputSize, int outputSize, 
+	FullyConnected(size_t inputSize, size_t outputSize, 
 	std::unique_ptr<Activation> activationFunction)
 		:_inputSize(inputSize), _outputSize(outputSize), _inputChannels(0),
 		_optimizer(std::make_unique<AdamOptimizer>(-1)),
@@ -47,7 +46,7 @@ public:
 		_weightsGradient.resize(_outputSize, _inputSize);
 		_biasGradient.resize(_outputSize);
 
-		_input.resize(_inputSize);
+		_flatInput.resize(_inputSize);
 		_output.resize(_outputSize);
 	}
 
@@ -62,9 +61,9 @@ public:
 
 		assert(_inputSize == _inputHeight * _inputWidth);
 
-		_input = input;
+		_flatInput = input;
 		
-		Eigen::VectorXd preActivationOut = _weights * _input + _bias;
+		Eigen::VectorXd preActivationOut = _weights * _flatInput + _bias;
 		_output = _activation->Activate(preActivationOut);
 
 		return _output;
@@ -81,8 +80,8 @@ public:
 
 		assert(_inputSize == _inputChannels * _inputHeight * _inputWidth);
 
-		_input = _flattenData(input);
-		Eigen::VectorXd preActivationOut = _weights * _input + _bias;
+		_flatInput = _flattenData(input);
+		Eigen::VectorXd preActivationOut = _weights * _flatInput + _bias;
 		_output = _activation->Activate(preActivationOut);
 
 		return _output;
@@ -94,7 +93,7 @@ public:
 			lossGradient, _output);
 
 		// Calculate the gradient w.r.t the parameters
-		_weightsGradient = dLoss_dPreActivation * _input.transpose();
+		_weightsGradient = dLoss_dPreActivation * _flatInput.transpose();
 		_biasGradient = dLoss_dPreActivation;
 
 		// L2 Regularization
@@ -118,7 +117,7 @@ public:
 			lossGradient, _output);
 
 		// Calculate the gradient w.r.t the parameters
-		_weightsGradient = dLoss_dPreActivation * _input.transpose();
+		_weightsGradient = dLoss_dPreActivation * _flatInput.transpose();
 		_biasGradient = dLoss_dPreActivation;
 
 		// L2 Regularization
@@ -164,9 +163,9 @@ private:
 			_inputSize));
 
 		// Initialize weights
-		for (int i = 0; i < _outputSize; ++i) {
-			for (int j = 0; j < _inputSize; ++j) {
-				_weights(i, j) = distribution(randomEngine);
+		for (size_t r = 0; r < _outputSize; ++r) {
+			for (size_t c = 0; c < _inputSize; ++c) {
+				_weights(r, c) = distribution(randomEngine);
 			}
 		}
 
@@ -210,7 +209,7 @@ private:
         unflattenedData.reserve(_inputChannels);
 
         size_t index = 0;
-        for (int c = 0; c < _inputChannels; ++c) {
+        for (size_t c = 0; c < _inputChannels; ++c) {
             Eigen::Map<const Eigen::MatrixXd> matrixMap(flattenedData.data() 
 				+ index, _inputHeight, _inputWidth);
             unflattenedData.emplace_back(matrixMap);

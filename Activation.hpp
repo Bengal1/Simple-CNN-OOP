@@ -39,12 +39,12 @@ public:
     std::vector<Eigen::MatrixXd> Activate(const std::vector<Eigen::MatrixXd>&
         preActivationOutput) const
     {  //Overload for 3D tensors
-        int numChannels = preActivationOutput.size();
+        size_t numChannels = preActivationOutput.size();
         std::vector<Eigen::MatrixXd> activationResult(numChannels,
             Eigen::MatrixXd::Zero(preActivationOutput[0].rows(),
                 preActivationOutput[0].cols()));
 
-        for (int c = 0; c < numChannels; ++c) {
+        for (size_t c = 0; c < numChannels; ++c) {
             activationResult[c] = preActivationOutput[c].cwiseMax(0.0);
         }
 
@@ -76,11 +76,11 @@ public:
     std::vector<Eigen::MatrixXd> computeGradient(const std::vector<Eigen::MatrixXd>&
         lossGradient, const std::vector<Eigen::MatrixXd>& layerOutput) const
     { //Overload for 3D tensors
-        int numChannels = layerOutput.size();
+        size_t numChannels = layerOutput.size();
         std::vector<Eigen::MatrixXd> reluGradient(numChannels,
             Eigen::MatrixXd::Zero(layerOutput[0].rows(), layerOutput[0].cols()));
 
-        for (int c = 0; c < numChannels; ++c) {
+        for (size_t c = 0; c < numChannels; ++c) {
             reluGradient[c] = ((layerOutput[c].array() > 0.0).select(lossGradient[c],
                 0.0)).matrix();
         }
@@ -121,12 +121,12 @@ public:
     std::vector<Eigen::VectorXd> Activate(const std::vector<Eigen::VectorXd>&
         preActivationOutput) const 
     {  //Overload for vector batch    
-        int numChannels = preActivationOutput.size();
+        size_t numChannels = preActivationOutput.size();
         std::vector<Eigen::VectorXd> activationResult(numChannels,
             Eigen::VectorXd::Zero(preActivationOutput[0].size()));
 
 
-        for (int c = 0; c < numChannels; ++c) {
+        for (size_t c = 0; c < numChannels; ++c) {
             Eigen::VectorXd expPreActivationOutput =
                 preActivationOutput[c].array().exp();
             activationResult[c] = expPreActivationOutput.array() /
@@ -163,12 +163,12 @@ public:
     std::vector<Eigen::VectorXd> computeGradient(const std::vector<Eigen::VectorXd>&
         lossGradient, const std::vector<Eigen::VectorXd>& layerOutput) const 
     { //Overload for vector batch
-        int numChannels = lossGradient.size();
+        size_t numChannels = lossGradient.size();
         size_t numClasses = layerOutput.size();
         std::vector<Eigen::VectorXd> softmaxGradient(numChannels,
             Eigen::VectorXd::Zero(numClasses));
 
-        for (int c = 0; c < numChannels; ++c) {
+        for (size_t c = 0; c < numChannels; ++c) {
             softmaxGradient[c] = (layerOutput[c].array() * (1.0 - layerOutput[c].
                 array())).matrix().cwiseProduct(lossGradient[c]);
         }

@@ -37,7 +37,7 @@ private:
     std::unique_ptr<AdamOptimizer> _optimizer;
 
 public:
-    BatchNormalization(int numChannels, int channelHeight, int channelWidth)
+    BatchNormalization(size_t numChannels, size_t channelHeight, size_t channelWidth)
         : _numChannels(numChannels), _channelHeight(channelHeight),  
         _channelWidth(channelWidth), _featureSize(channelHeight * channelWidth), 
         _epsilon(1e-8), _initialized(false), _isTraining(true),
@@ -162,6 +162,7 @@ private:
     Eigen::MatrixXd _createBatchesFromChannels(const std::vector<Eigen::MatrixXd>& input)
     {
         Eigen::MatrixXd batches(_numChannels, _featureSize);
+        
         //reshpe every channel to a row and store it _batchedInput
         for (size_t c = 0; c < _numChannels; ++c) {
             for (size_t h = 0; h < _channelHeight; ++h) {
