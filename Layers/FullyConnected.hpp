@@ -4,8 +4,6 @@
 #include <iostream>
 #include <random>
 #include <memory>
-#include <cassert>
-#include <Eigen/Dense>
 #include "../Optimizer.hpp"
 #include "../Activation.hpp"
 #include "../Regularization.hpp"
@@ -17,13 +15,13 @@ class FullyConnected {
 private:
 	const size_t _inputSize;
 	const size_t _outputSize;
-
 	size_t _inputChannels;
 	size_t _inputHeight;
 	size_t _inputWidth;
+	bool _initialized;
 
 	Eigen::VectorXd _flatInput;
-	Eigen::VectorXd _output;
+	Eigen::VectorXd _preActivationOutput;
 
 	Eigen::MatrixXd _weights;
 	Eigen::VectorXd _bias;
@@ -33,13 +31,12 @@ private:
 	std::unique_ptr<Activation> _activation;
 	std::unique_ptr<AdamOptimizer> _optimizer;
 
-
 public:
 	FullyConnected(size_t inputSize, size_t outputSize, 
-	std::unique_ptr<Activation> activationFunction)
+				   std::unique_ptr<Activation> activationFunction)
 		:_inputSize(inputSize),
 		 _outputSize(outputSize),
-		 _inputChannels(0),
+		 _initialized(false),
 		 _optimizer(std::make_unique<AdamOptimizer>(FullyConnectedMode)),
 		 _activation(std::move(activationFunction))
 	{
@@ -49,66 +46,40 @@ public:
 		_biasGradient.resize(_outputSize);
 
 		_flatInput.resize(_inputSize);
-		_output.resize(_outputSize);
+		_preActivationOutput.resize(_outputSize);
 	}
 
 	Eigen::VectorXd forward(const Eigen::VectorXd& input)
 	{ //Vector to vector (from fully-connected)
-		
-		if (!_inputChannels) { // initialize input dimensions
-			_inputChannels = 1;
-			_inputHeight = input.rows();
-			_inputWidth = input.cols();
-		}
-
-		assert(_inputSize == _inputHeight * _inputWidth);
-
+		_setupInputDimensions(input.rows(), input.cols(), 1);
 		_flatInput = input;
 		
-		Eigen::VectorXd preActivationOut = _weights * _flatInput + _bias;
-		_output = _activation->Activate(preActivationOut);
-
-		return _output;
+		_preActivationOutput = _weights * _flatInput + _bias;
+		return _activation->Activate(_preActivationOutput);
 	}
 
 	Eigen::VectorXd forward(const std::vector<Eigen::MatrixXd>& input)
 	{ //3D input to vector (from convolutional)
-
-		if (!_inputChannels) { // initialize input dimensions
-			_inputChannels = input.size();
-			_inputHeight = input[0].rows();
-			_inputWidth = input[0].cols();
-		}
-
-		assert(_inputSize == _inputChannels * _inputHeight * _inputWidth);
-
+		_setupInputDimensions(input[0].rows(), input[0].cols(), input.size());
+		
 		_flatInput = _flattenData(input);
-		Eigen::VectorXd preActivationOut = _weights * _flatInput + _bias;
-		_output = _activation->Activate(preActivationOut);
-
-		return _output;
+		_preActivationOutput = _weights * _flatInput + _bias;
+		return _activation->Activate(_preActivationOutput);
 	}
 
 	Eigen::VectorXd backward(Eigen::VectorXd& lossGradient)
 	{ //Backward pass to FC layer
 		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(
-			lossGradient, _output);
+											lossGradient, _preActivationOutput);
 
 		// Calculate the gradient w.r.t the parameters
 		_weightsGradient = dLoss_dPreActivation * _flatInput.transpose();
 		_biasGradient = dLoss_dPreActivation;
 
-		// L2 Regularization
-		/*double lambda = 5.0;
-		Eigen::MatrixXd dW_reg = _weights * (2.0 * lambda);
-		Eigen::VectorXd db_reg = _bias * (2.0 * lambda);
-		_weightsGradient = _weightsGradient + dW_reg;
-		_biasGradient = _biasGradient + db_reg;
-		*/
-		_updateParameters();
-
 		// Calculate the gradient w.r.t the input
 		Eigen::VectorXd inputGradient = _weights.transpose() * dLoss_dPreActivation;
+
+		_updateParameters();
 
 		return inputGradient;
 	}
@@ -116,37 +87,29 @@ public:
 	std::vector<Eigen::MatrixXd> backward(Eigen::VectorXd& lossGradient, bool input3D)
 	{ //Backward pass to Convolution2D layer
 		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(
-			lossGradient, _output);
+											   lossGradient, _preActivationOutput);
 
 		// Calculate the gradient w.r.t the parameters
 		_weightsGradient = dLoss_dPreActivation * _flatInput.transpose();
 		_biasGradient = dLoss_dPreActivation;
-
-		// L2 Regularization
-		/*double lambda = 0.5;
-		Eigen::MatrixXd dW_reg = _weights * 2.0 * lambda;
-		Eigen::VectorXd db_reg = _bias * 2.0 * lambda;
-		_weightsGradient = _weightsGradient + dW_reg;
-		_biasGradient = _biasGradient + db_reg;
-		*/
-		_updateParameters();
-
+		
 		// Calculate the gradient w.r.t the input
-		Eigen::VectorXd flatInputGradient = _weights.transpose() *
-			dLoss_dPreActivation;
-		std::vector<Eigen::MatrixXd> inputGradient = _unflattenData(
-			flatInputGradient);
+		Eigen::VectorXd flatInputGradient = _weights.transpose() * dLoss_dPreActivation;
+
+		std::vector<Eigen::MatrixXd> inputGradient = _unflattenData(flatInputGradient);
+
+		_updateParameters();
 
 		return inputGradient;
 	}
 
-	void SetTestMode()
+	void setTestMode()
 	{
 		_weightsGradient.resize(0, 0);
 		_biasGradient.resize(0);
 	}
 
-	void SetTrainingMode()
+	void setTrainingMode()
 	{
 		_weightsGradient.setConstant(_outputSize, _inputSize, 0.0);
 		_biasGradient.setConstant(_outputSize, 0.0);
@@ -174,6 +137,22 @@ private:
 		_bias.setZero(); //Initialize bias
 	}
 
+	void _setupInputDimensions(size_t inputHeight, size_t inputWidth, size_t inputChannels = 0)
+    {
+        if (!_initialized) {
+            _inputHeight = inputHeight;
+            _inputWidth = inputWidth;
+            _inputChannels = inputChannels;
+
+			// Calculate the expected input size and validate it
+			size_t expectedInputSize = _inputChannels * _inputHeight * _inputWidth;
+			if (_inputSize != expectedInputSize) {
+				throw std::invalid_argument("Input size does not match the expected dimensions.");
+			}
+			_initialized = true;
+		}
+    }
+
 	void _updateParameters()
 	{
 		// Update weights and biases
@@ -187,19 +166,16 @@ private:
 	Eigen::VectorXd _flattenData(const std::vector<Eigen::MatrixXd>& data) const 
 	{ //flatten 3D Tensor to a Vector
 		Eigen::VectorXd flattenData(_inputSize);
-
 		size_t rowIndex = 0;
+		
 		for (const auto& matrix : data) {
-			Eigen::Map<const Eigen::VectorXd> matrixMap(matrix.data(),
-				matrix.size());
+			Eigen::Map<const Eigen::VectorXd> matrixMap(matrix.data(), matrix.size());
 			flattenData.segment(rowIndex, matrixMap.size()) = matrixMap;
 			rowIndex += matrixMap.size();
 
 			if (rowIndex > _inputSize) {
-				std::cerr << "Row index exceeded the limit of input size, " <<
-					_inputSize << std::endl;
-				break; //Error
-			}
+                throw std::runtime_error("Row index exceeded the limit of input size.");
+            }
 		}
 
 		return flattenData;
@@ -208,21 +184,18 @@ private:
 	std::vector<Eigen::MatrixXd> _unflattenData(const Eigen::VectorXd& flattenedData) 
 	const 
 	{ //reconstruct a 3D Tensor from a flattened Vector
-        std::vector<Eigen::MatrixXd> unflattenedData;
-        unflattenedData.reserve(_inputChannels);
+        std::vector<Eigen::MatrixXd> unflattenedData(_inputChannels);
 
         size_t index = 0;
         for (size_t c = 0; c < _inputChannels; ++c) {
             Eigen::Map<const Eigen::MatrixXd> matrixMap(flattenedData.data() 
-				+ index, _inputHeight, _inputWidth);
-            unflattenedData.emplace_back(matrixMap);
+											+ index, _inputHeight, _inputWidth);
+            unflattenedData[c] = matrixMap;
             index += _inputHeight * _inputWidth;
-        
+	
 			if (index > _inputSize) {
-					std::cerr << "Index exceeded the limit of flattened data size, " << 
-						_inputSize << std::endl;
-					break; // Error
-			}
+                throw std::runtime_error("Index exceeded the limit of flattened data size.");
+            }
 		}
 
         return unflattenedData;
@@ -231,3 +204,11 @@ private:
 };
 
 #endif // FULLYCONNECTED_HPP
+
+// L2 Regularization
+/*double lambda = 0.5;
+Eigen::MatrixXd dW_reg = _weights * 2.0 * lambda;
+Eigen::VectorXd db_reg = _bias * 2.0 * lambda;
+_weightsGradient = _weightsGradient + dW_reg;
+_biasGradient = _biasGradient + db_reg;
+*/

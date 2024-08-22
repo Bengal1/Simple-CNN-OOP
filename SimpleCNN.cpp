@@ -7,6 +7,12 @@
 #include "Regularization.hpp"
 #include <math.h>
 
+/* TODO:
+    * TrainMode/TestMode methods
+    * code std.
+*/
+
+
 const size_t classes = 10;
 
 class SimpleCNN {
@@ -33,7 +39,8 @@ public:
       _pool2(8, 8, 64, 2),
       _fc1(4 * 4 * 64, 512, std::make_unique<ReLU>()),
       _fc2(512, 10, std::make_unique<Softmax>()),
-      _dropout1(0.45), _dropout2(0.35)
+      _dropout1(0.45), 
+      _dropout2(0.35)
     {}
 
     Eigen::VectorXd ForwardPass(const Eigen::MatrixXd& input) {
@@ -48,7 +55,7 @@ public:
 
         Eigen::VectorXd outputFc1 = _fc1.forward(outputDrop2);
         Eigen::VectorXd outputFc2 = _fc2.forward(outputFc1);
-
+        
         return outputFc2;
     }
 
@@ -69,8 +76,7 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
     const std::vector<Eigen::VectorXd>& oneHotTargets) {
 
     if (modelOutput.size() != oneHotTargets.size()) {
-        std::cerr << "Error: Input vectors have different sizes." << std::endl;
-        exit(EXIT_FAILURE);
+        throw std::invalid_argument("Input vectors have different sizes.");
     }
 
     double correctPredictions = 0;
@@ -80,8 +86,9 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
     for (size_t d = 0; d < dataSize; ++d) {
         modelOutput[d].maxCoeff(&predictedClass);
         oneHotTargets[d].maxCoeff(&trueClass);
-        if (predictedClass == trueClass)
+        if (predictedClass == trueClass){
             correctPredictions++;
+        }
     }
 
     return correctPredictions / static_cast<double>(dataSize) * 100.0;
@@ -100,19 +107,19 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, size_t epochs = 1
 
     std::cout << "\nStart training..." << std::endl;
 
-    double totalLoss = 0.0;
     std::vector<double> trainAccuracy(epochs);
     for (size_t epoch = 0; epoch < epochs; ++epoch) {
         Eigen::VectorXd outputEpoch(classes);
         std::cout << "\nepoch #" << (epoch + 1) << std::endl;
-
+        
         size_t imageNum = 0;
+        double totalEpochLoss = 0.0;
         for (const auto image : trainImages) {
             /*Forward pass*/
             Eigen::VectorXd singleTrainOutput = model.ForwardPass(image);
             trainOutput[imageNum] = singleTrainOutput;
             /*Loss*/
-            totalLoss += model.CEloss.calculateLoss(singleTrainOutput,
+            totalEpochLoss += model.CEloss.calculateLoss(singleTrainOutput,
                 oneHotTrainLabels[imageNum]);
             Eigen::VectorXd lossGrad = model.CEloss.calculateGradient(
                 singleTrainOutput, oneHotTrainLabels[imageNum]);
@@ -120,7 +127,7 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, size_t epochs = 1
             model.Backpropagation(lossGrad);
 
             /*TEST*/
-            if (imageNum % 1000 == 0) {
+            if (imageNum % 100 == 0) {
                 std::cout << imageNum << ": " << std::endl;
                 std::cout << singleTrainOutput << std::endl << std::endl;
                 if (isnan(singleTrainOutput[0])) {
@@ -140,7 +147,7 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, size_t epochs = 1
         trainAccuracy[epoch] = accuracyCalculation(trainOutput,
             oneHotTrainLabels);
         std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%"
-            << " ; Loss: " << totalLoss << std::endl;
+            << " ; Loss: " << totalEpochLoss << std::endl;
     }
 }
 

@@ -4,7 +4,6 @@
 #include <iostream>
 #include <random>
 #include <memory>
-#include <cassert>
 #include "../Activation.hpp"
 #include "../Optimizer.hpp"
 #include "../Regularization.hpp"
@@ -25,12 +24,13 @@ private:
 	size_t _outputHeight;
 	size_t _outputWidth;
 
-	Eigen::MatrixXd _input;
-	std::vector<Eigen::MatrixXd> _input3D;
+	std::vector<Eigen::MatrixXd> _input;
+	std::vector<Eigen::MatrixXd> _normalizedConvOutput;
+
 	std::vector<Eigen::MatrixXd> _filters;
 	std::vector<Eigen::MatrixXd> _filtersGradient;
-
-	std::vector<Eigen::MatrixXd> _preActivationOutput;
+	Eigen::VectorXd _biases;
+	Eigen::VectorXd _biasesGradient;
 
 	std::unique_ptr<AdamOptimizer> _optimizer;
 	std::unique_ptr<ReLU> _activation;
@@ -38,13 +38,15 @@ private:
 
 public:
 	Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels,
-		size_t numFilters, size_t kernelSize,  size_t stride = 1, size_t padding = 0)
+				  size_t numFilters, size_t kernelSize,  size_t stride = 1, 
+				  size_t padding = 0)
 		: _inputHeight(inputHeight), 
 		  _inputWidth(inputWidth),
 		  _inputChannels(inputChannels), 
 		  _numFilters(numFilters),
 		  _kernelSize(kernelSize),
-		  _stride(stride), _padding(padding),
+		  _stride(stride), 
+		  _padding(padding),
 		  _optimizer(std::make_unique<AdamOptimizer>(numFilters)),
 		  _activation(std::make_unique<ReLU>())
 	{
@@ -53,124 +55,88 @@ public:
 		_outputHeight = (_inputHeight - _kernelSize + 2 * _padding) / _stride + 1;
 		_outputWidth = (_inputWidth - _kernelSize + 2 * _padding) / _stride + 1;
 
-		if (_inputChannels == 1) {
-			_input.resize(_inputHeight, _inputWidth);
-		}
-		else {
-			_input3D.assign(_inputChannels, 
-				Eigen::MatrixXd::Zero(_inputHeight,_inputWidth));
-		}
+		_input.assign(_inputChannels, 
+					  Eigen::MatrixXd::Zero(_inputHeight,_inputWidth));
 		_filtersGradient.assign(_numFilters, 
-			Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
-		_preActivationOutput.assign(_numFilters,
-			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
+						Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
+		_normalizedConvOutput.assign(_numFilters,
+						Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
+
+		_biases = Eigen::VectorXd::Zero(_numFilters);
+        _biasesGradient = Eigen::VectorXd::Zero(_numFilters);
 
 		_bn.emplace(_numFilters,_outputHeight, _outputWidth);
 	}
 
 	std::vector<Eigen::MatrixXd> forward(const Eigen::MatrixXd& input)
 	{
-		std::vector<Eigen::MatrixXd> layerOutput(_numFilters,
+		std::vector<Eigen::MatrixXd> convolutionOutput(_numFilters,
 			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
-
-		if (!_padding) {
-			_input = input;
-		}
-		else if (_padding > 0) {
-			_input = _padWithZeros(input);
-		}
-		else {
-			std::cerr << "Non-positive padding value is not valid! " << _padding
-				<< std::endl;
-			exit(EXIT_FAILURE);
-		}
-		for (size_t f = 0; f < _numFilters; ++f) {
-			_preActivationOutput[f] += _Convolve2D(input, _filters[f]);
-		}
-
-		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn->forward(
-			_preActivationOutput);
-		layerOutput = _activation->Activate(nornalizedOutput);
 		
-		return layerOutput;
+		_input[0] = _padWithZeros(input);
+		
+		for (size_t f = 0; f < _numFilters; ++f) {
+			convolutionOutput[f] += _convolve2D(input, _filters[f]);
+			(convolutionOutput[f].array() += _biases(f)).matrix();
+		}
+		
+		_normalizedConvOutput = _bn->forward(convolutionOutput);
+		return _activation->Activate(_normalizedConvOutput);
 	}
 
-	std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& multiInput) 
+	std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input3D) 
 	{ //Overload for multi-channel input
-		std::vector<Eigen::MatrixXd> layerOutput(_numFilters,
-			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
+		std::vector<Eigen::MatrixXd> convolutionOutput(_numFilters,
+					Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
 
-		if (!_padding) {
-			_input3D = multiInput;
-		}
-		else if (_padding > 0) {
-			_input3D = _padWithZeros(multiInput);
-		}
-		else {
-			std::cerr << "Non-positive padding value is not valid! " << _padding
-				<< std::endl;
-			exit(EXIT_FAILURE);
-		}
-
+		_input = _padWithZeros(input3D);
+		
 		for (size_t f = 0; f < _numFilters; ++f) {
 			for (size_t c = 0; c < _inputChannels; ++c) {
-				_preActivationOutput[f] += _Convolve2D(multiInput[c],
-					_filters[f]);
+				convolutionOutput[f] += _convolve2D(input3D[c], _filters[f]);
 			}
+			(convolutionOutput[f].array() += _biases(f)).matrix();
 		}
 
-		std::vector<Eigen::MatrixXd> nornalizedOutput = _bn->forward(
-			_preActivationOutput);
-		layerOutput = _activation->Activate(nornalizedOutput);
-		
-		return layerOutput;
+		_normalizedConvOutput = _bn->forward(convolutionOutput);
+		return _activation->Activate(_normalizedConvOutput);
 	}
 
 	std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd>& lossGradient)
 	{
 		std::vector<Eigen::MatrixXd> inputGradient(_inputChannels,
-			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+					Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
 		assert(lossGradient.size() == _numFilters);
+		
+		std::vector<Eigen::MatrixXd> dLoss_dNormalizedOutput = _activation->computeGradient(
+														lossGradient, _normalizedConvOutput);
 
-		std::vector<Eigen::MatrixXd> dLoss_dPreActivation = _activation->computeGradient(
-			lossGradient, _preActivationOutput);
-		std::vector<Eigen::MatrixXd> dLoss_dBN = _bn->backward(dLoss_dPreActivation);
-
+		std::vector<Eigen::MatrixXd> dLoss_dConvOutput = _bn->backward(dLoss_dNormalizedOutput);
+		
 		for (size_t c = 0; c < _inputChannels; ++c) {
 			for (size_t f = 0; f < _numFilters; ++f) {
-
 				// Calculate the gradient w.r.t the parameters
-				if (_inputChannels == 1) {
-					_filtersGradient[f] += _Convolve2D(_input, dLoss_dBN[f]);
-				}
-				else if (_inputChannels > 1) {
-					_filtersGradient[f] += _Convolve2D(_input3D[c],
-						dLoss_dBN[f]);
-				}
-				else{
-					std::cerr << "Non-positive number of channels is not valid! " 
-					<< _inputChannels << std::endl;
-					exit(EXIT_FAILURE);
-				} 
+				_filtersGradient[f] += _convolve2D(_input[c], dLoss_dConvOutput[f]);
 				// Calculate the gradient w.r.t the input
-				_calculateInputGradient(dLoss_dPreActivation[f], _filters[f],
-					_preActivationOutput[f], inputGradient[c]);
-				_preActivationOutput[f].setZero();
+				inputGradient[c] = _calculateInputGradient(dLoss_dConvOutput[f], _filters[f]); 
+				// Compute bias gradients
+				_biasesGradient(f) += dLoss_dConvOutput[f].sum();
+				_normalizedConvOutput[f].setZero();
 			}
 		}
 		_updateParameters();
-
+			
 		return inputGradient;
 	}
 
-	void SetTestMode()
+	void setTestMode()
 	{
 		_filtersGradient.clear();
 		_bn->SetTestMode();
 	}
 
-	void SetTrainingMode()
+	void setTrainingMode()
 	{
 		_filtersGradient.assign(_numFilters, 
 			Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
@@ -181,7 +147,7 @@ private:
 	void _initializeFilters() 
 	{
 		_filters.assign(_numFilters, 
-			Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
+				 Eigen::MatrixXd::Zero(_kernelSize, _kernelSize));
 
 		// Setup random number generator and distribution for He initialization
 		std::random_device rd;
@@ -190,19 +156,19 @@ private:
 			(_inputHeight * _inputWidth * _inputChannels)));
 
 		for (size_t f = 0; f < _numFilters; ++f) {
-			Eigen::MatrixXd filter(_kernelSize, _kernelSize);
+			Eigen::MatrixXd initializedKernel(_kernelSize, _kernelSize);
 
 			// Initialize filters
 			for (size_t row = 0; row < _kernelSize; ++row) {
 				for (size_t col = 0; col < _kernelSize; ++col) {
-					filter(row, col) = distribution(randomEngine);
+					initializedKernel(row, col) = distribution(randomEngine);
 				}
 			}
-			_filters[f] = filter;
+			_filters[f] = initializedKernel;
 		}
 	}
 
-	Eigen::MatrixXd _Convolve2D(const Eigen::MatrixXd& input,
+	Eigen::MatrixXd _convolve2D(const Eigen::MatrixXd& input,
 		const Eigen::MatrixXd& kernel) const
 	{
 		const size_t inputHeight = input.rows();
@@ -217,93 +183,94 @@ private:
 
 		Eigen::MatrixXd ConvolutionResult(outputHeight, outputWidth);
 		ConvolutionResult.setZero();
+		Eigen::MatrixXd reversedKernel = kernel.reverse();
 
 		for (size_t h = 0; h < outputHeight; ++h) {
 			for (size_t w = 0; w < outputWidth; ++w) {
 				ConvolutionResult(h, w) = (input.block(h * _stride, w * _stride,
-					filterHeight, filterWidth).cwiseProduct(kernel)).sum();
+					filterHeight, filterWidth).cwiseProduct(reversedKernel)).sum();
 			}
 		}
 
 		return ConvolutionResult;
 	}
 
-
 	void _updateParameters()
 	{
+		_bn->updateParameters();
+
 		for (size_t f = 0; f < _numFilters; ++f) {
 			_optimizer->updateStep(_filters[f], _filtersGradient[f], f);
 			// Reset gradients
 			_filtersGradient[f].setZero();
 		}
-		_bn->updateParameters();
+		_optimizer->updateStep(_biases, _biasesGradient);
+		_biasesGradient.setZero();
 	}
 
-	void _calculateInputGradient(const Eigen::MatrixXd& lossGradientChannel,
-		const Eigen::MatrixXd& filter, Eigen::MatrixXd preActivationOut,
-		Eigen::MatrixXd& inputGradChannel) 
+	Eigen::MatrixXd _calculateInputGradient(const Eigen::MatrixXd& dLoss_dPreActivation,
+		const Eigen::MatrixXd& filter) 
 	{
-		Eigen::MatrixXd dOutput_dInput = _activation->computeGradient(
-			lossGradientChannel, preActivationOut);
+		Eigen::MatrixXd dLoss_dInput(_inputHeight, _inputWidth);
 		Eigen::MatrixXd reversedKernel = filter.reverse();
 
-		// Zero-pad dOutput_dInput to match inputGradChannel size
-    	size_t paddedHeight = dOutput_dInput.rows() + _kernelSize - 1;
-    	size_t paddedWidth = dOutput_dInput.cols() + _kernelSize - 1;
-    	Eigen::MatrixXd padded_dOutput = Eigen::MatrixXd::Zero(paddedHeight, paddedWidth);
-    	padded_dOutput.block((_kernelSize - 1) / 2, (_kernelSize - 1) / 2, 
-			dOutput_dInput.rows(), dOutput_dInput.cols()) = dOutput_dInput;
+		// Zero-pad dLoss_dPreActivation to match dLoss_dInput size
+    	size_t paddedHeight = dLoss_dPreActivation.rows() + _kernelSize - 1;
+    	size_t paddedWidth = dLoss_dPreActivation.cols() + _kernelSize - 1;
+    	
+		Eigen::MatrixXd padded_dLoss = Eigen::MatrixXd::Zero(paddedHeight, paddedWidth);
+    	padded_dLoss.block((_kernelSize - 1) / 2, (_kernelSize - 1) / 2, 
+			dLoss_dPreActivation.rows(), dLoss_dPreActivation.cols()) = dLoss_dPreActivation;
 
-		// Iterate through positions and calculate the gradient w.r.t input
+		// convolve2D(dL/dPre-activation, rot180(kernel))
 		for (size_t h = 0; h < _outputHeight; ++h) {
             for (size_t w = 0; w < _outputWidth; ++w) {
-				inputGradChannel(h, w) += (padded_dOutput.block(h, w, _kernelSize, 
-					_kernelSize).cwiseProduct(reversedKernel)).sum();
+				dLoss_dInput(h, w) += (padded_dLoss.block(h, w, _kernelSize, _kernelSize).cwiseProduct(reversedKernel)).sum();
         	}
         }
-		//inputGradChannel = _Convolve2D(padded_dOutput, reversedKernel); //maybe Try
+
+		return dLoss_dInput;
 	}
 
-	Eigen::MatrixXd _padWithZeros(const Eigen::MatrixXd& input,
-		size_t promptPadding = 0) const 
+	Eigen::MatrixXd _padWithZeros(const Eigen::MatrixXd& input) const 
 	{	
-		size_t padding = 0;
-		
-		if (promptPadding)
-			padding = promptPadding;
-		else
-			padding = _padding;
+		if(_padding == 0){
+			return input;
+		}
+		if( _padding < 0){
+			throw std::invalid_argument("Padding must be non-negative");
+		}
 
-		size_t padInputHeight = _inputHeight + 2 * padding;
-		size_t padInputWidth = _inputWidth + 2 * padding;
+		size_t padInputHeight = _inputHeight + 2 * _padding;
+		size_t padInputWidth = _inputWidth + 2 * _padding;
 		Eigen::MatrixXd paddedInput = Eigen::MatrixXd::Zero(padInputHeight,
 			padInputWidth);
 
-		paddedInput.block(_padding, _padding, padInputHeight,
-			padInputWidth) = input;
+		paddedInput.block(_padding, _padding, padInputHeight, padInputWidth) 
+						= input;
 
 
 		return paddedInput;
 	}
 
 	std::vector<Eigen::MatrixXd> _padWithZeros(const std::vector<
-		Eigen::MatrixXd>& input, size_t promptPadding = 0) const
+		Eigen::MatrixXd>& input) const
 	{
-		size_t padding = 0;
+		if(_padding == 0){
+			return input;
+		}
+		if( _padding < 0){
+			throw std::invalid_argument("Padding must be non-negative");
+		}
 
-		if (promptPadding)
-			padding = promptPadding;
-		else
-			padding = _padding;
-
-		size_t padInputHeight = _inputHeight + 2 * padding;
-		size_t padInputWidth = _inputWidth + 2 * padding;
+		size_t padInputHeight = _inputHeight + 2 * _padding;
+		size_t padInputWidth = _inputWidth + 2 * _padding;
 		std::vector<Eigen::MatrixXd> paddedInput(_inputChannels,
 			Eigen::MatrixXd::Zero(padInputHeight, padInputWidth));
 
 		for (size_t c = 0; c < _inputChannels; ++c) {
 			paddedInput[c].block(_padding, _padding, padInputHeight,
-				padInputWidth) = input[c];
+						padInputWidth) = input[c];
 		}
 
 		return paddedInput;

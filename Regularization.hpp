@@ -11,17 +11,17 @@
 
 class BatchNormalization {
 private:
-    double _epsilon;
-    bool _initialized;
-    bool _isTraining;
-
     const size_t _numChannels;
     const size_t _channelHeight;
     const size_t _channelWidth;
     const size_t _featureSize;
+    double _epsilon;
+    double _momentum;
+    bool _initialized;
+    bool _isTraining;
 
-    Eigen::VectorXd _mean;
-    Eigen::VectorXd _variance;
+    Eigen::VectorXd _runningMean;
+    Eigen::VectorXd _runningVariance;
 
     Eigen::VectorXd _gamma;
     Eigen::VectorXd _beta;
@@ -35,12 +35,15 @@ private:
     std::unique_ptr<AdamOptimizer> _optimizer;
 
 public:
-    BatchNormalization(size_t numChannels, size_t channelHeight, size_t channelWidth)
+    BatchNormalization(size_t numChannels, size_t channelHeight, 
+                       size_t channelWidth, double momentum = 0.1)
         : _numChannels(numChannels),
           _channelHeight(channelHeight),
           _channelWidth(channelWidth), 
           _featureSize(channelHeight * channelWidth), 
-          _epsilon(1e-8), _initialized(false), _isTraining(true),
+          _epsilon(1e-8), 
+          _momentum(momentum),
+          _initialized(false), _isTraining(true),
           _optimizer(std::make_unique<AdamOptimizer>(BatchNormalizationMode)) 
     {}
 
@@ -48,17 +51,26 @@ public:
         input) 
     {
         if (!_initialized) {
-            _InitializeParameters(input);
+            _InitializeParameters();
         }
         _batchedInput = _createBatchesFromChannels(input);
-
+        
         // Compute mean and variance
-        _mean = _batchedInput.colwise().mean();
-        _variance = ((_batchedInput.rowwise() - _mean.transpose()).array().square()
-                    .colwise().sum() / _numChannels).matrix();
+        Eigen::VectorXd Mean = _batchedInput.colwise().mean();
+        Eigen::VectorXd Variance = ((_batchedInput.rowwise() - Mean.transpose())
+                        .array().square().colwise().sum() / _numChannels).matrix();
+
+        // Update running mean and variance - exponential moving average
+        if(_isTraining){
+            _runningMean = (1 - _momentum) * _runningMean + _momentum * Mean;
+            _runningVariance = (1 - _momentum) * _runningVariance + _momentum * Variance;
+        }
+        Eigen::VectorXd meanToUse = _isTraining ? Mean : _runningMean;
+        Eigen::VectorXd varianceToUse = _isTraining ? Variance :
+                _runningVariance;
         // Normalize
-        _normalizedBatch = (_batchedInput.rowwise() - _mean.transpose()).array()
-                        .rowwise() / (_variance.array().transpose() + _epsilon)
+        _normalizedBatch = (_batchedInput.rowwise() - meanToUse.transpose()).array()
+                        .rowwise() / (varianceToUse.array().transpose() + _epsilon)
                         .sqrt();
         // Apply scale (gamma) and shift (beta) - Y = gamma*X + beta
         Eigen::MatrixXd scaledShiftedBatch = ((_normalizedBatch.array().rowwise() 
@@ -84,24 +96,24 @@ public:
         .array()).matrix();
         // Gradients w.r.t. variance
         Eigen::VectorXd dLoss_dVar = ((dLoss_dXHat.array() * (_batchedInput.rowwise() 
-                                    - _mean.transpose()).array()).colwise().sum()
-                                    .transpose() * -0.5 * (_variance.array() + 
+                                    - _runningMean.transpose()).array()).colwise().sum()
+                                    .transpose() * -0.5 * (_runningVariance.array() + 
                                     _epsilon).pow(-1.5));
         // Gradients w.r.t. mean
-        Eigen::VectorXd dLoss_dMean = (dLoss_dXHat.array().rowwise() * -(_variance.array() 
+        Eigen::VectorXd dLoss_dMean = (dLoss_dXHat.array().rowwise() * -(_runningVariance.array() 
                                     + _epsilon).sqrt().cwiseInverse().transpose()).matrix()
                                     .colwise().sum().transpose() + (dLoss_dVar.array() * (-2.0 
                                     / _numChannels)).matrix().asDiagonal() * (_batchedInput.rowwise() 
-                                    - _mean.transpose()).colwise().sum().transpose();
+                                    - _runningMean.transpose()).colwise().sum().transpose();
         // Gradients w.r.t. input batch
-        Eigen::MatrixXd dLoss_dBatches = (dLoss_dXHat.array().rowwise() * (_variance.array() 
+        Eigen::MatrixXd dLoss_dBatches = (dLoss_dXHat.array().rowwise() * (_runningVariance.array() 
                                         + _epsilon).sqrt().cwiseInverse().transpose()).matrix() 
-                                        + ((_batchedInput.rowwise() - _mean.transpose()) * (dLoss_dVar
-                                        .transpose() * 2.0 / _numChannels).asDiagonal()) 
+                                        + ((_batchedInput.rowwise() - _runningMean.transpose()) * 
+                                        (dLoss_dVar.transpose() * 2.0 / _numChannels).asDiagonal()) 
                                         + dLoss_dMean.replicate(1, _numChannels).transpose();
         // set dLoss_dInput
         std::vector<Eigen::MatrixXd> dLoss_dInput(_numChannels, 
-            Eigen::MatrixXd::Zero(_channelHeight,_channelWidth));
+                                    Eigen::MatrixXd::Zero(_channelHeight,_channelWidth));
 
         dLoss_dInput = _remapBatchesToChannels(dLoss_dBatches);
         
@@ -118,21 +130,20 @@ public:
         _dBeta.setZero();
     }
 
-    void SetTestMode() {
+    void SetTestMode() { //add assertion
         _isTraining = false;
         _dGamma.resize(0);
         _dBeta.resize(0);
-        //_input.clear();
     }
 
-    void SetTrainingMode() {
+    void SetTrainingMode() { //add assertion
         _isTraining = true;
         _dGamma.setConstant(_featureSize, 0.0);
         _dBeta.setConstant(_featureSize, 0.0);
     }
 
 private:
-    void _InitializeParameters(const std::vector<Eigen::MatrixXd>& input) 
+    void _InitializeParameters() 
     {
         //Initialize parameters
         _gamma.setConstant(_featureSize, 1.0);
@@ -140,8 +151,8 @@ private:
         _dGamma.setConstant(_featureSize, 0.0);
         _dBeta.setConstant(_featureSize, 0.0);
         //Initialize variables
-        _mean.setConstant(_featureSize, 0.0);
-        _variance.setConstant(_featureSize, 0.0);
+        _runningMean.setConstant(_featureSize, 0.0);
+        _runningVariance.setConstant(_featureSize, 0.0);
         _batchedInput.resize(_numChannels, _featureSize);
         _normalizedBatch.resize(_numChannels, _featureSize);
         
@@ -160,6 +171,9 @@ private:
                 }
             }
         }
+        /*for (size_t c = 0; c < _numChannels; ++c) {
+            batches.row(c) = Eigen::Map<const Eigen::RowVectorXd>(input[c].data(), _featureSize);
+        }*/
         return batches;
     }
 
@@ -172,10 +186,13 @@ private:
         for (size_t c = 0; c < _numChannels; ++c) {
             for (size_t h = 0; h < _channelHeight; ++h) {
                 for (size_t w = 0; w < _channelWidth; ++w) {
-                        remapedInput[c](h, w) = batches(c, h * _channelWidth + w);
+                        remapedInput[c](h, w) = batches(c, h * _channelHeight + w);
                 }
             }
         }
+        /*for (size_t c = 0; c < _numChannels; ++c) {
+            remapedInput[c] = Eigen::Map<const Eigen::MatrixXd>(batches.row(c).data(), _channelHeight, _channelWidth);
+        }*/
         return remapedInput;
     }
 
@@ -186,61 +203,69 @@ private:
     size_t _inputHeight;
     size_t _inputWidth;
     size_t _numChannels;
-    double _dropoutRate;
-    bool _isTraining;
 
+    double _dropoutRate;
+    double _scaleFactor;
+    bool _isTraining;
+    bool _initialized;
+
+    std::mt19937 _gen;
+    std::uniform_real_distribution<double> _dist;
 public:
     Dropout(double dropoutRate = 0.5)
         : _dropoutRate(dropoutRate),
+          _scaleFactor(1/(1-dropoutRate)),
           _inputHeight(0),
           _inputWidth(0),
-          _numChannels(0), _isTraining(true) 
-        {}
+          _numChannels(0), 
+          _isTraining(true), 
+          _initialized(false),
+          _gen(std::random_device{}()), 
+          _dist(0.0, 1.0) 
+    {
+        if (dropoutRate < 0.0 || dropoutRate >= 1.0) {
+            throw std::invalid_argument("Dropout rate must be between 0 and 1.");
+        }
+    }
 
     Eigen::MatrixXd forward(const Eigen::MatrixXd& input) 
     {
-        if (!_inputHeight) {
-            _inputHeight = input.rows();
-            _inputWidth = input.cols();
-        }
+        setupDimensions(input.rows(), input.cols());
+
         if (!_isTraining || _dropoutRate == 0.0) {
-            // No dropout
             return input;
         }
+        
+        Eigen::MatrixXd dropoutMask = createRandomMask();
+        dropoutMask = (dropoutMask.array() > _dropoutRate).cast<double>();
+        Eigen::MatrixXd dropoutOutput = (input.array() * dropoutMask.array()) 
+                                        / (1.0 - _dropoutRate);
 
-        // Create a random mask with values between -1 and 1
-        Eigen::MatrixXd dropoutMask = CreateRandomMask();
-        double randomThreshold = 2 * _dropoutRate - 1;
-
-        // Apply dropout
-        dropoutMask = (dropoutMask.array() > randomThreshold).cast<double>();
-        return input.array() * dropoutMask.array() / (1.0 - _dropoutRate);
+        return dropoutOutput * _scaleFactor;
     }
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) 
     {
-        if (!_numChannels) {
-            _numChannels = input.size();
-            _inputHeight = input[0].rows();
-            _inputWidth = input[0].cols();
+        if (input.empty()) {
+            throw std::invalid_argument("Input batch must not be empty.");
         }
+
+        setupDimensions(input[0].rows(), input[0].cols(), input.size());
+
         if (!_isTraining || _dropoutRate == 0.0) {
-            // No dropout
             return input;
         }
-        std::vector<Eigen::MatrixXd> dropedOutInput(_numChannels,
-            Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
-        for (size_t c = 0; c < _numChannels; ++c) {
-            // Create a random mask with values between -1 and 1
-            Eigen::MatrixXd dropoutMask = CreateRandomMask();
-            double randomThreshold = 2 * _dropoutRate - 1;
 
-            // Apply dropout
-            dropoutMask = (dropoutMask.array() > randomThreshold).cast<double>();
-            dropedOutInput[c] = input[c].array() * dropoutMask.array() / (1.0 -
-                _dropoutRate);
+        std::vector<Eigen::MatrixXd> dropoutOutputs(_numChannels);
+        for (size_t c = 0; c < _numChannels; ++c) {
+            Eigen::MatrixXd dropoutMask = createRandomMask();
+            dropoutMask = (dropoutMask.array() > _dropoutRate).cast<double>();
+
+            dropoutOutputs[c] = (input[c].array() * dropoutMask.array()) / (1.0 - _dropoutRate);
+            dropoutOutputs[c] *= _scaleFactor;
         }
-        return dropedOutInput;
+
+        return dropoutOutputs;
     }
 
     void SetTestMode()
@@ -254,17 +279,24 @@ public:
     }
 
 private:
-    Eigen::MatrixXd CreateRandomMask() 
+    Eigen::MatrixXd createRandomMask() 
     {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<double> dist(0.0, 1.0);
-
-        Eigen::MatrixXd randomMask = Eigen::MatrixXd::NullaryExpr(_inputHeight,
-            _inputWidth, [&dist, &gen]() { return dist(gen); });
-
-        return randomMask;
+        return Eigen::MatrixXd::NullaryExpr(_inputHeight, _inputWidth, [this]() {
+            return _dist(_gen);
+        });
     }
+
+    void setupDimensions(size_t inputHeight, size_t inputWidth, size_t numChannels = 0)
+    {
+        if (!_initialized) {
+            _inputHeight = inputHeight;
+            _inputWidth = inputWidth;
+            _numChannels = numChannels;
+            _initialized = true;
+        }
+    }
+
+
 };
 
 #endif // REGULARIZATION_HPP
