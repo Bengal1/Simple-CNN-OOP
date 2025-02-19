@@ -47,7 +47,6 @@ public:
 	}
 
 private:
-
     void validateSize(const Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients) const
     {
         if (parameters.rows() != gradients.rows() || parameters.cols() != gradients.cols()) {
@@ -79,7 +78,6 @@ private:
 	std::vector<Eigen::VectorXd> _secondMomentEstimateVector;
 
 public:
-
 	AdamOptimizer(int numParams, double learningRate = 1e-5, double beta1 = 0.9,
 				  double beta2 = 0.999, double epsilon = 1.0e-8)
 		: _numParams(numParams),
@@ -155,20 +153,19 @@ public:
 	}
 
 private:
-
 	void validateSize(const Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients) const
-    {
-        if (parameters.rows() != gradients.rows() || parameters.cols() != gradients.cols()) {
-            throw std::invalid_argument("Parameter and gradient sizes must match.");
-        }
-    }
+    	{
+        	if (parameters.rows() != gradients.rows() || parameters.cols() != gradients.cols()) {
+            	throw std::invalid_argument("Parameter and gradient sizes must match.");
+        	}
+    	}
 
-    void validateSize(const Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients) const
-    {
-        if (parameters.size() != gradients.size()) {
-            throw std::invalid_argument("Parameter and gradient sizes must match.");
-        }
-    }
+    	void validateSize(const Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients) const
+	{
+	        if (parameters.size() != gradients.size()) {
+	            throw std::invalid_argument("Parameter and gradient sizes must match.");
+	        }
+	}
 
 	void _initializeMoments(size_t rows, size_t cols = 0) 
 	{
