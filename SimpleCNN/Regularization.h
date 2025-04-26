@@ -62,8 +62,7 @@ public:
             
             // Normalizing the channel 
             double meanToUse = _isTraining ? channelMean : _runningMean[c];
-            double varianceToUse = _isTraining ? channelVariance : 
-                _runningVariance[c];
+            double varianceToUse = _isTraining ? channelVariance : _runningVariance[c];
 
             // Scale and shift using gamma and beta
             outputBN[c] = _gamma[c] * ((input[c].array() - meanToUse) / 
@@ -156,9 +155,13 @@ private:
     bool _isTraining;
 
 public:
-    GradientNormClipping(double maxValue = 1.5) 
-        : _maxValue(maxValue),  _numChannels(0),
-        _isTraining(true){}
+    GradientNormClipping(double maxValue = 1.5, bool isTraining = true) 
+        : _maxValue(maxValue),  _numChannels(0), _isTraining(isTraining)
+    {
+		if (_maxValue < 0.0) {
+			throw std::invalid_argument("Max value must be non-negative.");
+		}
+    }
 
 
     Eigen::MatrixXd ClipGradient(const Eigen::MatrixXd& gradient)
@@ -205,9 +208,20 @@ private:
 
 public:
     WeightsRegularization(int degree = 2, double lambda = 0.5, double learningRate = 0.01)
-        : _degree(degree), _lambda(lambda), _learningRate(learningRate){}
+        : _degree(degree), _lambda(lambda), _learningRate(learningRate)
+    {
+		if (_degree < 0) {
+			throw std::invalid_argument("Degree must be non-negative.");
+		}
+		if (_lambda < 0.0) {
+			throw std::invalid_argument("Lambda must be non-negative.");
+		}
+		if (_learningRate <= 0.0) {
+			throw std::invalid_argument("Learning rate must be positive.");
+		}
+    }
 
-    Eigen::MatrixXd Regulize(Eigen::MatrixXd& weights, Eigen::MatrixXd& dW) {
+    Eigen::MatrixXd Regularize(Eigen::MatrixXd& weights, Eigen::MatrixXd& dW) {
         Eigen::MatrixXd regulizedWeights;
 
         Eigen::MatrixXd dW_reg = weights * (_degree * _lambda);
@@ -229,7 +243,12 @@ private:
 public:
     Dropout(double dropoutRate = 0.5)
         : _dropoutRate(dropoutRate), _isTraining(true), _inputHeight(0), 
-        _inputWidth(0), _numChannels(0){}
+        _inputWidth(0), _numChannels(0)
+    {
+        if (_dropoutRate < 0.0 || _dropoutRate >= 1.0) {
+            throw std::invalid_argument("Dropout rate must be in the range [0, 1).");
+        }
+    }
 
     Eigen::MatrixXd forward(const Eigen::MatrixXd& input) {
 

@@ -9,7 +9,12 @@
 #include "LossFunction.h"
 #include "Regularization.h"
 
-
+/*TODO:
+* look at the regularization
+* look at the loss function
+* look al al layers again
+* new functions: save model, load model, save loss to csv
+*/
 class SimpleCNN {
 private:
     //Layers
@@ -29,9 +34,9 @@ public:
 
 public:
     SimpleCNN() :
-        _conv1(28, 28, 1, 32, 5),
+        _conv1(28, 28, 1, 32, 5, std::make_unique<ReLU>()),
         _pool1(24, 24, 32, 2),
-        _conv2(12, 12, 32, 64, 5),
+        _conv2(12, 12, 32, 64, 5, std::make_unique<ReLU>()),
         _pool2(8, 8, 64, 2),
         _fc1(4 * 4 * 64, 512, std::make_unique<ReLU>()),
         _fc2(512, 10, std::make_unique<Softmax>()), 
@@ -114,22 +119,36 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 20)
     int classes = 10;
     /* Load MNIST Train dataset */
     const std::vector<Eigen::MatrixXd>& trainImages =
-        dataLoader.getTrainImages();
+                                dataLoader.getTrainImages();
     const std::vector<Eigen::VectorXd>& oneHotTrainLabels =
-        dataLoader.getOneHotTrainLabels();
-    int numTrainImages = dataLoader.numTrain;
+                            dataLoader.getOneHotTrainLabels();
+    int numTrainImages = dataLoader.getNumTrain();
 
     std::vector<Eigen::VectorXd> trainOutput(numTrainImages,
-        Eigen::VectorXd(classes));
+                                             Eigen::VectorXd(classes));
+
+    /* Load MNIST Validation dataset */
+    const std::vector<Eigen::MatrixXd>& validationImages =
+        dataLoader.getValidationImages();
+    const std::vector<Eigen::VectorXd>& oneHotValidationLabels =
+        dataLoader.getOneHotValidationLabels();
+    int numValidationImages = dataLoader.getNumValidation();
+
+    std::vector<Eigen::VectorXd> validationOutput(numValidationImages,
+                                             Eigen::VectorXd(classes));
 
     std::cout << "\nStart training..." << std::endl;
 
-    double totalLoss = 0.0;
+    /*double trainLoss = 0.0;*/
+    std::vector<double> trainLoss(epochs);
     std::vector<double> trainAccuracy(epochs);
-    for (int epoch = 0; epoch < epochs; epoch++) {
+    std::vector<double> validationLoss(epochs);
+    std::vector<double> validationAccuracy(epochs);
+
+    for (int epoch = 1; epoch <= epochs; epoch++) {
         double accuracy = 0.0;
-        Eigen::VectorXd outputEpoch(classes);
-        std::cout << "\nepoch #" << (epoch + 1) << std::endl;
+        //Eigen::VectorXd outputEpoch(classes);
+        std::cout << "\nepoch #" << (epoch) << std::endl; // Debug!
 
         int imageNum = 0;
         for (Eigen::MatrixXd image : trainImages) {
@@ -137,17 +156,17 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 20)
             Eigen::VectorXd singleTrainOutput = model.ForwardPass(image);
             trainOutput[imageNum] = singleTrainOutput;
             /*Loss*/
-            totalLoss += model.CEloss.calculateLoss(singleTrainOutput,
-                oneHotTrainLabels[imageNum]);
+            trainLoss[epoch] += model.CEloss.calculateLoss(singleTrainOutput,
+                                            oneHotTrainLabels[imageNum]);
             Eigen::VectorXd lossGrad = model.CEloss.calculateGradient(
-                singleTrainOutput, oneHotTrainLabels[imageNum]);
+                            singleTrainOutput, oneHotTrainLabels[imageNum]);
             /*Backpropagation*/
             model.Backpropagation(lossGrad);
             
-            /*TEST*/
+            /*Debug!*/
             if (imageNum % 1000 == 0) {
-                std::cout << imageNum << ": " << std::endl;//TEST!!!
-                std::cout << singleTrainOutput << std::endl << std::endl;//TEST!!!
+                std::cout << imageNum << ": " << std::endl;
+                std::cout << singleTrainOutput << std::endl << std::endl;
                 if (isnan(singleTrainOutput[0])) {
                     std::cout << "\nimage No. : " << imageNum << std::endl;
                     exit(-1);
@@ -158,14 +177,23 @@ void trainSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model, int epochs = 20)
                 std::vector<Eigen::VectorXd> tempTrainL(&oneHotTrainLabels[0], &oneHotTrainLabels[imageNum]);
                 std::cout << "Train Accuracy: " << accuracyCalculation(tempTrainO, tempTrainL) << "%\n" << std::endl;
             }
-            /*TEST*/
+            /*Debug!*/
 
             imageNum++;
         }
-        trainAccuracy[epoch] = accuracyCalculation(trainOutput,
-            oneHotTrainLabels);
-        std::cout << "Train Accuracy: " << trainAccuracy[epoch] << "%"
-            << " ; Loss: " << totalLoss << std::endl;
+        int validationImageNum = 0;
+		//double valLoss = 0.0;
+        for (Eigen::MatrixXd image : validationImages) {
+            Eigen::VectorXd singleValidationOutput = model.ForwardPass(image);
+            validationOutput[validationImageNum] = singleValidationOutput;
+            validationLoss[epoch] += model.CEloss.calculateLoss(singleValidationOutput,
+                                            oneHotValidationLabels[validationImageNum]);
+            validationImageNum++;
+        }
+        validationAccuracy[epoch] = accuracyCalculation(validationOutput, oneHotValidationLabels);
+        trainAccuracy[epoch] = accuracyCalculation(trainOutput,oneHotTrainLabels);
+        std::cout << "Epoch" << epoch << ": Train Loss: " << trainLoss[epoch] << " ; Train Accuracy: " << trainAccuracy[epoch] << "% "
+            << "| Validation Loss: " << validationLoss[epoch] << " ; Validation Accuracy: " << validationAccuracy[epoch] << "% " << std::endl;
     }
 }
 
@@ -176,10 +204,10 @@ void testSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model)
     const std::vector<Eigen::MatrixXd>& testImages = dataLoader.getTestImages();
     const std::vector<Eigen::VectorXd>& oneHotTestLabels =
         dataLoader.getOneHotTestLabels();
-    int numTestImages = dataLoader.numTest;
+    int numTestImages = dataLoader.getNumTest();
 
     std::vector<Eigen::VectorXd> testOutput(numTestImages,
-        Eigen::VectorXd(classes));
+                                Eigen::VectorXd(classes));
 
     std::cout << "\nStart testing...\n" << std::endl;
 
@@ -198,15 +226,17 @@ void testSimpleCNN(MNISTLoader& dataLoader, SimpleCNN& model)
 int main()
 {
     int epochs = 10, classes = 10;
+	double validationRatio = 0.2;
 
     SimpleCNN model;
 
     /* Load MNIST dataset */
     MNISTLoader loader("train-images.idx3-ubyte", "train-labels.idx1-ubyte",
-        "t10k-images.idx3-ubyte", "t10k-labels.idx1-ubyte");
+                       "t10k-images.idx3-ubyte", "t10k-labels.idx1-ubyte",
+                        true, validationRatio);
     if (!loader.loadTrainData() || !loader.loadTestData()) {
         std::cerr << "Error: Loading data failed." << std::endl;
-        return -1;
+		return -1;
     }
 
     trainSimpleCNN(loader, model, epochs);

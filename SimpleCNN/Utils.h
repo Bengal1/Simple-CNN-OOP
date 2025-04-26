@@ -5,9 +5,9 @@
 #include <Eigen/Dense>
 
 
-double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
-	const std::vector<Eigen::VectorXd>& oneHotTargets) {
-	
+double accuracyCalculation(const std::vector<Eigen::VectorXd>& modelOutput,
+						   const std::vector<Eigen::VectorXd>& oneHotTargets) 
+{	
 	if (modelOutput.size() != oneHotTargets.size()) {
 		std::cerr << "Error: Input vectors have different sizes." << std::endl;
 		return 0.0;
@@ -17,21 +17,23 @@ double accuracyCalculation(std::vector<Eigen::VectorXd>& modelOutput,
 	int dataSize = modelOutput.size();
 	Eigen::Index predictedClass, trueClass;
 
-	for (int i = 0; i < dataSize; i++) {
+	for (size_t i = 0; i < dataSize; ++i) {
 		modelOutput[i].maxCoeff(&predictedClass);
 		oneHotTargets[i].maxCoeff(&trueClass);
-		if (predictedClass == trueClass)
-			correctPredictions++;
-		/*else { //TESTING
+		if (predictedClass == trueClass) {
+			++correctPredictions;
+		}
+		/*else { // Debug!
 			std::cout << modelOutput[i] << std::endl;
 			std::cout << oneHotTargets[i] <<  std::endl;
 			std::cout << "trueClass : " << trueClass << " ; predictedClass : " << predictedClass << std::endl << std::endl;
-		} //TESTING*/
+		} // Debug!*/
 	}
 
-	return correctPredictions / static_cast<double>(dataSize) * 100.0;
+	return static_cast<double>(correctPredictions) / static_cast<double>(dataSize) * 100.0;
 }
 
-void exportTrainingData(void) {}
+void exportTrainingDataToCSV(void) {}
+void saveModelState(void) {}
+void loadModelState(void) {}
 
-void storeModelData(void) {}

@@ -7,25 +7,49 @@
 
 class MNISTLoader {
 private:
+	// MNIST file paths
     std::string _trainImagesFile;
     std::string _trainLabelsFile;
     std::string _testImagesFile;
     std::string _testLabelsFile;
+	// MNIST images
     std::vector<Eigen::MatrixXd> _trainImages;
-    std::vector<uint8_t> _trainLabels;
+    std::vector<Eigen::MatrixXd> _validationImages;
     std::vector<Eigen::MatrixXd> _testImages;
+	// MNIST labels
+    std::vector<uint8_t> _trainLabels;
+    std::vector<uint8_t> _validationLabels;
     std::vector<uint8_t> _testLabels;
+	// One-hot encoded labels
     std::vector<Eigen::VectorXd> _oneHotTrainLabels;
     std::vector<Eigen::VectorXd> _oneHotTestLabels;
+    std::vector<Eigen::VectorXd> _oneHotValidationLabels;
+    
+    size_t numTrain;
+    size_t numValidation;
+    size_t numTest;
+    bool _splitValidation;
+    double _validationRatio;
 
 public:
-    int numTrain = 0;
-    int numTest = 0;
+    
 
     MNISTLoader(const std::string& trainImagesFile, const std::string& trainLabelsFile,
-        const std::string& testImagesFile, const std::string& testLabelsFile) :
+        const std::string& testImagesFile, const std::string& testLabelsFile,
+        bool splitValidation = false, double validationRatio = 0.0) :
         _trainImagesFile(trainImagesFile), _trainLabelsFile(trainLabelsFile),
-        _testImagesFile(testImagesFile), _testLabelsFile(testLabelsFile) {}
+        _testImagesFile(testImagesFile), _testLabelsFile(testLabelsFile),
+        _splitValidation(splitValidation), _validationRatio(validationRatio), 
+        numTrain(0), numValidation(0), numTest(0)
+    {
+		if (_validationRatio <= 0.0 || _validationRatio >= 1.0) {
+			throw std::invalid_argument("Validation ratio must be in the range (0, 1).");
+		}
+		if (_trainImagesFile.empty() || _trainLabelsFile.empty() ||
+			_testImagesFile.empty() || _testLabelsFile.empty()) {
+			throw std::invalid_argument("File paths cannot be empty.");
+		}
+    }
 
     bool loadTrainData() {
         return _loadImages(_trainImagesFile, _trainLabelsFile, 
@@ -41,6 +65,10 @@ public:
         return _trainImages;
     }
 
+    const std::vector<Eigen::MatrixXd>& getValidationImages() const {
+        return _validationImages;
+    }
+
     const std::vector<Eigen::MatrixXd>& getTestImages() const {
         return _testImages;
     }
@@ -52,6 +80,13 @@ public:
         return _oneHotTrainLabels;
     }
 
+    const std::vector<Eigen::VectorXd>& getOneHotValidationLabels() {
+        if (_oneHotValidationLabels.empty()) {
+            _createOneHotLabels(_validationLabels, _oneHotValidationLabels);
+        }
+        return _oneHotValidationLabels;
+    }
+
     const std::vector<Eigen::VectorXd>& getOneHotTestLabels() {
         if (_oneHotTestLabels.empty()) {
             _createOneHotLabels(_testLabels, _oneHotTestLabels);
@@ -59,10 +94,29 @@ public:
         return _oneHotTestLabels;
     }
 
+	const size_t getNumTrain() const {
+		return numTrain;
+	}
+	const size_t getNumValidation() const {
+		return numValidation;
+	}
+	const size_t getNumTest() const {
+		return numTest;
+	}
+	/*void setValidationSplit(double ratio) {
+		_validationSplit = ratio;
+		_splitTrainValidation(ratio);
+	}
+	double getValidationSplit() const {
+		return _validationSplit;
+	}*/
+
+
 private:
 
     bool _loadImages(const std::string& imagesFile, const std::string& labelsFile,
-        std::vector<Eigen::MatrixXd>& images, std::vector<uint8_t>& labels, bool isTrain) {
+        std::vector<Eigen::MatrixXd>& images, std::vector<uint8_t>& labels, bool isTrain) 
+    {
         std::ifstream fImages(imagesFile, std::ios::binary);
 
         if (!fImages.is_open()) {
@@ -133,11 +187,39 @@ private:
 
         fLabels.close();
 
+        if(_splitValidation && isTrain)
+			_splitTrainValidation(_validationRatio);
+
         return true;
     }
 
+    void _splitTrainValidation(double ratio) {
+        if (_trainImages.empty() || _trainLabels.empty()) {
+            throw std::runtime_error("Train data not loaded. Call loadTrainData() before splitting.");
+        }
+        if (ratio <= 0.0 || ratio >= 1.0) {
+            throw std::invalid_argument("Validation ratio must be between 0 and 1 (exclusive).");
+        }
+        std::cout << "Performing train-validation split." << std::endl;
+
+
+        size_t total = _trainImages.size();
+        size_t splitIndex = static_cast<size_t>(total * (1.0 - ratio));
+
+        numValidation = total - splitIndex;
+        numTrain = splitIndex;
+
+        _validationImages.assign(_trainImages.begin() + splitIndex, _trainImages.end());
+        _validationLabels.assign(_trainLabels.begin() + splitIndex, _trainLabels.end());
+
+        _trainImages.resize(splitIndex);
+        _trainLabels.resize(splitIndex);
+        _oneHotTrainLabels.clear(); // force regeneration on next access
+    }
+
     void _createOneHotLabels(const std::vector<uint8_t>& labels, 
-        std::vector<Eigen::VectorXd>& oneHotLabels) {
+                    std::vector<Eigen::VectorXd>& oneHotLabels) 
+    {
         oneHotLabels.clear();
         for (uint8_t label : labels) {
             Eigen::VectorXd oneHot = Eigen::VectorXd::Zero(10);
