@@ -23,31 +23,31 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Activation.h">
+    <ClInclude Include="Activation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Optimizer.h">
+    <ClInclude Include="Optimizer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MNISTLoader.h">
+    <ClInclude Include="MNISTLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LossFunction.h">
+    <ClInclude Include="LossFunction.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils.h">
+    <ClInclude Include="Utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Layers\MaxPooling.h">
+    <ClInclude Include="Layers\MaxPooling.hpp">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="Layers\Convolution2D.h">
+    <ClInclude Include="Layers\Convolution2D.hpp">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="Layers\FullyConnected.h">
+    <ClInclude Include="Layers\FullyConnected.hpp">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="Regularization.h">
+    <ClInclude Include="Regularization.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

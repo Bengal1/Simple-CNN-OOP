@@ -2,16 +2,17 @@
 
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <vector>
 #include <Eigen/Dense>
 
 class MNISTLoader {
 private:
 	// MNIST file paths
-    std::string _trainImagesFile;
-    std::string _trainLabelsFile;
-    std::string _testImagesFile;
-    std::string _testLabelsFile;
+    const std::filesystem::path _trainImagesFile;
+    const std::filesystem::path _trainLabelsFile;
+    const std::filesystem::path _testImagesFile;
+    const std::filesystem::path _testLabelsFile;
 	// MNIST images
     std::vector<Eigen::MatrixXd> _trainImages;
     std::vector<Eigen::MatrixXd> _validationImages;
@@ -24,31 +25,52 @@ private:
     std::vector<Eigen::VectorXd> _oneHotTrainLabels;
     std::vector<Eigen::VectorXd> _oneHotTestLabels;
     std::vector<Eigen::VectorXd> _oneHotValidationLabels;
-    
-    size_t numTrain;
-    size_t numValidation;
-    size_t numTest;
+	// Number of images
+    size_t _numTrain;
+    size_t _numValidation;
+    size_t _numTest;
+	// Validation
     bool _splitValidation;
     double _validationRatio;
 
 public:
     
 
-    MNISTLoader(const std::string& trainImagesFile, const std::string& trainLabelsFile,
-        const std::string& testImagesFile, const std::string& testLabelsFile,
-        bool splitValidation = false, double validationRatio = 0.0) :
-        _trainImagesFile(trainImagesFile), _trainLabelsFile(trainLabelsFile),
-        _testImagesFile(testImagesFile), _testLabelsFile(testLabelsFile),
-        _splitValidation(splitValidation), _validationRatio(validationRatio), 
-        numTrain(0), numValidation(0), numTest(0)
+    MNISTLoader(const std::filesystem::path& trainImagesFile, 
+                const std::filesystem::path& trainLabelsFile,
+                const std::filesystem::path& testImagesFile, 
+                const std::filesystem::path& testLabelsFile,
+                double validationRatio = 0.0) 
+        : _trainImagesFile(trainImagesFile), 
+          _trainLabelsFile(trainLabelsFile),
+          _testImagesFile(testImagesFile), 
+          _testLabelsFile(testLabelsFile),
+          _validationRatio(validationRatio), 
+          _splitValidation(false),
+          _numTrain(0), 
+          _numValidation(0), 
+          _numTest(0)
     {
-		if (_validationRatio <= 0.0 || _validationRatio >= 1.0) {
-			throw std::invalid_argument("Validation ratio must be in the range (0, 1).");
+		// Check that the file paths are not empty
+        if (_trainImagesFile.empty() || _trainLabelsFile.empty() ||
+            _testImagesFile.empty() || _testLabelsFile.empty()) {
+            throw std::invalid_argument("[MNISTLoader]: File paths cannot be empty.");
+        }
+        // Check that each file exists and is a regular file
+        for (const auto& path : { _trainImagesFile, _trainLabelsFile, _testImagesFile, _testLabelsFile }) {
+            if (!std::filesystem::exists(path)) {
+                throw std::runtime_error("[MNISTLoader]: File not found: " + path.string());
+            }
+            if (!std::filesystem::is_regular_file(path)) {
+                throw std::runtime_error("[MNISTLoader]: Not a regular file: " + path.string());
+            }
 		}
-		if (_trainImagesFile.empty() || _trainLabelsFile.empty() ||
-			_testImagesFile.empty() || _testLabelsFile.empty()) {
-			throw std::invalid_argument("File paths cannot be empty.");
+		// Check that the validation ratio is in the range [0, 1)
+		if (_validationRatio < 0.0 || _validationRatio > 1.0) {
+			throw std::invalid_argument("[MNISTLoader]: Validation ratio must be in the range [0, 1).");
 		}
+		// Check if validation split is needed
+		_splitValidation = (_validationRatio > 0) ? true : false;
     }
 
     bool loadTrainData() {
@@ -95,13 +117,13 @@ public:
     }
 
 	const size_t getNumTrain() const {
-		return numTrain;
+		return _numTrain;
 	}
 	const size_t getNumValidation() const {
-		return numValidation;
+		return _numValidation;
 	}
 	const size_t getNumTest() const {
-		return numTest;
+		return _numTest;
 	}
 	/*void setValidationSplit(double ratio) {
 		_validationSplit = ratio;
@@ -114,13 +136,16 @@ public:
 
 private:
 
-    bool _loadImages(const std::string& imagesFile, const std::string& labelsFile,
-        std::vector<Eigen::MatrixXd>& images, std::vector<uint8_t>& labels, bool isTrain) 
+    bool _loadImages(const std::filesystem::path& imagesFile, 
+                     const std::filesystem::path& labelsFile,
+                     std::vector<Eigen::MatrixXd>& images, 
+                     std::vector<uint8_t>& labels, 
+                     bool isTrain) 
     {
         std::ifstream fImages(imagesFile, std::ios::binary);
 
         if (!fImages.is_open()) {
-            std::cerr << "Failed to open images file: " << imagesFile << std::endl;
+            std::cerr << "[MNISTLoader]: Failed to open images file: " << imagesFile << std::endl;
             return false;
         }
         if (isTrain)
@@ -140,11 +165,11 @@ private:
         numCols = _byteswap_ulong(numCols);
 
         if (magicNumber != 0x803) {
-            std::cerr << "Invalid magic number in images file" << std::endl;
+            std::cerr << "[MNISTLoader]: Invalid magic number in images file" << std::endl;
             return false;
         }
 
-        isTrain ? numTrain = numImages : numTest = numImages;
+        isTrain ? _numTrain = numImages : _numTest = numImages;
 
         images.resize(numImages);
         for (size_t i = 0; i < numImages; ++i) {
@@ -164,7 +189,7 @@ private:
         std::ifstream fLabels(labelsFile, std::ios::binary);
 
         if (!fLabels.is_open()) {
-            std::cerr << "Failed to open labels file: " << labelsFile << std::endl;
+            std::cerr << "[MNISTLoader]: Failed to open labels file: " << labelsFile << std::endl;
             return false;
         }
 
@@ -175,10 +200,13 @@ private:
         labelsMagicNumber = _byteswap_ulong(labelsMagicNumber);
         numLabels = _byteswap_ulong(numLabels);
 
-        assert(numImages == numLabels);
+        if(numImages != numLabels){
+			std::cerr << "[MNISTLoader]: Number of images and labels do not match" << std::endl;
+			return false;
+		}
 
         if (labelsMagicNumber != 0x801) {
-            std::cerr << "Invalid magic number in labels file" << std::endl;
+            std::cerr << "[MNISTLoader]: Invalid magic number in labels file" << std::endl;
             return false;
         }
 
@@ -195,10 +223,10 @@ private:
 
     void _splitTrainValidation(double ratio) {
         if (_trainImages.empty() || _trainLabels.empty()) {
-            throw std::runtime_error("Train data not loaded. Call loadTrainData() before splitting.");
+            throw std::runtime_error("[MNISTLoader]: Train data not loaded. Call loadTrainData() before splitting.");
         }
         if (ratio <= 0.0 || ratio >= 1.0) {
-            throw std::invalid_argument("Validation ratio must be between 0 and 1 (exclusive).");
+            throw std::invalid_argument("[MNISTLoader]: Validation ratio must be between 0 and 1 (exclusive).");
         }
         std::cout << "Performing train-validation split." << std::endl;
 
@@ -206,8 +234,8 @@ private:
         size_t total = _trainImages.size();
         size_t splitIndex = static_cast<size_t>(total * (1.0 - ratio));
 
-        numValidation = total - splitIndex;
-        numTrain = splitIndex;
+        _numValidation = total - splitIndex;
+        _numTrain = splitIndex;
 
         _validationImages.assign(_trainImages.begin() + splitIndex, _trainImages.end());
         _validationLabels.assign(_trainLabels.begin() + splitIndex, _trainLabels.end());
