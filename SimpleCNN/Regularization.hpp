@@ -39,18 +39,18 @@ public:
 		: _numChannels(0), 
           _channelHeight(0), 
           _channelWidth(0),
-          _epsilon(1e-8), 
+          _epsilon(1e-6), 
           _initialized(false), 
           _isTraining(true), 
           _momentum(momentum),
           _optimizer(std::make_unique<AdamOptimizer>(-2))
     {
         if (_momentum < 0.0 || _momentum > 1.0) {
-            throw std::invalid_argument("Momentum must be in the range [0, 1].");
+            throw std::invalid_argument("[BatchNormalization]: Momentum must be in the range [0, 1].");
         }
     }
 
-    std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd>& input) 
+    std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) 
     {
         if (!_initialized) {
             _InitializeParameters(input);
@@ -85,7 +85,7 @@ public:
         return outputBN;
     }
 
-    std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd>& dInput) 
+    std::vector<Eigen::MatrixXd> backward(const std::vector<Eigen::MatrixXd>& dOutput) 
     {
         std::vector<Eigen::MatrixXd> inputGradient(_numChannels, 
                     Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
@@ -94,15 +94,15 @@ public:
         for (size_t c = 0; c < _numChannels; ++c) {
             double mean = _batchMean[c];
             double variance = _batchVariance[c];
-            double invStd = 1.0 / (sqrt(variance) + _epsilon);
+            double invStd = 1.0 / std::sqrt(variance + _epsilon);
 
             // Gradients w.r.t gamma and beta
             Eigen::MatrixXd x_hat = (_input[c].array() - mean) * invStd;
-            _dGamma(c) = (dInput[c].array() * x_hat.array()).sum();
-            _dBeta(c) = dInput[c].sum();
+            _dGamma(c) = (dOutput[c].array() * x_hat.array()).sum();
+            _dBeta(c) = dOutput[c].sum();
 
             // Gradient w.r.t x_hat
-            Eigen::MatrixXd dXhat = dInput[c].array() * _gamma(c);
+            Eigen::MatrixXd dXhat = dOutput[c].array() * _gamma(c);
 
             // Gradient w.r.t variance
             Eigen::MatrixXd x_mu = _input[c].array() - mean;
@@ -130,6 +130,10 @@ public:
         _dBeta.setZero();
     }
 
+	void setTrainingMode(bool isTraining) {
+		_isTraining = isTraining;
+	}
+
 private:
     void _InitializeParameters(const std::vector<Eigen::MatrixXd>& input) 
     {
@@ -143,10 +147,10 @@ private:
 		_batchVariance.assign(_numChannels, 0.0);
         _runningMean.assign(_numChannels, 0.0);
         _runningVariance.assign(_numChannels, 1.0);
-        _gamma.setConstant(_numChannels, 1.0);
-        _beta.setConstant(_numChannels, 0.0);
-        _dGamma.setConstant(_numChannels, 0.0);
-        _dBeta.setConstant(_numChannels, 0.0);
+        _gamma = Eigen::VectorXd::Constant(_numChannels, 1.0);
+        _beta = Eigen::VectorXd::Constant(_numChannels, 0.0);
+        _dGamma = Eigen::VectorXd::Zero(_numChannels);
+        _dBeta = Eigen::VectorXd::Zero(_numChannels);
     }
 };
 
@@ -158,13 +162,13 @@ private:
     bool _isTraining;
 
 public:
-    GradientNormClipping(double maxValue = 1.5, bool isTraining = true) 
+    GradientNormClipping(double maxValue = 1.0, bool isTraining = true) 
         : _maxValue(maxValue),  
           _numChannels(0), 
           _isTraining(isTraining)
     {
 		if (_maxValue < 0.0) {
-			throw std::invalid_argument("Max value must be non-negative.");
+			throw std::invalid_argument("[GradientNormClipping]: Max value must be non-negative.");
 		}
     }
 
@@ -207,31 +211,29 @@ public:
 
 class WeightsRegularization {
 private:
-    size_t _degree;
     double _lambda;
     double _learningRate;
 
 public:
-    WeightsRegularization(size_t degree = 2, double lambda = 0.5, double learningRate = 0.01)
-        : _degree(degree), 
-          _lambda(lambda), 
+    WeightsRegularization( 
+        double lambda = 0.5, double learningRate = 0.01)
+        : _lambda(lambda), 
           _learningRate(learningRate)
     {
-		if (_degree < 0) {
-			throw std::invalid_argument("Degree must be non-negative.");
-		}
 		if (_lambda < 0.0) {
-			throw std::invalid_argument("Lambda must be non-negative.");
+			throw std::invalid_argument("[WeightsRegularization]: Lambda must be non-negative.");
 		}
 		if (_learningRate <= 0.0) {
-			throw std::invalid_argument("Learning rate must be positive.");
+			throw std::invalid_argument("[WeightsRegularization]: Learning rate must be positive.");
 		}
     }
 
-    Eigen::MatrixXd Regularize(Eigen::MatrixXd& weights, Eigen::MatrixXd& dW) {
+    Eigen::MatrixXd Regularize(const Eigen::MatrixXd& weights, 
+                               const Eigen::MatrixXd& dW) 
+    {
         Eigen::MatrixXd regulizedWeights;
 
-        Eigen::MatrixXd dW_reg = weights * (_degree * _lambda);
+        Eigen::MatrixXd dW_reg = weights * _lambda;
 
         regulizedWeights = weights - _learningRate * (dW + dW_reg);
 
@@ -245,19 +247,24 @@ private:
     size_t _inputWidth;
     size_t _numChannels;
     double _dropoutRate;
+	double _dropoutScale;
     bool _isTraining;
+	
+    Eigen::MatrixXd _dropoutMask;
+    std::vector<Eigen::MatrixXd> _dropoutMask3D;
 
 public:
     Dropout(double dropoutRate = 0.5)
-        : _dropoutRate(dropoutRate), 
+        : _dropoutRate(dropoutRate),
           _isTraining(true), 
           _inputHeight(0), 
           _inputWidth(0), 
           _numChannels(0)
     {
         if (_dropoutRate < 0.0 || _dropoutRate >= 1.0) {
-            throw std::invalid_argument("Dropout rate must be in the range [0, 1).");
+            throw std::invalid_argument("[Dropout]: Dropout rate must be in the range [0, 1).");
         }
+		_dropoutScale = 1.0 / (1.0 - _dropoutRate);
     }
 
     Eigen::MatrixXd forward(const Eigen::MatrixXd& input) 
@@ -265,19 +272,24 @@ public:
         if (!_inputHeight) {
             _inputHeight = input.rows();
             _inputWidth = input.cols();
+			_numChannels = 1;
+			_dropoutMask = Eigen::MatrixXd::Zero(_inputHeight, _inputWidth);
         }
         if (!_isTraining || _dropoutRate == 0.0) {
             // No dropout
             return input;
         }
-        
-        // Create a random mask with values between -1 and 1
+		if (_inputHeight != input.rows() || _inputWidth != input.cols()) {
+			throw std::invalid_argument("[Dropout]: Input dimensions do not match.");
+		}
+		// Reset dropout mask
+		_dropoutMask.setZero();
+        // Create a random mask with values between 0 and 1
         Eigen::MatrixXd dropoutMask = CreateRandomMask();
-        double randomThreshold = 2 * _dropoutRate - 1;
 
         // Apply dropout
-        dropoutMask = (dropoutMask.array() > randomThreshold).cast<double>();
-        return input.array() * dropoutMask.array() / (1.0 - _dropoutRate);
+        _dropoutMask = (dropoutMask.array() > _dropoutRate).cast<double>();
+        return input.array() * _dropoutMask.array() * _dropoutScale;
     }
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) {
@@ -286,25 +298,58 @@ public:
             _numChannels = input.size();
             _inputHeight = input[0].rows();
             _inputWidth = input[0].cols();
+			_dropoutMask3D.assign(_numChannels, 
+                Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
         }
         if (!_isTraining || _dropoutRate == 0.0) {
             // No dropout
             return input;
         }
+		if (_numChannels != input.size()) {
+			throw std::invalid_argument("[Dropout]: Input channels do not match.");
+		}
+		if (_inputHeight != input[0].rows() || _inputWidth != input[0].cols()) {
+			throw std::invalid_argument("[Dropout]: Input dimensions do not match.");
+		}
         std::vector<Eigen::MatrixXd> dropedOutInput(_numChannels, 
                 Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
-        for (size_t c = 0; c < _numChannels; ++c) {
-            // Create a random mask with values between -1 and 1
-            Eigen::MatrixXd dropoutMask = CreateRandomMask();
-            double randomThreshold = 2 * _dropoutRate - 1;
 
+        for (size_t c = 0; c < _numChannels; ++c) {
+			// Reset dropout mask for each channel
+			_dropoutMask3D[c].setZero();
+            // Create a random mask with values between 0 and 1
+            Eigen::MatrixXd dropoutMask = CreateRandomMask();
+            
             // Apply dropout
-            dropoutMask = (dropoutMask.array() > randomThreshold).cast<double>();
-            dropedOutInput[c] = input[c].array() * dropoutMask.array() / (1.0 - 
-                                _dropoutRate);
+            _dropoutMask3D[c] = (dropoutMask.array() > _dropoutRate).cast<double>();
+            dropedOutInput[c] = input[c].array() * _dropoutMask3D[c].array() * _dropoutScale;
         }
         return dropedOutInput;
     }
+
+    Eigen::MatrixXd backward(const Eigen::MatrixXd& dOutput) {
+        if (!_isTraining || _dropoutRate == 0.0) {
+            return dOutput;
+        }
+        return dOutput.array() * _dropoutMask.array() * _dropoutScale;
+    }
+
+	std::vector<Eigen::MatrixXd> backward(const std::vector<Eigen::MatrixXd>& dOutput) {
+		if (!_isTraining || _dropoutRate == 0.0) {
+			return dOutput;
+		}
+		std::vector<Eigen::MatrixXd> dOutput3D(_numChannels,
+			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+
+		for (size_t c = 0; c < _numChannels; ++c) {
+			dOutput3D[c] = dOutput[c].array() * _dropoutMask3D[c].array() * _dropoutScale;
+		}
+		return dOutput3D;
+	}
+
+	void setTrainingMode(bool isTraining) {
+		_isTraining = isTraining;
+	}
 
 private: 
     Eigen::MatrixXd CreateRandomMask() {

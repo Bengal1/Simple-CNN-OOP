@@ -66,7 +66,7 @@ public:
             }
 		}
 		// Check that the validation ratio is in the range [0, 1)
-		if (_validationRatio < 0.0 || _validationRatio > 1.0) {
+		if (_validationRatio < 0.0 || _validationRatio >= 1.0) {
 			throw std::invalid_argument("[MNISTLoader]: Validation ratio must be in the range [0, 1).");
 		}
 		// Check if validation split is needed
@@ -119,20 +119,14 @@ public:
 	const size_t getNumTrain() const {
 		return _numTrain;
 	}
-	const size_t getNumValidation() const {
+	
+    const size_t getNumValidation() const {
 		return _numValidation;
 	}
-	const size_t getNumTest() const {
+	
+    const size_t getNumTest() const {
 		return _numTest;
 	}
-	/*void setValidationSplit(double ratio) {
-		_validationSplit = ratio;
-		_splitTrainValidation(ratio);
-	}
-	double getValidationSplit() const {
-		return _validationSplit;
-	}*/
-
 
 private:
 

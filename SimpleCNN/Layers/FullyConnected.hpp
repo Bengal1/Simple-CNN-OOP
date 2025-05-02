@@ -10,38 +10,34 @@
 
 class FullyConnected {
 private:
+	// layer dimensions
 	const size_t _inputSize;
 	const size_t _outputSize;
 	const size_t _batchSize;
-
+	// input dimensions
 	size_t _inputChannels;
 	size_t _inputHeight;
 	size_t _inputWidth;
-
+	// learnable parameters
 	Eigen::MatrixXd _weights;
 	Eigen::VectorXd _bias;
+	// gradients
 	Eigen::MatrixXd _weightsGradient;
 	Eigen::VectorXd _biasGradient;
-
+	// input data
 	Eigen::VectorXd _flatInput;
-	Eigen::VectorXd _preActivationOutput;
-
-	std::unique_ptr<Activation> _activation;
+	// Optimizer
 	std::unique_ptr<AdamOptimizer> _optimizer;
-	//GradientNormClipping _gnc;
-
+	
 public:
-	FullyConnected(size_t inputSize, size_t outputSize,
-		std::unique_ptr<Activation> activationFunction, size_t batchSize = 1)
+	FullyConnected(size_t inputSize, size_t outputSize, size_t batchSize = 1)
 		: _inputSize(inputSize), 
 		  _outputSize(outputSize), 
 		  _batchSize(batchSize),
 		  _inputChannels(0),
 		  _inputHeight(0),
 	      _inputWidth(0),
-		  _activation(std::move(activationFunction)), 
-		  _optimizer(std::make_unique<AdamOptimizer>(-1))//,
-		  //_gnc(1.0)
+		  _optimizer(std::make_unique<AdamOptimizer>(-1))
 	{
 		if (_inputSize == 0) {
 			throw std::invalid_argument("[FullyConnected]: Input size must be greater than zero.");
@@ -56,52 +52,64 @@ public:
 		_initializeWeights();
 		// Initialize input and output
 		_flatInput = Eigen::VectorXd::Zero(_inputSize);
-		_preActivationOutput = Eigen::VectorXd::Zero(_outputSize);
 	}
 
 	Eigen::VectorXd forward(const Eigen::VectorXd& input) {
 		if (_inputChannels == 0) _inferShape(input);
+		if (input.size() != _inputSize) {
+			throw std::invalid_argument("[FullyConnected]: Input size does not match.");
+		}
 		_flatInput = input;
-		_preActivationOutput = _weights * _flatInput + _bias;
-		return _activation->Activate(_preActivationOutput);
+		return _weights * _flatInput + _bias;
 	}
 
     Eigen::VectorXd forward(const Eigen::MatrixXd& input) {
         if (_inputChannels == 0) _inferShape(input);
-        _flatInput = _flattenData(input);
-		_preActivationOutput = _weights * _flatInput + _bias;
-        return _activation->Activate(_preActivationOutput);
+		if (input.rows() != _inputHeight || input.cols() != _inputWidth) {
+			throw std::invalid_argument("[FullyConnected]: Input dimensions do not match.");
+		}
+		_flatInput = _flattenData(input);
+		return _weights * _flatInput + _bias;
     }
 
     Eigen::VectorXd forward(const std::vector<Eigen::MatrixXd>& input) {
         if (_inputChannels == 0) _inferShape(input);
-        _flatInput = _flattenData(input);
-		_preActivationOutput = _weights * _flatInput + _bias;
-        return _activation->Activate(_preActivationOutput);
+		if (input.size() != _inputChannels) {
+			throw std::invalid_argument("[FullyConnected]: Input channels do not match.");
+		}
+		// Flatten the input data
+		_flatInput = _flattenData(input);
+
+		// Perform the forward pass
+		return _weights * _flatInput + _bias;
     }
 
-	Eigen::VectorXd backward(const Eigen::VectorXd& lossGradient) {
-		Eigen::VectorXd dLoss_dPreActivation = _activation->computeGradient(
-											lossGradient, _preActivationOutput);
-		_weightsGradient = dLoss_dPreActivation * _flatInput.transpose();
-		_biasGradient = dLoss_dPreActivation;
-		/*_biasGradient = _gnc.ClipGradient(dLoss_dPreActivation);
-		/*double lambda = 0.5;
-		_weightsGradient += _weights * lambda;
-		_weightsGradient = _gnc.ClipGradient(_weightsGradient);
-		updateParameters();
-		return _gnc.ClipGradient( _weights.transpose() * dLoss_dPreActivation);*/
-		return _weights.transpose() * dLoss_dPreActivation;
+	Eigen::VectorXd backward(const Eigen::VectorXd& dLoss_dOutput) {
+		if (dLoss_dOutput.size() != _outputSize) {
+			throw std::invalid_argument("[FullyConnected]: Loss gradient size does not match.");
+		}
+		// Compute gradient w.r.t. weights and bias
+		_weightsGradient = dLoss_dOutput * _flatInput.transpose();
+		_biasGradient = dLoss_dOutput;
+
+		// Return gradient w.r.t. input
+		return _weights.transpose() * dLoss_dOutput;
 	}
 
-	std::vector<Eigen::MatrixXd> backward(Eigen::VectorXd& lossGradient, bool input3D) {
-		Eigen::VectorXd flatGradient = backward(lossGradient);
+	std::vector<Eigen::MatrixXd> backward(Eigen::VectorXd& dLoss_dOutput, bool input3D) {
+		if (dLoss_dOutput.size() != _outputSize) {
+			throw std::invalid_argument("[FullyConnected]: Loss gradient size does not match.");
+		}
+		Eigen::VectorXd flatGradient = backward(dLoss_dOutput);
+		// Return gradient w.r.t.input (3D)
 		return _unflattenInputGradient(flatGradient);
 	}
 
 	void updateParameters() {
+		// Update weights and bias
 		_optimizer->updateStep(_weights, _weightsGradient);
 		_optimizer->updateStep(_bias, _biasGradient);
+		// Reset gradients
 		_weightsGradient.setZero();
 		_biasGradient.setZero();
 	}
@@ -171,6 +179,7 @@ private:
 	}
 
 	Eigen::VectorXd _flattenData(const Eigen::MatrixXd& data) {
+		// Flatten the input data
 		Eigen::Map<const Eigen::VectorXd> map(data.data(), data.size());
 		return map;
 	}
@@ -178,6 +187,7 @@ private:
 	Eigen::VectorXd _flattenData(const std::vector<Eigen::MatrixXd>& data) {
 		Eigen::VectorXd flat(_inputSize);
 		Eigen::Index offset = 0;
+		// Flatten the input data
 		for (const auto& mat : data) {
 			Eigen::Map<const Eigen::VectorXd> map(mat.data(), mat.size());
 			flat.segment(offset, map.size()) = map;
@@ -187,7 +197,9 @@ private:
 	}
 
 	std::vector<Eigen::MatrixXd> _unflattenInputGradient(const Eigen::VectorXd& flat) {
-		std::vector<Eigen::MatrixXd> unflat(_inputChannels, Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+		std::vector<Eigen::MatrixXd> unflat(_inputChannels, 
+					  Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+		// Unflatten input
 		for (size_t c = 0; c < _inputChannels; ++c)
 			for (size_t h = 0; h < _inputHeight; ++h)
 				for (size_t w = 0; w < _inputWidth; ++w) {

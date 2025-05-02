@@ -3,10 +3,6 @@
 #include <vector>
 #include <Eigen/Dense>
 
-enum {
-	FullyConnectedMode = -1,
-	BatchNormalizationMode = -2
-};
 
 class Optimizer {
 public:
@@ -62,7 +58,7 @@ public:
 		if (parameters.size() != gradients.size()) {
 			throw std::invalid_argument("[Optimizer]: Parameters and gradients must have the same size.");
 		}
-
+		
 		size_t channels = parameters.size();
 		for (size_t c = 0; c < channels; ++c) {
 			updateStep(parameters[c], gradients[c]);
@@ -73,6 +69,12 @@ public:
 // Adam optimizer
 class AdamOptimizer :public Optimizer {
 private:
+	// **Optimizer Modes**
+	enum OptimizerMode {
+		FullyConnected = -1,
+		BatchNormalization = -2
+	};
+	
 	const double _learningRate;
 	const double _beta1;
 	const double _beta2;
@@ -86,7 +88,7 @@ private:
 	double _biasCorrection1;
 	double _biasCorrection2;
 	double _effectiveLearningRate;
-
+	// Moments
 	std::vector<Eigen::MatrixXd> _firstMomentEstimate;
 	std::vector<Eigen::MatrixXd> _secondMomentEstimate;
 	std::vector<Eigen::VectorXd> _firstMomentEstimateVector;
@@ -106,7 +108,7 @@ public:
 		  _biasCorrection2(1.0),
 		  _effectiveLearningRate(learningRate)
 	{
-		
+		_validateInputParameters();
 	}
 
 	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, 
@@ -148,7 +150,7 @@ public:
 			_initializeMoments(parameters.size(), parameters.size());
 			_isInitialized = true;
 		}
-		if (!paramIndex && _numParams == BatchNormalizationMode) {
+		if (!paramIndex && _numParams == BatchNormalization) {
 			_timeStep++;
 			_updateEffectiveLearningRate();
 		}
@@ -169,7 +171,7 @@ public:
 
 private:
 	void _validateInputParameters() {
-		if (_numParams < BatchNormalizationMode) {
+		if (_numParams < BatchNormalization) {
 			throw std::invalid_argument("[Optimizer]: Number of parameters is not valid.");
 		}
 		if (_learningRate <= 0) {
@@ -184,29 +186,29 @@ private:
 		if (_epsilon <= 0) {
 			throw std::invalid_argument("[Optimizer]: Epsilon must be positive.");
 		}
-
-		if (_numParams != FullyConnectedMode && _numParams != BatchNormalizationMode &&
+		if (_numParams != FullyConnected && _numParams != BatchNormalization &&
 			_numParams <= 0) {
 			throw std::invalid_argument("[Optimizer]: Invalid number of parameters.");
 		}
 	}
 	void _initializeMoments(size_t rows, size_t cols)
 	{
-		if (_numParams == FullyConnectedMode) { //Fully-Connected - weights and bias
+		if (_numParams == FullyConnected) { //Fully-Connected - weights and bias
 			_firstMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_secondMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_firstMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
 			_secondMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
 		}
-		else if (_numParams == BatchNormalizationMode) { //BatchNormalization - 2 vectors
+		else if (_numParams == BatchNormalization) { //BatchNormalization - 2 vectors
 			_firstMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
 			_secondMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
 		}
 		else { //Convolution2D - filters and bias
 			_firstMomentEstimate.assign(_numParams, Eigen::MatrixXd::Zero(rows, cols));
 			_secondMomentEstimate.assign(_numParams, Eigen::MatrixXd::Zero(rows, cols));
-			_firstMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
-			_secondMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
+			_firstMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(_numParams));
+			_secondMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(_numParams));
+
 		}
 	}
 
