@@ -29,7 +29,8 @@ private:
     size_t _numTrain;
     size_t _numValidation;
     size_t _numTest;
-	// Validation
+	size_t _numClasses;	
+    // Validation
     bool _splitValidation;
     double _validationRatio;
 
@@ -49,7 +50,8 @@ public:
           _splitValidation(false),
           _numTrain(0), 
           _numValidation(0), 
-          _numTest(0)
+		  _numTest(0),
+		  _numClasses(10) // MNIST has 10 classes (0-9)
     {
 		// Check that the file paths are not empty
         if (_trainImagesFile.empty() || _trainLabelsFile.empty() ||
@@ -137,15 +139,10 @@ private:
                      bool isTrain) 
     {
         std::ifstream fImages(imagesFile, std::ios::binary);
-
-        if (!fImages.is_open()) {
-            std::cerr << "[MNISTLoader]: Failed to open images file: " << imagesFile << std::endl;
-            return false;
+        if (!fImages) {
+            throw std::runtime_error("[MNISTLoader]: Failed to open images file: " + imagesFile.string());
         }
-        if (isTrain)
-            std::cout << "Reading Train Data From Source." << std::endl;
-        else
-            std::cout << "Reading Test Data From Source." << std::endl;
+        std::cout << "Reading " << (isTrain ? "Train" : "Test") << " Data From Source." << std::endl;
 
         uint32_t magicNumber, numImages, numRows, numCols;
         fImages.read(reinterpret_cast<char*>(&magicNumber), sizeof(magicNumber));
@@ -159,8 +156,7 @@ private:
         numCols = _byteswap_ulong(numCols);
 
         if (magicNumber != 0x803) {
-            std::cerr << "[MNISTLoader]: Invalid magic number in images file" << std::endl;
-            return false;
+			throw std::runtime_error("[MNISTLoader]: Invalid magic number in images file");
         }
 
         isTrain ? _numTrain = numImages : _numTest = numImages;
@@ -171,8 +167,11 @@ private:
             for (size_t r = 0; r < numRows; ++r) {
                 for (size_t c = 0; c < numCols; ++c) {
                     uint8_t pixelValue;
-                    fImages.read(reinterpret_cast<char*>(&pixelValue), sizeof(pixelValue));
-                    imageMatrix(r, c) = static_cast<float>(pixelValue) / 255.0; // Normalize to [0, 1]
+                    if (!fImages.read(reinterpret_cast<char*>(&pixelValue), sizeof(pixelValue))) {
+                        fImages.close();
+                        throw std::runtime_error("[MNISTLoader]: Unexpected end of file while reading image data in " + imagesFile.string());
+                    }
+                    imageMatrix(r, c) = static_cast<float>(pixelValue) / 255.0f; // Normalize to [0, 1]
                 }
             }
             images[i] = imageMatrix;
@@ -182,9 +181,8 @@ private:
 
         std::ifstream fLabels(labelsFile, std::ios::binary);
 
-        if (!fLabels.is_open()) {
-            std::cerr << "[MNISTLoader]: Failed to open labels file: " << labelsFile << std::endl;
-            return false;
+        if (!fLabels) {
+            throw std::runtime_error("[MNISTLoader]: Failed to open labels file: " + labelsFile.string());
         }
 
         uint32_t labelsMagicNumber, numLabels;
@@ -193,19 +191,21 @@ private:
 
         labelsMagicNumber = _byteswap_ulong(labelsMagicNumber);
         numLabels = _byteswap_ulong(numLabels);
-
-        if(numImages != numLabels){
-			std::cerr << "[MNISTLoader]: Number of images and labels do not match" << std::endl;
-			return false;
-		}
-
+       
         if (labelsMagicNumber != 0x801) {
-            std::cerr << "[MNISTLoader]: Invalid magic number in labels file" << std::endl;
-            return false;
+            throw std::runtime_error("[MNISTLoader]: Invalid magic number in labels file");
         }
 
+        if(numImages != numLabels){
+            throw std::runtime_error("[MNISTLoader]: Number of images (" + std::to_string(numImages) +
+                ") does not match number of labels (" + std::to_string(numLabels) + ")");
+		}
+
         labels.resize(numLabels);
-        fLabels.read(reinterpret_cast<char*>(labels.data()), numLabels);
+        if (!fLabels.read(reinterpret_cast<char*>(labels.data()), numLabels)) {
+            fLabels.close();
+            throw std::runtime_error("[MNISTLoader]: Failed to read labels data from file: " + labelsFile.string());
+        }
 
         fLabels.close();
 
@@ -215,7 +215,7 @@ private:
         return true;
     }
 
-    void _splitTrainValidation(double ratio) {
+    void _splitTrainValidation(const double ratio) {
         if (_trainImages.empty() || _trainLabels.empty()) {
             throw std::runtime_error("[MNISTLoader]: Train data not loaded. Call loadTrainData() before splitting.");
         }
@@ -239,14 +239,22 @@ private:
         _oneHotTrainLabels.clear(); // force regeneration on next access
     }
 
-    void _createOneHotLabels(const std::vector<uint8_t>& labels, 
-                    std::vector<Eigen::VectorXd>& oneHotLabels) 
+    void _createOneHotLabels(const std::vector<uint8_t>& labels,
+                     std::vector<Eigen::VectorXd>& oneHotLabels)
     {
         oneHotLabels.clear();
-        for (uint8_t label : labels) {
-            Eigen::VectorXd oneHot = Eigen::VectorXd::Zero(10);
+        oneHotLabels.reserve(labels.size());
+
+        for (const auto& label : labels) {
+            if (label >= _numClasses) {
+                throw std::out_of_range("[MNISTLoader]: Label exceeds number of classes.");
+            }
+
+            // Construct in-place: no temporary vector needed
+            Eigen::VectorXd oneHot = Eigen::VectorXd::Zero(_numClasses);
             oneHot(static_cast<int>(label)) = 1.0;
-            oneHotLabels.push_back(oneHot);
+            oneHotLabels.emplace_back(std::move(oneHot));
         }
     }
+
 };

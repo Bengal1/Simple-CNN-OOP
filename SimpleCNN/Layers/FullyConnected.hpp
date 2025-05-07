@@ -27,17 +27,17 @@ private:
 	// input data
 	Eigen::VectorXd _flatInput;
 	// Optimizer
-	std::unique_ptr<AdamOptimizer> _optimizer;
+	std::unique_ptr<Optimizer> _optimizer;
 	
 public:
-	FullyConnected(size_t inputSize, size_t outputSize, size_t batchSize = 1)
-		: _inputSize(inputSize), 
-		  _outputSize(outputSize), 
-		  _batchSize(batchSize),
-		  _inputChannels(0),
-		  _inputHeight(0),
-	      _inputWidth(0),
-		  _optimizer(std::make_unique<AdamOptimizer>(-1))
+	FullyConnected(size_t inputSize, size_t outputSize, double maxGradNorm = -1.0, double weightDecay = 0.0, size_t batchSize = 1)
+		: _inputSize(inputSize),
+		_outputSize(outputSize),
+		_batchSize(batchSize),
+		_inputChannels(0),
+		_inputHeight(0),
+		_inputWidth(0),
+		_optimizer(std::make_unique<AdamOptimizer>(-1, maxGradNorm, weightDecay))
 	{
 		if (_inputSize == 0) {
 			throw std::invalid_argument("[FullyConnected]: Input size must be greater than zero.");
@@ -50,7 +50,7 @@ public:
 		}
 		// Initialize weights and gradients
 		_initializeWeights();
-		// Initialize input and output
+		// Initialize input
 		_flatInput = Eigen::VectorXd::Zero(_inputSize);
 	}
 

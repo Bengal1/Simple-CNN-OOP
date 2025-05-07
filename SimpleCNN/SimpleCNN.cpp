@@ -52,29 +52,32 @@ private:
     
 	// **Training parameters**
     const size_t _classes;
-
+	
 public:
     SimpleCNN(size_t classes = 10) :
-        _conv1(28, 28, 1, 32, 5),
+        _conv1(28, 28, 1, 32, 5, /*maxGradNorm*/2.0, /*weightDecay*/0.05),
         _pool1(24, 24, 32, 2),
-        _conv2(12, 12, 32, 64, 5),
+        _conv2(12, 12, 32, 64, 5, /*maxGradNorm*/1.0, /*weightDecay*/5e-3),
         _pool2(8, 8, 64, 2),
-        _fc1(4 * 4 * 64, 512),
-        _fc2(512, classes),
+        _fc1(4 * 4 * 64, 512, /*maxGradNorm*/3.0, /*weightDecay*/0.05),
+        _fc2(512, classes, /*maxGradNorm*/5.0, /*weightDecay*/0.05),
+        
         _dropout1(0.45),
-		_dropout2(0.35),
-		CEloss(),
-		_classes(classes),
-		_testAccuracy(0.0)
+        _dropout2(0.35),
+        _bn1(/*maxGradNorm*/ 5.0, /*weightDecay*/5e-3),
+        _bn2(/*maxGradNorm*/ 5.0, /*weightDecay*/5e-3),
+        
+        _classes(classes),
+        _testAccuracy(0.0)
 	{
-		if (classes <= 2) {
-			throw std::invalid_argument("[SimpleCNN]: Number of classes must be greater than 2.");
+		if (classes < 2) {
+			throw std::invalid_argument("[SimpleCNN]: Number of classes must be greater than 1.");
 		}
 
     }
 
     void trainSimpleCNN(MNISTLoader& dataLoader,
-                        const size_t epochs = 20)
+                        const size_t epochs = 10)
     {
 		if (epochs <= 0) {
 			throw std::invalid_argument("[SimpleCNN]: Number of epochs must be greater than 0.");
@@ -116,7 +119,7 @@ public:
 			_trainingStats[VALIDATION_ACCURACY][epoch - 1] = accuracyCalculation(validationOutput,
 				                                                            oneHotValidationLabels);
 
-			std::cout << "Epoch" << epoch << ":"
+			std::cout << "Epoch" << epoch << ": "
                 << "Train Loss = " << _trainingStats[TRAIN_LOSS][epoch - 1] << " ; "
                 << "Train Accuracy = " << _trainingStats[TRAIN_ACCURACY][epoch - 1] << "% | "
                 << "Validation Loss = " << _trainingStats[VALIDATION_LOSS][epoch - 1] << " ; "
@@ -160,19 +163,19 @@ public:
 
 private:
     Eigen::VectorXd _ForwardPass(Eigen::MatrixXd& input) {
-        /*Forward propagation*/
+        // First convolution block
         std::vector<Eigen::MatrixXd> outputConv1 = _conv1.forward(input);
 		std::vector<Eigen::MatrixXd> outputBN1 = _bn1.forward(outputConv1);
 		std::vector<Eigen::MatrixXd> outputRelu1 = _relu1.Activate(outputBN1);
         std::vector<Eigen::MatrixXd> outputPool1 = _pool1.forward(outputRelu1);
         std::vector<Eigen::MatrixXd> outputDrop1 = _dropout1.forward(outputPool1);
-
+        // Second convolution block
         std::vector<Eigen::MatrixXd> outputConv2 = _conv2.forward(outputDrop1);
 		std::vector<Eigen::MatrixXd> outputBN2 = _bn2.forward(outputConv2);
 		std::vector<Eigen::MatrixXd> outputRelu2 = _relu2.Activate(outputBN2);
         std::vector<Eigen::MatrixXd> outputPool2 = _pool2.forward(outputRelu2);
         std::vector<Eigen::MatrixXd> outputDrop2 = _dropout2.forward(outputPool2);
-
+        // Fully connected layers
         Eigen::VectorXd outputFc1 = _fc1.forward(outputDrop2);
 		Eigen::VectorXd outputRelu3 = _relu3.Activate(outputFc1);
         Eigen::VectorXd outputFc2 = _fc2.forward(outputRelu3);
@@ -209,19 +212,11 @@ private:
         _fc1.updateParameters();
         _fc2.updateParameters();
     }
-	void _initializeTrainingStats(size_t epochs) {
-		if (epochs <= 0) {
-			throw std::invalid_argument("[SimpleCNN]: Number of epochs must be greater than 0.");
-		}
-		/* Initialize training statistics */
-		_trainingStats.clear();
-		_trainingStats.resize(NUM_TRAIN_STATS, std::vector<double>(epochs, 0.0));
-	}
 
-    double _trainEpoch(const std::vector<Eigen::MatrixXd>& trainImages, 
-                       const std::vector<Eigen::VectorXd>& oneHotTrainLabels,
-                       std::vector<Eigen::VectorXd>& trainOutput,
-                       const size_t  numTrainImages)
+    const double _trainEpoch(const std::vector<Eigen::MatrixXd>& trainImages, 
+                             const std::vector<Eigen::VectorXd>& oneHotTrainLabels,
+                             std::vector<Eigen::VectorXd>& trainOutput,
+                             const size_t  numTrainImages)
     {
         size_t trainImageNum = 0;
 		double trainLoss = 0.0;
@@ -263,10 +258,10 @@ private:
 		return trainLoss / static_cast<double>(numTrainImages);
     }
 
-    double _validateEpoch(const std::vector<Eigen::MatrixXd>& validationImages, 
-                          const std::vector<Eigen::VectorXd>& oneHotValidationLabels,
-                          std::vector<Eigen::VectorXd>& validationOutput,
-                          const size_t numValidationImages)
+    const double _validateEpoch(const std::vector<Eigen::MatrixXd>& validationImages, 
+                                const std::vector<Eigen::VectorXd>& oneHotValidationLabels,
+                                std::vector<Eigen::VectorXd>& validationOutput,
+                                const size_t numValidationImages)
     {
         size_t validationImageNum = 0;
 		double validationLoss = 0.0;
@@ -289,7 +284,15 @@ private:
 		_dropout1.setTrainingMode(isTraining);
 		_dropout2.setTrainingMode(isTraining);
 	}
-	
+
+    void _initializeTrainingStats(size_t epochs) {
+        if (epochs <= 0) {
+            throw std::invalid_argument("[SimpleCNN]: Number of epochs must be greater than 0.");
+        }
+        /* Initialize training statistics */
+        _trainingStats.clear();
+        _trainingStats.resize(NUM_TRAIN_STATS, std::vector<double>(epochs, 0.0));
+    }
 
 	void _printTrainingStats() {
 		std::cout << "\nTraining statistics:" << std::endl;
@@ -310,122 +313,33 @@ int main()
 {
     size_t epochs = 10, classes = 10;
 	double validationRatio = 0.2;
-
+	// MNIST dataset paths
 	std::filesystem::path trainImage = "train-images.idx3-ubyte";
 	std::filesystem::path trainLabel = "train-labels.idx1-ubyte";
 	std::filesystem::path testImage = "t10k-images.idx3-ubyte";
 	std::filesystem::path testLabel = "t10k-labels.idx1-ubyte";
- 
+    
+	// Create a SimpleCNN model
     SimpleCNN model(classes);
 
-    /* Load MNIST dataset */
-    MNISTLoader loader(trainImage, trainLabel,
-                       testImage, testLabel, validationRatio);
-    if (!loader.loadTrainData() || !loader.loadTestData()) {
+    try {
+        // Load MNIST dataset
+        MNISTLoader loader(trainImage, trainLabel, testImage, testLabel, validationRatio);
+
+        // Attempt to load training and test data
+        loader.loadTrainData();  // Throws on failure
+        loader.loadTestData();   // Throws on failure
+
+        // Train the model
+        model.trainSimpleCNN(loader, epochs);
+
+        // Test the model
+        model.testSimpleCNN(loader);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         return -1;
     }
 
-    model.trainSimpleCNN(loader, epochs);
-
-    model.testSimpleCNN(loader);
-
     return 0;
 }
-
-
-/*Eigen::VectorXd _ForwardPass(Eigen::MatrixXd& input) {
-
-    std::vector<Eigen::MatrixXd> outputConv1 = _conv1.forward(input);
-    std::vector<Eigen::MatrixXd> outputPool1 = _pool1.forward(outputConv1);
-    std::vector<Eigen::MatrixXd> outputDrop1 = _dropout1.forward(outputPool1);
-
-    std::vector<Eigen::MatrixXd> outputConv2 = _conv2.forward(outputDrop1);
-    std::vector<Eigen::MatrixXd> outputPool2 = _pool2.forward(outputConv2);
-    std::vector<Eigen::MatrixXd> outputDrop2 = _dropout2.forward(outputPool2);
-
-    Eigen::VectorXd outputFc1 = _fc1.forward(outputDrop2);
-    Eigen::VectorXd outputFc2 = _fc2.forward(outputFc1);
-
-    return outputFc2;
-}*/
-
-/*void _Backpropagation(Eigen::VectorXd& lossGradient) {
-    Eigen::VectorXd fc2BackGrad = _fc2.backward(lossGradient);
-    std::vector<Eigen::MatrixXd> fc1BackGrad = _fc1.backward(fc2BackGrad, true);
-    std::vector<Eigen::MatrixXd> pool2BackGrad = _pool2.backward(fc1BackGrad);
-    std::vector<Eigen::MatrixXd> conv2BackGrad = _conv2.backward(pool2BackGrad);
-    std::vector<Eigen::MatrixXd> pool1BackGrad = _pool1.backward(conv2BackGrad);
-    _conv1.backward(pool1BackGrad);
-}*/
-
-/*void _setTrainigStats(const std::vector<double> trainLoss,
-                      const std::vector<double> trainAccuracy,
-                      const std::vector<double> validationLoss,
-                      const std::vector<double> validationAccuracy,
-                      const size_t epochs)
-{
-    _trainingStats.clear();
-    _trainingStats.assign(NUM_TRAIN_STATS, std::vector<double>(epochs, 0.0));
-
-    _trainingStats[TRAIN_LOSS] = trainLoss;
-    _trainingStats[TRAIN_ACCURACY] = trainAccuracy;
-    _trainingStats[VALIDATION_LOSS] = validationLoss;
-    _trainingStats[VALIDATION_ACCURACY] = validationAccuracy;
-}*/
-
-
-/*void getModelState() {
-    std::vector<Eigen::MatrixXd> conv1Filters =  _conv1.getFilters();
-    Eigen::VectorXd conv1Biases = _conv1.getBiases();
-    std::vector<Eigen::MatrixXd> conv2Filters = _conv2.getFilters();
-    Eigen::VectorXd conv2Biases = _conv2.getBiases();
-    Eigen::MatrixXd fc1Weights = _fc1.getWeights();
-    Eigen::VectorXd fc1Bias = _fc1.getBias();
-    Eigen::MatrixXd fc2Weights = _fc2.getWeights();
-    Eigen::VectorXd fc2Bias = _fc2.getBias();
-}
-
-void setModelState() {
-    _conv1.setParameters();
-    _conv2.setParameters();
-    _fc1.setParameters();
-    _fc2.setParameters();
-}*/
-
-
-//  std::vector<Eigen::VectorXd> ForwardPassBatch(std::vector<Eigen::MatrixXd>& inputBatch) {
-      /*Forward propagation*/
- /*     std::vector<std::vector<Eigen::MatrixXd>> outputConv1 =
-          _conv1.forwardBatch(inputBatch);
-      std::vector<std::vector<Eigen::MatrixXd>> outputPool1 =
-          _pool1.forwardBatch(outputConv1);
-      std::vector<std::vector<Eigen::MatrixXd>> outputConv2 =
-          _conv2.forwardBatch(outputPool1);
-      std::vector<std::vector<Eigen::MatrixXd>> outputPool2 =
-          _pool2.forwardBatch(outputConv2);
-      std::vector<Eigen::VectorXd> outputFc1 = _fc1.forwardBatch(outputPool2);
-      std::vector<Eigen::VectorXd> outputFc2 = _fc2.forwardBatch(outputFc1);
-
-      return outputFc2;
-  }
-
-  void BackpropagationBatch(std::vector<Eigen::VectorXd>& lossGradientBatch) {
-      /*Backward*/
-      /*     std::vector<Eigen::VectorXd> fc2BackGrad =
-               _fc2.backwardBatch(lossGradientBatch);
-           std::vector<std::vector<Eigen::MatrixXd>> fc1BackGrad =
-               _fc1.backwardBatch(fc2BackGrad, true);
-           std::vector<std::vector<Eigen::MatrixXd>> pool2BackGrad =
-               _pool2.backwardBatch(fc1BackGrad);
-           std::vector<std::vector<Eigen::MatrixXd>> conv2BackGrad =
-               _conv2.backwardBatch(pool2BackGrad);
-           std::vector<std::vector<Eigen::MatrixXd>> pool1BackGrad =
-               _pool1.backwardBatch(conv2BackGrad);
-           _conv1.backwardBatch(pool1BackGrad);
-
-           /*Optimizer - upadte step*/
-           /*     _fc2.updateParameters();
-                _fc1.updateParameters();
-                _conv2.updateBatch();
-                _conv1.updateBatch();
-            }  */

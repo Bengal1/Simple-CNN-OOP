@@ -98,23 +98,6 @@ public:
 		return (predictions - targets);
 	}
 
-	/*Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
-		const Eigen::VectorXd& targets) const override {
-
-		if (predictions.size() != targets.size()) {
-			throw std::invalid_argument("Predictions and targets must have the same size.");
-		}
-		
-		size_t classNum = predictions.size();
-		Eigen::VectorXd gradientCE(classNum);
-
-		for (size_t c = 0; c < classNum; ++c) {
-			gradientCE(c) = -targets(c) / (predictions(c) +_epsilon);
-		}
-		
-		return gradientCE;
-	}*/
-
 	std::vector<Eigen::VectorXd> calculateGradientBatch(
 		const std::vector<Eigen::VectorXd>& predictionBatch, 
 		const std::vector<Eigen::VectorXd>& targetBatch) const 

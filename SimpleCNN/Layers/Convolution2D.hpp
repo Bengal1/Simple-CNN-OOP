@@ -8,49 +8,47 @@
 
 class Convolution2D {
 private:
+	// Input dimensions
 	const size_t _inputHeight;
 	const size_t _inputWidth;
 	const size_t _inputChannels;
 	const size_t _batchSize;
-
+	// Filter parameters
 	const size_t _numFilters;
 	const size_t _kernelSize;
 	const size_t _stride;
 	const size_t _padding;
-	
+	// Output dimensions
 	size_t _outputHeight;
 	size_t _outputWidth;
-
+	// Biases
 	Eigen::VectorXd _biases;
 	Eigen::VectorXd _biasesGradient;
-
+	// Input data
 	Eigen::MatrixXd _input;
 	std::vector<Eigen::MatrixXd> _input3D;
-
+	// Filters and gradients
 	std::vector<Eigen::MatrixXd> _filters;
 	std::vector<Eigen::MatrixXd> _filtersGradient;
-
+	// Data structures for batch processing
 	std::vector<std::vector<Eigen::MatrixXd>> _input3DBatch;
 	std::vector<std::vector<Eigen::MatrixXd>> _filtersGradBatch;
-
-	std::unique_ptr<AdamOptimizer> _optimizer;
-
-	//BatchNormalization _bn;
-
+	// Optimizer
+	std::unique_ptr<Optimizer> _optimizer;
 public:
 	Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels,
-		size_t numFilters, size_t kernelSize, size_t batchSize = 1, 
+		size_t numFilters, size_t kernelSize, double maxGradNorm = -1.0, double weightDecay = 0.0, size_t batchSize = 1,
 		size_t stride = 1, size_t padding = 0)
-		: _inputHeight(inputHeight), 
-		  _inputWidth(inputWidth),
-		  _inputChannels(inputChannels), 
-		  _numFilters(numFilters),
-		  _kernelSize(kernelSize), 
-		  _batchSize(batchSize), 
-		  _stride(stride),
-		  _padding(padding),
-		  _optimizer(std::make_unique<AdamOptimizer>
-					(static_cast<int>(numFilters)))
+		: _inputHeight(inputHeight),
+		_inputWidth(inputWidth),
+		_inputChannels(inputChannels),
+		_numFilters(numFilters),
+		_kernelSize(kernelSize),
+		_batchSize(batchSize),
+		_stride(stride),
+		_padding(padding),
+		_optimizer(std::make_unique<AdamOptimizer>(
+			static_cast<int>(numFilters), maxGradNorm, weightDecay))
 	{
 		// Validate input
 		_validateInputParameters();
