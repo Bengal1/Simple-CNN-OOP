@@ -30,8 +30,8 @@ private:
     // Layers
     Convolution2D _conv1;
     Convolution2D _conv2;
-    FullyConnected _fc1;
-    FullyConnected _fc2;
+    FullyConnected<std::vector<Eigen::MatrixXd>> _fc1;
+    FullyConnected<Eigen::VectorXd> _fc2;
     MaxPooling _pool1;
     MaxPooling _pool2;
     
@@ -42,10 +42,10 @@ private:
     Dropout _dropout2;
 
 	// Activation functions
-    ReLU _relu1;
-	ReLU _relu2;
-	ReLU _relu3;
-	Softmax _softmax;
+    ReLU<std::vector<Eigen::MatrixXd>> _relu1;
+	ReLU<std::vector<Eigen::MatrixXd>> _relu2;
+	ReLU<Eigen::VectorXd> _relu3;
+	Softmax<Eigen::VectorXd> _softmax;
 	
     // Loss function
     CrossEntropy CEloss;
@@ -59,13 +59,13 @@ public:
         _pool1(24, 24, 32, 2),
         _conv2(12, 12, 32, 64, 5, /*maxGradNorm*/1.0, /*weightDecay*/5e-3),
         _pool2(8, 8, 64, 2),
-        _fc1(4 * 4 * 64, 512, /*maxGradNorm*/3.0, /*weightDecay*/0.05),
+        _fc1(4 * 4 * 64, 512, /*maxGradNorm*/2.0, /*weightDecay*/0.05),
         _fc2(512, classes, /*maxGradNorm*/5.0, /*weightDecay*/0.05),
         
         _dropout1(0.45),
         _dropout2(0.35),
-        _bn1(/*maxGradNorm*/ 5.0, /*weightDecay*/5e-3),
-        _bn2(/*maxGradNorm*/ 5.0, /*weightDecay*/5e-3),
+        _bn1(/*maxGradNorm*/ 4.0, /*weightDecay*/0.05),
+        _bn2(/*maxGradNorm*/ 3.0, /*weightDecay*/0.05),
         
         _classes(classes),
         _testAccuracy(0.0)
@@ -101,21 +101,20 @@ public:
         _initializeTrainingStats(epochs);
 
         for (size_t epoch = 1; epoch <= epochs; ++epoch) {
-            //std::cout << "\nepoch #" << (epoch) << std::endl; // Debug!
+			// Training
             std::vector<Eigen::VectorXd> trainOutput(numTrainImages,
                                             Eigen::VectorXd(_classes));
             _trainingStats[TRAIN_LOSS][epoch - 1] = _trainEpoch(trainImages,
                                                                 oneHotTrainLabels, 
-                                                                trainOutput, 
-                                                                numTrainImages);
+                                                                trainOutput);
 			_trainingStats[TRAIN_ACCURACY][epoch - 1] = accuracyCalculation(trainOutput,
 				                                                      oneHotTrainLabels);
+			// Validation
             std::vector<Eigen::VectorXd> validationOutput(numValidationImages,
                                                       Eigen::VectorXd(_classes));
             _trainingStats[VALIDATION_LOSS][epoch - 1] = _validateEpoch(validationImages,
                                                                         oneHotValidationLabels, 
-                                                                        validationOutput,
-                                                                        numValidationImages);
+                                                                        validationOutput);
 			_trainingStats[VALIDATION_ACCURACY][epoch - 1] = accuracyCalculation(validationOutput,
 				                                                            oneHotValidationLabels);
 
@@ -189,7 +188,7 @@ private:
         Eigen::VectorXd softmaxBackGrad = _softmax.computeGradient(lossGradient);
         Eigen::VectorXd fc2BackGrad = _fc2.backward(softmaxBackGrad);
 		Eigen::VectorXd relu3BackGrad = _relu3.computeGradient(fc2BackGrad);
-		std::vector<Eigen::MatrixXd> fc1BackGrad = _fc1.backward(relu3BackGrad, true);
+        std::vector<Eigen::MatrixXd> fc1BackGrad = _fc1.backward(relu3BackGrad);// , true);
 
 		std::vector<Eigen::MatrixXd> dropout2BackGrad = _dropout2.backward(fc1BackGrad);
 		std::vector<Eigen::MatrixXd> pool2BackGrad = _pool2.backward(dropout2BackGrad);
@@ -215,12 +214,11 @@ private:
 
     const double _trainEpoch(const std::vector<Eigen::MatrixXd>& trainImages, 
                              const std::vector<Eigen::VectorXd>& oneHotTrainLabels,
-                             std::vector<Eigen::VectorXd>& trainOutput,
-                             const size_t  numTrainImages)
+                             std::vector<Eigen::VectorXd>& trainOutput)
     {
         size_t trainImageNum = 0;
 		double trainLoss = 0.0;
-		setTrainingMode(true);
+		_setTrainingMode(true);
 
         for (Eigen::MatrixXd image : trainImages) {
             /*Forward pass*/
@@ -255,30 +253,30 @@ private:
             ++trainImageNum;
         }
 
-		return trainLoss / static_cast<double>(numTrainImages);
+		return trainLoss / static_cast<double>(trainImageNum);
     }
 
     const double _validateEpoch(const std::vector<Eigen::MatrixXd>& validationImages, 
                                 const std::vector<Eigen::VectorXd>& oneHotValidationLabels,
-                                std::vector<Eigen::VectorXd>& validationOutput,
-                                const size_t numValidationImages)
+                                std::vector<Eigen::VectorXd>& validationOutput)
     {
         size_t validationImageNum = 0;
 		double validationLoss = 0.0;
-		setTrainingMode(false);
+		_setTrainingMode(false);
 
         for (Eigen::MatrixXd image : validationImages) {
             Eigen::VectorXd singleValidationOutput = _ForwardPass(image);
             validationOutput[validationImageNum] = singleValidationOutput;
             validationLoss += CEloss.calculateLoss(singleValidationOutput,
                 oneHotValidationLabels[validationImageNum]);
+            
             ++validationImageNum;
         }
 
-        return validationLoss / static_cast<double>(numValidationImages);
+        return validationLoss / static_cast<double>(validationImageNum);
     }
 
-	void setTrainingMode(bool isTraining) {
+	void _setTrainingMode(bool isTraining) {
 		_bn1.setTrainingMode(isTraining);
 		_bn2.setTrainingMode(isTraining);
 		_dropout1.setTrainingMode(isTraining);
@@ -295,6 +293,10 @@ private:
     }
 
 	void _printTrainingStats() {
+		if (_trainingStats.empty()) {
+			std::cout << "[SimpleCNN]: No training statistics available." << std::endl;
+			return;
+		}
 		std::cout << "\nTraining statistics:" << std::endl;
 		for (size_t i = 0; i < _trainingStats[TRAIN_LOSS].size(); ++i) {
 			std::cout << "Epoch " << i + 1 << ": "
@@ -314,10 +316,10 @@ int main()
     size_t epochs = 10, classes = 10;
 	double validationRatio = 0.2;
 	// MNIST dataset paths
-	std::filesystem::path trainImage = "train-images.idx3-ubyte";
-	std::filesystem::path trainLabel = "train-labels.idx1-ubyte";
-	std::filesystem::path testImage = "t10k-images.idx3-ubyte";
-	std::filesystem::path testLabel = "t10k-labels.idx1-ubyte";
+	std::filesystem::path trainImage = "MNIST/train-images.idx3-ubyte";
+	std::filesystem::path trainLabel = "MNIST/train-labels.idx1-ubyte";
+	std::filesystem::path testImage = "MNIST/t10k-images.idx3-ubyte";
+	std::filesystem::path testLabel = "MNIST/t10k-labels.idx1-ubyte";
     
 	// Create a SimpleCNN model
     SimpleCNN model(classes);
