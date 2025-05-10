@@ -6,12 +6,16 @@
 
 class Optimizer {
 protected:
+	double _learningRate;
 	double _maxGradNorm;
 	double _weightDecay;
 
 public:
-	Optimizer(double maxGradNorm = -1.0, double weightDecay = 0.0) 
-		: _maxGradNorm(maxGradNorm), _weightDecay(weightDecay){}
+	Optimizer(double learningRate = 0.001, double maxGradNorm = -1.0, double weightDecay = 0.0) 
+		: _learningRate(learningRate), 
+		_maxGradNorm(maxGradNorm), 
+		_weightDecay(weightDecay)
+	{}
 
 	virtual void updateStep(Eigen::MatrixXd& parameters, 
 							const Eigen::MatrixXd& gradients, 
@@ -52,13 +56,15 @@ protected:
 	}
 
 	// Apply weight decay to the gradients
-	void _applyWeightDecay(Eigen::MatrixXd& grad, const Eigen::MatrixXd& weights) {
+	void _applyWeightDecay(Eigen::MatrixXd& grad, 
+						   const Eigen::MatrixXd& weights) const {
 		if (_weightDecay > 0) {
 			grad += _weightDecay * weights;
 		}
 	}
 
-	void _applyWeightDecay(Eigen::VectorXd& grad, const Eigen::VectorXd& weights) {
+	void _applyWeightDecay(Eigen::VectorXd& grad, 
+						   const Eigen::VectorXd& weights) const {
 		if (_weightDecay > 0) {
 			grad += _weightDecay * weights;
 		}
@@ -67,12 +73,9 @@ protected:
 
 // Stochastic Gradient Descent optimizer
 class SGD : public Optimizer {
-private:
-	double _learningRate;
 public:
 	SGD(double learningRate = 0.001, double maxGradNorm = -1.0, double weightDecay = 0.0)
-		: Optimizer(maxGradNorm, weightDecay),
-		_learningRate(learningRate) 
+		: Optimizer(learningRate, maxGradNorm, weightDecay)
 	{
 		if (_learningRate <= 0) {
 			throw std::invalid_argument("[Optimizer]: Learning rate must be positive.");
@@ -135,7 +138,6 @@ private:
 		BatchNormalization = -2
 	};
 	// Adam optimizer parameters
-	const double _learningRate;
 	const double _beta1;
 	const double _beta2;
 	const double _epsilon;
@@ -155,20 +157,19 @@ private:
 	std::vector<Eigen::VectorXd> _secondMomentEstimateVector;
 
 public:
-	AdamOptimizer(int numParams, double maxGradNorm = -1.0, double weightDecay = 0.0, 
+	AdamOptimizer(int numParams, double maxGradNorm = -1.0, double weightDecay = 0.0,
 		double learningRate = 0.001, double beta1 = 0.9,
 		double beta2 = 0.999, double epsilon = 1.0e-8)
-		: Optimizer(maxGradNorm, weightDecay),
-		  _numParams(numParams), 
-		  _learningRate(learningRate), 
-		  _beta1(beta1), 
-		  _beta2(beta2), 
-		  _epsilon(epsilon), 
-		  _timeStep(0), 
-		  _isInitialized(false),
-		  _biasCorrection1(1.0),
-		  _biasCorrection2(1.0),
-		  _effectiveLearningRate(learningRate)
+		: Optimizer(learningRate, maxGradNorm, weightDecay),
+		_numParams(numParams),
+		_beta1(beta1),
+		_beta2(beta2),
+		_epsilon(epsilon),
+		_timeStep(0),
+		_isInitialized(false),
+		_biasCorrection1(1.0),
+		_biasCorrection2(1.0),
+		_effectiveLearningRate(learningRate)
 	{
 		_validateInputParameters();
 	}
@@ -221,8 +222,9 @@ public:
 
 		Eigen::VectorXd grad = gradients;
 		// Apply weight decay and gradient clipping
-		if(_numParams == BatchNormalization && paramIndex == 0)
+		if (_numParams == BatchNormalization && paramIndex == 0) { //skip bias
 			_applyWeightDecay(grad, parameters);
+		}
 		_clipGradient(grad);
 
 		if (!paramIndex && _numParams == BatchNormalization) {
@@ -245,9 +247,10 @@ public:
 	}
 
 private:
-	void _validateInputParameters() {
-		if (_numParams < BatchNormalization) {
-			throw std::invalid_argument("[Optimizer]: Number of parameters is not valid.");
+	void _validateInputParameters() const {
+		if (_numParams != FullyConnected && _numParams != BatchNormalization &&
+			_numParams <= 0) {
+			throw std::invalid_argument("[Optimizer]: Invalid number of parameters.");
 		}
 		if (_learningRate <= 0) {
 			throw std::invalid_argument("[Optimizer]: Learning rate must be positive.");
@@ -261,10 +264,7 @@ private:
 		if (_epsilon <= 0) {
 			throw std::invalid_argument("[Optimizer]: Epsilon must be positive.");
 		}
-		if (_numParams != FullyConnected && _numParams != BatchNormalization &&
-			_numParams <= 0) {
-			throw std::invalid_argument("[Optimizer]: Invalid number of parameters.");
-		}
+		
 	}
 	void _initializeMoments(size_t rows, size_t cols)
 	{

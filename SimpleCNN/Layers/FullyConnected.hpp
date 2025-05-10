@@ -71,14 +71,14 @@ public:
 			if (input.rows() != _inputHeight || input.cols() != _inputWidth) {
 				throw std::invalid_argument("[FullyConnected]: Input dimensions do not match.");
 			}
-			_flatInput = _flattenMatrixToVector(input);
+			_flatInput = _flattenInput(input);
 		}
 		// Case 3: If the input is std::vector<Eigen::MatrixXd>
 		else if constexpr (std::is_same_v<T, std::vector<Eigen::MatrixXd>>) {
 			if (input.size() != _inputChannels) {
 				throw std::invalid_argument("[FullyConnected]: Input channels do not match.");
 			}
-			_flatInput = _flatten3DToVector(input);
+			_flatInput = _flattenInput(input);
 		}
 
 		// Perform the forward pass
@@ -101,7 +101,6 @@ public:
 		// Restore gradient to match input shape
 		return _restoreInputShape(flatGrad);
 	}
-
 
 	void updateParameters() {
 		// Update weights and bias
@@ -243,84 +242,4 @@ private:
 	}
 };
 
-
-	/*Eigen::MatrixXd _unflattenToMatrix(const Eigen::VectorXd& flat) {
-		if (flat.size() != _inputHeight *_inputWidth)
-			throw std::invalid_argument("Size mismatch in unflattenMatrix.");
-		return Eigen::Map<const Eigen::MatrixXd>(flat.data(), _inputHeight, _inputWidth);
-	}
-
-	std::vector<Eigen::MatrixXd> _unflattenTo3D(const Eigen::VectorXd& flat) {
-		std::vector<Eigen::MatrixXd> unflat(_inputChannels, 
-					  Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
-		// Unflatten input
-		for (size_t c = 0; c < _inputChannels; ++c)
-			for (size_t h = 0; h < _inputHeight; ++h)
-				for (size_t w = 0; w < _inputWidth; ++w) {
-					size_t index = c * _inputHeight * _inputWidth + h * _inputWidth + w;
-					unflat[c](h, w) = flat(index);
-				}
-		return unflat;
-	}*/
-
-
-	/*Eigen::VectorXd forward(const Eigen::VectorXd& input) {
-		if (_inputChannels == 0) _getInputDimensions(input);
-		if (input.size() != _inputSize) {
-			throw std::invalid_argument("[FullyConnected]: Input size does not match.");
-		}
-		_flatInput = input;
-		return _weights * _flatInput + _bias;
-	}
-
-	Eigen::VectorXd forward(const Eigen::MatrixXd& input) {
-		if (_inputChannels == 0) _getInputDimensions(input);
-		if (input.rows() != _inputHeight || input.cols() != _inputWidth) {
-			throw std::invalid_argument("[FullyConnected]: Input dimensions do not match.");
-		}
-		_flatInput = _flattenMatrixToVector(input);
-		return _weights * _flatInput + _bias;
-	}
-
-	Eigen::VectorXd forward(const std::vector<Eigen::MatrixXd>& input) {
-		if (_inputChannels == 0) _getInputDimensions(input);
-		if (input.size() != _inputChannels) {
-			throw std::invalid_argument("[FullyConnected]: Input channels do not match.");
-		}
-		// Flatten the input data
-		_flatInput = _flatten3DToVector(input);
-
-		// Perform the forward pass
-		return _weights * _flatInput + _bias;
-	}*/
-
-	/*Eigen::VectorXd backward(const Eigen::VectorXd& dLoss_dOutput) {
-		if (dLoss_dOutput.size() != _outputSize) {
-			throw std::invalid_argument("[FullyConnected]: Loss gradient size does not match.");
-		}
-		// Compute gradient w.r.t. weights and bias
-		_weightsGradient = dLoss_dOutput * _flatInput.transpose();
-		_biasGradient = dLoss_dOutput;
-
-		// Return gradient w.r.t. input
-		return _weights.transpose() * dLoss_dOutput;
-	}
-
-	Eigen::MatrixXd backward(const Eigen::MatrixXd& dLoss_dOutput) {
-		if (dLoss_dOutput.rows() != _outputSize || dLoss_dOutput.cols() != _batchSize) {
-			throw std::invalid_argument("[FullyConnected]: Loss gradient size does not match.");
-		}
-		Eigen::VectorXd flatGradient = backward(dLoss_dOutput);
-		// Return gradient w.r.t.input (2D)
-		return _unflattenToMatrix(flatGradient);
-	}
-
-	std::vector<Eigen::MatrixXd> backward(Eigen::VectorXd& dLoss_dOutput, bool input3D) {
-		if (dLoss_dOutput.size() != _outputSize) {
-			throw std::invalid_argument("[FullyConnected]: Loss gradient size does not match.");
-		}
-		Eigen::VectorXd flatGradient = backward(dLoss_dOutput);
-		// Return gradient w.r.t.input (3D)
-		return _unflattenTo3D(flatGradient);
-	}*/
 

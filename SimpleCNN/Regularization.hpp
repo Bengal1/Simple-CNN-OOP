@@ -168,145 +168,59 @@ private:
         _dGamma = Eigen::VectorXd::Zero(_numChannels);
         _dBeta = Eigen::VectorXd::Zero(_numChannels);
     }
+
 };
 
-
-class GradientNormClipping {
-private:
-    size_t _numChannels;
-    double _maxValue;
-    bool _isTraining;
-
-public:
-    GradientNormClipping(double maxValue = 1.0, bool isTraining = true) 
-        : _maxValue(maxValue),  
-          _numChannels(0), 
-          _isTraining(isTraining)
-    {
-		if (_maxValue < 0.0) {
-			throw std::invalid_argument("[GradientNormClipping]: Max value must be non-negative.");
-		}
-    }
-
-
-    Eigen::MatrixXd ClipGradient(const Eigen::MatrixXd& gradient)
-    { // Matrix gradient
-
-        if (!_isTraining || _maxValue == 0.0) {
-            // No clipping
-            return gradient;
-        }
-
-        double gradientNorm = gradient.norm();
-        Eigen::MatrixXd clippedGradient = gradient * (_maxValue / gradientNorm);
-
-        return clippedGradient;
-    }
-
-    std::vector<Eigen::MatrixXd> ClipGradient(const std::vector<Eigen::MatrixXd>& gradient) 
-    { // 3D Tensor gradient
-
-        if (!_numChannels) {
-            _numChannels = gradient.size();
-        }
-        if (!_isTraining || _maxValue == 0.0) {
-            // No clipping
-            return gradient;
-        }
-
-        std::vector<Eigen::MatrixXd> clippedGradient(_numChannels);
-        for (size_t c = 0; c < _numChannels; ++c) {
-            double gradientNorm = gradient[c].norm();
-            clippedGradient[c] = gradient[c] * (_maxValue / gradientNorm);
-        }
-
-        return clippedGradient;
-    }
-};
-
-
-class WeightsRegularization {
-private:
-    double _lambda;
-    double _learningRate;
-
-public:
-    WeightsRegularization( 
-        double lambda = 0.5, double learningRate = 0.01)
-        : _lambda(lambda), 
-          _learningRate(learningRate)
-    {
-		if (_lambda < 0.0) {
-			throw std::invalid_argument("[WeightsRegularization]: Lambda must be non-negative.");
-		}
-		if (_learningRate <= 0.0) {
-			throw std::invalid_argument("[WeightsRegularization]: Learning rate must be positive.");
-		}
-    }
-
-    Eigen::MatrixXd Regularize(const Eigen::MatrixXd& weights, 
-                               const Eigen::MatrixXd& dW) 
-    {
-        Eigen::MatrixXd regulizedWeights;
-
-        Eigen::MatrixXd dW_reg = weights * _lambda;
-
-        regulizedWeights = weights - _learningRate * (dW + dW_reg);
-
-        return regulizedWeights;
-    }
-};
-
+//template<typename T>
 class Dropout {
 private:
-	// Input dimensions
+    // Input dimensions
     size_t _inputHeight;
     size_t _inputWidth;
     size_t _numChannels;
-	// Hyperparameters
+    // Hyperparameters
     double _dropoutRate;
-	double _dropoutScale;
+    double _dropoutScale;
     // Training flag
     bool _isTraining;
-	// Dropout mask
+    // Dropout mask
     Eigen::MatrixXd _dropoutMask;
-    //std::vector<Eigen::MatrixXd> _dropoutMask3D;
-	// Random number generator
+    // Random number generator
     std::mt19937 _randGen;
     std::uniform_real_distribution<double> _dist;
 
 public:
     Dropout(double dropoutRate = 0.5)
         : _dropoutRate(dropoutRate),
-          _isTraining(true), 
-          _inputHeight(0), 
-          _inputWidth(0), 
-          _numChannels(0),
-		  _randGen(std::random_device{}()),
-		  _dist(0.0, 1.0)
+        _isTraining(true),
+        _inputHeight(0),
+        _inputWidth(0),
+        _numChannels(0),
+        _randGen(std::random_device{}()),
+        _dist(0.0, 1.0)
     {
         if (_dropoutRate < 0.0 || _dropoutRate >= 1.0) {
             throw std::invalid_argument("[Dropout]: Dropout rate must be in the range [0, 1).");
         }
-		// Dropout scale
-		_dropoutScale = 1.0 / (1.0 - _dropoutRate);
+        // Dropout scale
+        _dropoutScale = 1.0 / (1.0 - _dropoutRate);
     }
 
-    Eigen::MatrixXd forward(const Eigen::MatrixXd& input) 
+    Eigen::MatrixXd forward(const Eigen::MatrixXd& input)
     {
-		if (!_numChannels) { //initialization
+        if (!_numChannels) { //initialization
             _numChannels = 1;
             _inputHeight = input.rows();
             _inputWidth = input.cols();
-			_dropoutMask = Eigen::MatrixXd::Zero(_inputHeight, _inputWidth);
+            _dropoutMask = Eigen::MatrixXd::Zero(_inputHeight, _inputWidth);
         }
         if (!_isTraining || _dropoutRate == 0.0) {
             // No dropout
             return input;
         }
-		if (_inputHeight != input.rows() || _inputWidth != input.cols()) {
-			throw std::invalid_argument("[Dropout]: Input dimensions do not match.");
-		}
+        if (_inputHeight != input.rows() || _inputWidth != input.cols()) {
+            throw std::invalid_argument("[Dropout]: Input dimensions do not match.");
+        }
         // Create a random mask with values between 0 and 1
         Eigen::MatrixXd randomMask = _createRandomMask();
 
@@ -317,35 +231,24 @@ public:
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) {
 
-		if (!_numChannels) { //initialization
+        if (!_numChannels) { //initialization
             _numChannels = input.size();
             _inputHeight = input[0].rows();
             _inputWidth = input[0].cols();
             _dropoutMask = Eigen::MatrixXd::Zero(_inputHeight, _inputWidth);
-			/*_dropoutMask3D.assign(_numChannels,
-                Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));*/
         }
         if (!_isTraining || _dropoutRate == 0.0) {
             // No dropout
             return input;
         }
-		if (_numChannels != input.size()) {
-			throw std::invalid_argument("[Dropout]: Input channels do not match.");
-		}
-		if (_inputHeight != input[0].rows() || _inputWidth != input[0].cols()) {
-			throw std::invalid_argument("[Dropout]: Input dimensions do not match.");
-		}
-        std::vector<Eigen::MatrixXd> dropedOutInput(_numChannels, 
-                Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
-
-        /*for (size_t c = 0; c < _numChannels; ++c) {
-            // Create a random mask with values between 0 and 1
-            Eigen::MatrixXd randomMask = _createRandomMask();
-            
-            // Apply dropout
-            _dropoutMask3D[c] = (randomMask.array() > _dropoutRate).cast<double>();
-            dropedOutInput[c] = input[c].array() * _dropoutMask3D[c].array() * _dropoutScale;
-        }*/
+        if (_numChannels != input.size()) {
+            throw std::invalid_argument("[Dropout]: Input channels do not match.");
+        }
+        if (_inputHeight != input[0].rows() || _inputWidth != input[0].cols()) {
+            throw std::invalid_argument("[Dropout]: Input dimensions do not match.");
+        }
+        std::vector<Eigen::MatrixXd> dropedOutInput(_numChannels,
+            Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
         // Create a random Dropout mask
         Eigen::MatrixXd randomMask = _createRandomMask();
@@ -363,29 +266,141 @@ public:
         if (!_isTraining || _dropoutRate == 0.0) {
             return dOutput;
         }
+		if (_inputHeight != dOutput.rows() || _inputWidth != dOutput.cols()) {
+			throw std::invalid_argument("[Dropout]: Gradient dimensions do not match.");
+		}
+        
         return dOutput.array() * _dropoutMask.array() * _dropoutScale;
     }
 
-	std::vector<Eigen::MatrixXd> backward(const std::vector<Eigen::MatrixXd>& dOutput) {
-		if (!_isTraining || _dropoutRate == 0.0) {
-			return dOutput;
+    std::vector<Eigen::MatrixXd> backward(const std::vector<Eigen::MatrixXd>& dOutput) {
+        if (!_isTraining || _dropoutRate == 0.0) {
+            return dOutput;
+        }
+		if (_numChannels != dOutput.size()) {
+			throw std::invalid_argument("[Dropout]: Gradient size does not match number of channels.");
 		}
+		if (_inputHeight != dOutput[0].rows() || _inputWidth != dOutput[0].cols()) {
+			throw std::invalid_argument("[Dropout]: Gradient dimensions do not match.");
+		}
+        
 		std::vector<Eigen::MatrixXd> dOutput3D(_numChannels,
-			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+            Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
-		for (size_t c = 0; c < _numChannels; ++c) {
-			dOutput3D[c] = dOutput[c].array() * _dropoutMask.array() * _dropoutScale;
-		}
-		return dOutput3D;
-	}
+        for (size_t c = 0; c < _numChannels; ++c) {
+            dOutput3D[c] = dOutput[c].array() * _dropoutMask.array() * _dropoutScale;
+        }
+        return dOutput3D;
+    }
+	
 
-	void setTrainingMode(bool isTraining) {
-		_isTraining = isTraining;
-	}
+    void setTrainingMode(bool isTraining) {
+        _isTraining = isTraining;
+    }
 
-private: 
+private:
     Eigen::MatrixXd _createRandomMask() {
         return Eigen::MatrixXd::NullaryExpr(_inputHeight, _inputWidth,
             [this]() { return _dist(_randGen); });
     }
 };
+
+//template<typename T> version
+/*T forward(const T& input)
+    {
+        // Handle input dimension initialization lazily
+        if (_numChannels == 0) {
+            _getInputDimensions(input);
+        }
+        if (!_isTraining || _dropoutRate == 0.0) {
+            // No dropout
+            return input;
+        }
+        if constexpr (std::is_same_v<T, Eigen::MatrixXd>) {
+            if (_inputHeight != input.rows() || _inputWidth != input.cols()) {
+                throw std::invalid_argument("[Dropout]: Input dimensions do not match.");
+            }
+            // Create a random mask with values between 0 and 1
+            Eigen::MatrixXd randomMask = _createRandomMask();
+            // Apply dropout
+            _dropoutMask = (randomMask.array() > _dropoutRate).cast<double>();
+            return input.array() * _dropoutMask.array() * _dropoutScale;
+        }
+        else if constexpr (std::is_same_v<T, std::vector<Eigen::MatrixXd>>) {
+            if (_numChannels != input.size()) {
+                throw std::invalid_argument("[Dropout]: Input channels do not match.");
+            }
+            if (_inputHeight != input[0].rows() || _inputWidth != input[0].cols()) {
+                throw std::invalid_argument("[Dropout]: Input dimensions do not match.");
+            }
+            std::vector<Eigen::MatrixXd> dropedOutInput(_numChannels,
+                Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+
+            // Create a random Dropout mask
+            Eigen::MatrixXd randomMask = _createRandomMask();
+            _dropoutMask = (randomMask.array() > _dropoutRate).cast<double>();
+
+            for (size_t c = 0; c < _numChannels; ++c) {
+                // Apply dropout
+                dropedOutInput[c] = input[c].array() * _dropoutMask.array() * _dropoutScale;
+            }
+
+            return dropedOutInput;
+        }
+    }*/
+
+/*T backward(const T& dOutput) {
+        if (!_isTraining || _dropoutRate == 0.0) {
+            return dOutput;
+        }
+        if constexpr (std::is_same_v<T, Eigen::MatrixXd>) {
+            if (_inputHeight != dOutput.rows() || _inputWidth != dOutput.cols()) {
+                throw std::invalid_argument("[Dropout]: Gradient dimensions do not match.");
+            }
+            return dOutput.array() * _dropoutMask.array() * _dropoutScale;
+        }
+        else if constexpr (std::is_same_v<T, std::vector<Eigen::MatrixXd>>) {
+            if (_numChannels != dOutput.size()) {
+                throw std::invalid_argument("[Dropout]: Gradient size does not match number of channels.");
+            }
+            if (_inputHeight != dOutput[0].rows() || _inputWidth != dOutput[0].cols()) {
+                throw std::invalid_argument("[Dropout]: Gradient dimensions do not match.");
+            }
+            std::vector<Eigen::MatrixXd> dOutput3D(_numChannels,
+                Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+
+            for (size_t c = 0; c < _numChannels; ++c) {
+                dOutput3D[c] = dOutput[c].array() * _dropoutMask.array() * _dropoutScale;
+            }
+            return dOutput3D;
+        }
+        else {
+            throw std::invalid_argument("[Dropout]: Unsupported input type.");
+        }
+    }*/
+
+/*void _getInputDimensions(const T& input) {
+            if constexpr (std::is_same_v<T, Eigen::VectorXd>) {
+                _numChannels = input.size();
+                _inputHeight = input[0].rows();
+                _inputWidth = input[0].cols();
+                _dropoutMask = Eigen::MatrixXd::Zero(_inputHeight, _inputWidth);
+            }
+            else if constexpr (std::is_same_v<T, Eigen::MatrixXd>) {
+                _numChannels = 1;
+                _inputHeight = input[0].rows();
+                _inputWidth = input[0].cols();
+                _dropoutMask = Eigen::MatrixXd::Zero(_inputHeight, _inputWidth);
+            }
+            else if constexpr (std::is_same_v<T, std::vector<Eigen::MatrixXd>>) {
+                _numChannels = input.size();
+                _inputHeight = input[0].rows();
+                _inputWidth = input[0].cols();
+                _dropoutMask = Eigen::MatrixXd::Zero(_inputHeight, _inputWidth);
+            }
+            else {
+                throw std::invalid_argument("[FullyConnected]: Unsupported input type.");
+            }
+        }*/
+
+

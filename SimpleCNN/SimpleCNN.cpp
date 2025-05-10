@@ -55,17 +55,17 @@ private:
 	
 public:
     SimpleCNN(size_t classes = 10) :
-        _conv1(28, 28, 1, 32, 5, /*maxGradNorm*/2.0, /*weightDecay*/0.05),
+        _conv1(28, 28, 1, 32, 5, /*maxGradNorm*/1.0, /*weightDecay*/0.05),
         _pool1(24, 24, 32, 2),
-        _conv2(12, 12, 32, 64, 5, /*maxGradNorm*/1.0, /*weightDecay*/5e-3),
+        _conv2(12, 12, 32, 64, 5, /*maxGradNorm*/1.0, /*weightDecay*/0.05),
         _pool2(8, 8, 64, 2),
-        _fc1(4 * 4 * 64, 512, /*maxGradNorm*/2.0, /*weightDecay*/0.05),
-        _fc2(512, classes, /*maxGradNorm*/5.0, /*weightDecay*/0.05),
+        _fc1(4 * 4 * 64, 512, /*maxGradNorm*/2.0, /*weightDecay*/0.1),
+        _fc2(512, classes, /*maxGradNorm*/1.0, /*weightDecay*/0.05),
         
         _dropout1(0.45),
         _dropout2(0.35),
-        _bn1(/*maxGradNorm*/ 4.0, /*weightDecay*/0.05),
-        _bn2(/*maxGradNorm*/ 3.0, /*weightDecay*/0.05),
+        _bn1(/*maxGradNorm*/ 2.0, /*weightDecay*/0.005),
+        _bn2(/*maxGradNorm*/ 2.0, /*weightDecay*/0.005),
         
         _classes(classes),
         _testAccuracy(0.0)
@@ -152,11 +152,11 @@ public:
         std::cout << "\nTest Accuracy: " << _testAccuracy << "%\n" << std::endl;
     }
 
-    std::vector<std::vector<double>> getLastTrainingStats() {
+    std::vector<std::vector<double>> getLastTrainingStats() const {
 		return _trainingStats;
 	}
 
-	double getLastTestAccuracy() {
+	const double getLastTestAccuracy() const {
 		return _testAccuracy;
 	}
 
