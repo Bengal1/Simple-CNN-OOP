@@ -125,7 +125,7 @@ $$
 Where $`p`$ is the probability of a neuron being dropped.
 
 #### BatchNormalization
-Batch Normalization (BatchNorm) is a technique used to improve the training of deep neural networks by normalizing the activations of each layer. It ensures that the output of each layer has a consistent distribution, reducing issues related to internal covariate shift, where the distribution of activations changes as the model trains. By doing so, BatchNorm can make the network train faster, stabilize training, and reduce the reliance on careful initialization or dropout.<br/>
+Batch Normalization (BatchNorm) is a  regularization technique used to improve the training of deep neural networks by normalizing the activations of each layer. It ensures that the output of each layer has a consistent distribution, reducing issues related to internal covariate shift, where the distribution of activations changes as the model trains. By doing so, BatchNorm can make the network train faster, stabilize training, and reduce the reliance on careful initialization or dropout.<br/>
 The Batch Normalization process steps:
 1. Compute Mean and Variance:
 
@@ -141,7 +141,7 @@ $$ \hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} $$
 
 $$ y_i = \gamma \hat{x}_i + \beta $$
 
-&emsp;Where $`\gamma`$ and $`\beta`$ are learnable parameters.
+&emsp;Where $`\gamma`$ and $`\beta`$ are learned scale and shift parameters. This stabilizes and speeds up training and adds a bit of regularization through batch noise.
 
 ## *Loss & Optimization*
 ### Cross-Entropy Loss Function
