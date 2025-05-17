@@ -141,7 +141,7 @@ $$ \hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} $$
 
 $$ y_i = \gamma \hat{x}_i + \beta $$
 
-&emsp;Where $`\gamma`$ and $`\beta`$ are learned scale and shift parameters. This stabilizes and speeds up training and adds a bit of regularization through batch noise.
+&emsp;Where $`\gamma`$ and $`\beta`$ are learned scale and shift parameters.
 
 ## *Loss & Optimization*
 ### Cross-Entropy Loss Function
