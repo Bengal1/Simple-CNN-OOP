@@ -26,8 +26,8 @@ Our Network is consist of 6 layers:
 
 The Simple CNN is implemented in C++ as Object Oriented Programming. In order to implement the network layers and methods [Eigen Library](https://eigen.tuxfamily.org/index.php?title=Main_Page) is being used. Eigen is a C++-based open-source linear algebra library. 
 
-Every Layer apart of the fully connected can gets an input of 4-dimentions *(N,C,H,W)*, were *N* is the batch size, *C* is the number of the channels and *H,W* are height and width respectively, the resolution of the images.
-In order to write the *Simple CNN* network  in C++ we constructed:
+Every Layer apart of the fully connected can gets an input of 4-dimentions *(N,C,H,W)*, were *N* is the batch size, *C* is the number of the channels and *H,W* are height and width respectively, the resolution of the images. <br/>
+Also see [SimpleCNN.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/master/SimpleCNN/SimpleCNN.hpp).
 
 ## The Layers & Model's Components
 ### Convolution2D
