@@ -1,7 +1,0 @@
-[
-    {
-        "file":"SimpleCNN.cpp",
-        "command":"ClCompile -DNDEBUG -DWIN32 -D_CONSOLE -D_DEBUG -I\"C:/Libraries/Eigen\" \"SimpleCNN.cpp\"",
-        "directory":"C:/Dev/SimpleCNN/SimpleCNN"
-    }
-]
