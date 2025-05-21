@@ -18,7 +18,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SimpleCNN.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -48,6 +48,9 @@
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
     <ClInclude Include="Regularization.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleCNN.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

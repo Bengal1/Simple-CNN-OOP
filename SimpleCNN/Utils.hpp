@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <Eigen/Dense>
+//#include "matplotlibcpp.h"
 
 
 double accuracyCalculation(const std::vector<Eigen::VectorXd>& modelOutput,
@@ -27,21 +28,7 @@ double accuracyCalculation(const std::vector<Eigen::VectorXd>& modelOutput,
 	return static_cast<double>(correctPredictions) / static_cast<double>(dataSize) * 100.0;
 }
 
-/*void exportTrainingDataToCSV(std::vector<double> train, std::vector<double> validation)
-{
-	std::ofstream file("training_data.csv");
-	if (file.is_open()) {
-		file << "Epoch,Train Loss,Validation Loss\n";
-		for (size_t i = 0; i < train.size(); ++i) {
-			file << i + 1 << "," << train[i] << "," << validation[i] << "\n";
-		}
-		file.close();
-	}
-	else {
-		std::cerr << "Unable to open file for writing." << std::endl;
-	}
-}
-void saveModelState(SimpleCNN model) 
+/*void saveModelState(SimpleCNN model) 
 {
 	std::ofstream file("model_state.txt");
 	if (file.is_open()) {

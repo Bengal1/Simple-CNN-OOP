@@ -63,10 +63,9 @@ public:
 			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
 
 		if constexpr (std::is_same_v<T, Eigen::MatrixXd>) {
+			// Single input, single channel
 			if (input.rows() != _inputHeight || input.cols() != _inputWidth) {
-				throw std::invalid_argument("[Convolution2D]: Input dimensions do not match. Expected " +
-					std::to_string(_inputHeight) + "x" + std::to_string(_inputWidth) +
-					", got " + std::to_string(input.rows()) + "x" + std::to_string(input.cols())); );
+				throw std::invalid_argument("[Convolution2D]: Input dimensions do not match.");
 			}
 			_input = input;
 			for (size_t f = 0; f < _numFilters; ++f) {
@@ -76,16 +75,13 @@ public:
 			}
 		}
 		else if constexpr (std::is_same_v<T, std::vector<Eigen::MatrixXd>>) {
+			// Multi-channel input
 			if (input.size() != _inputChannels) {
-				throw std::invalid_argument("[Convolution2D]: Input channels do not match. Expected " +
-					std::to_string(_inputChannels) + ", got " + std::to_string(input.size());
+				throw std::invalid_argument("[Convolution2D]: Input channels do not match.");
 			}
 			if (input[0].rows() != _inputHeight || input[0].cols() != _inputWidth) {
-				throw std::invalid_argument("[Convolution2D]: Input dimensions do not match. Expected " +
-					std::to_string(_inputHeight) + "x" + std::to_string(_inputWidth) +
-					", got " + std::to_string(input[0].rows()) + "x" + std::to_string(input[0].cols()));
+				throw std::invalid_argument("[Convolution2D]: Input dimensions do not match.");
 			}
-			
 			_input3D = input;
 			for (size_t f = 0; f < _numFilters; ++f) {
 				for (size_t c = 0; c < _inputChannels; ++c) {
@@ -108,29 +104,28 @@ public:
 	std::vector<Eigen::MatrixXd> backward(const std::vector<Eigen::MatrixXd>& dLoss_dOutput)
 	{
 		if (dLoss_dOutput.size() != _numFilters) {
-			throw std::invalid_argument("[Convolution2D]: Loss gradient size must match number of filters. Expected " +
-				std::to_string(_numFilters) + ", got " + std::to_string(dLoss_dOutput.size()));
+			throw std::invalid_argument("[Convolution2D]: Loss gradient size must match number of filters.");
 		}
 
 		std::vector<Eigen::MatrixXd> dLoss_dInput(_inputChannels,
 			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 
 		for (size_t f = 0; f < _numFilters; ++f) {
-			// Bias gradient
+			// Gradient w.r.t biases
 			_biasesGradient(f) += dLoss_dOutput[f].sum();
 
 			for (size_t c = 0; c < _inputChannels; ++c) {
-				// Parameter gradient w.r.t. filter[c]
+				// Gradient w.r.t. filters
 				if (_inputChannels == 1) {
 					_filtersGradient[f] += _Convolve2D(_input, dLoss_dOutput[f]);
 				}
 				else if (_inputChannels > 1) {
 					_filtersGradient[f] += _Convolve2D(_input3D[c], dLoss_dOutput[f]);
 				}
-				// Compute reversed filter for backprop
+				// Reverse filter for dL/dIn[f] computation
 				Eigen::MatrixXd reversedFilter = _filters[f].colwise().reverse().rowwise().reverse();
 
-				// Gradient w.r.t input[c] ← convolve dL/dOut[f] with reversed filter
+				// Gradient w.r.t input 
 				dLoss_dInput[c] += _Convolve2D(dLoss_dOutput[f], reversedFilter, _kernelSize - 1);
 			}
 		}
@@ -276,7 +271,7 @@ private:
 	}
 
 	const std::vector<Eigen::MatrixXd> _padWithZeros(const std::vector<Eigen::MatrixXd>& input,
-		size_t promptPadding = 0) const
+													 const size_t promptPadding = 0) const
 	{// Overloaded function for 3D input
 		std::vector<Eigen::MatrixXd> paddedInput;
 		paddedInput.reserve(input.size());
@@ -301,11 +296,12 @@ private:
 		if (filterHeight > inputHeight || filterWidth > inputWidth) {
 			throw std::invalid_argument("[Convolution2D]: Kernel size must be smaller than input size.");
 		}
+		
 		// Pad input with zeros if padding is specified
 		Eigen::MatrixXd paddedInput = (padding > 0) ? _padWithZeros(input, padding) : input;
 		
-		const size_t paddedHeight = paddedInput.rows();
-		const size_t paddedWidth = paddedInput.cols();
+		const size_t paddedHeight = inputHeight + 2 * padding;
+		const size_t paddedWidth = inputWidth + 2 * padding;
 
 		const size_t outputHeight = (paddedHeight - filterHeight) / _stride + 1;
 		const size_t outputWidth = (paddedWidth - filterWidth) / _stride + 1;
@@ -323,46 +319,3 @@ private:
 	}
 };
 
-/*std::vector<Eigen::MatrixXd> forward(const Eigen::MatrixXd& input)
-	{
-		if (input.rows() != _inputHeight || input.cols() != _inputWidth) {
-			throw std::invalid_argument("[Convolution2D]: Input dimensions do not match.");
-		}
-
-		std::vector<Eigen::MatrixXd> convOutput(_numFilters,
-			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
-		
-		_input = input;
-		for (size_t f = 0; f < _numFilters; ++f) {
-			convOutput[f] += _Convolve2D(input, _filters[f], _padding);
-
-			convOutput[f].array() += _biases[f];
-		}
-
-		
-		return convOutput;
-	}
-
-	std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input)
-	{// Overloaded function for 3D input
-		if (input.size() != _inputChannels) {
-			throw std::invalid_argument("[Convolution2D]: Input channels do not match.");
-		}
-		if (input[0].rows() != _inputHeight || input[0].cols() != _inputWidth) {
-			throw std::invalid_argument("[Convolution2D]: Input dimensions do not match.");
-		}
-		
-		std::vector<Eigen::MatrixXd> convOutput(_numFilters,
-			Eigen::MatrixXd::Zero(_outputHeight, _outputWidth));
-
-		_input3D = input;
-		for (size_t f = 0; f < _numFilters; ++f) {
-			for (size_t c = 0; c < _inputChannels; ++c) {
-				convOutput[f] += _Convolve2D(input[c],
-									_filters[f], _padding);
-			}
-			convOutput[f].array() += _biases[f];
-		}
-
-		return convOutput;
-	}*/

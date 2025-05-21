@@ -85,8 +85,9 @@ public:
 	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, 
 					const int paramIndex = 0) override 
 	{ // Matrices version
-
-		if (parameters.size() != gradients.size()) {
+		
+		if (parameters.rows() != gradients.rows() ||
+			parameters.cols() != gradients.cols()) {
 			throw std::invalid_argument("[Optimizer]: Parameters and gradients must have the same size.");
 		}
 		Eigen::MatrixXd grad = gradients;
@@ -174,15 +175,20 @@ public:
 		_validateInputParameters();
 	}
 
-	void updateStep(Eigen::MatrixXd& parameters, const Eigen::MatrixXd& gradients, 
+	void updateStep(Eigen::MatrixXd& parameters, 
+					const Eigen::MatrixXd& gradients, 
 					const int paramIndex = 0) override 
 	{
-		if(parameters.size() != gradients.size()){
+		if (parameters.rows() != gradients.rows() ||
+			parameters.cols() != gradients.cols()) {
 			throw std::invalid_argument("[Optimizer]: Parameters and gradients must have the same size.");
 		}
 		if (!_isInitialized) {
 			_initializeMoments(parameters.rows(), parameters.cols());
-			_isInitialized = true;
+		}
+		if (!paramIndex) {
+			_timeStep++;
+			_updateEffectiveLearningRate();
 		}
 
 		Eigen::MatrixXd grad = gradients;
@@ -190,10 +196,6 @@ public:
 		_applyWeightDecay(grad, parameters);
 		_clipGradient(grad);
 
-		if (!paramIndex) {
-			_timeStep++;
-			_updateEffectiveLearningRate();
-		}
 		// calculate moments - m_t, v_t
 		_firstMomentEstimate[paramIndex] = _beta1 * _firstMomentEstimate[paramIndex].
 										   array() + (1 - _beta1) * grad.array();
@@ -209,7 +211,8 @@ public:
 					  (secondMomentEstimateHat.array().sqrt() + _epsilon)).matrix();
 	}
 
-	void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients, 
+	void updateStep(Eigen::VectorXd& parameters, 
+					const Eigen::VectorXd& gradients, 
 					const int paramIndex = 0)  override
 	{
 		if (parameters.size() != gradients.size()) {
@@ -217,20 +220,16 @@ public:
 		}
 		if (!_isInitialized) {
 			_initializeMoments(parameters.size(), parameters.size());
-			_isInitialized = true;
 		}
 
 		Eigen::VectorXd grad = gradients;
-		// Apply weight decay and gradient clipping
-		if (_numParams == BatchNormalization && paramIndex == 0) { //skip bias
+		if (paramIndex == 0 && _numParams == BatchNormalization) { //only for BN - Gamma
+			_timeStep++;
+			_updateEffectiveLearningRate();
 			_applyWeightDecay(grad, parameters);
 		}
 		_clipGradient(grad);
 
-		if (!paramIndex && _numParams == BatchNormalization) {
-			_timeStep++;
-			_updateEffectiveLearningRate();
-		}
 		// calculate moments - m_t, v_t
 		_firstMomentEstimateVector[paramIndex] = _beta1 * _firstMomentEstimateVector[paramIndex].
 												 array() + (1 - _beta1) * grad.array();
@@ -285,6 +284,7 @@ private:
 			_secondMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(_numParams));
 
 		}
+		_isInitialized = true;
 	}
 
 	void _updateEffectiveLearningRate() {

@@ -1,10 +1,8 @@
 #pragma once
 
-#include <vector>
 #include <memory>
 #include <random>
 #include <iostream>
-#include <Eigen/Dense>
 #include "Optimizer.hpp"
 
 
@@ -55,16 +53,16 @@ public:
     {
         if (!_initialized) {
             _InitializeParameters(input);
-        }
-		if (_optimizer == nullptr) {
-			throw std::invalid_argument("[BatchNormalization]: Optimizer is not set.");
-		}   
+        }   
         if (input.empty()) {
             throw std::invalid_argument("[BatchNormalization]: Input is empty.");
         }
         if (input.size() != _numChannels) {
             throw std::invalid_argument("[BatchNormalization]: Input channels do not match.");
         }
+		if (input[0].rows() != _channelHeight || input[0].cols() != _channelWidth) {
+			throw std::invalid_argument("[BatchNormalization]: Input dimensions do not match.");
+		}
         
 		// Initialize output
         std::vector<Eigen::MatrixXd> outputBN(_numChannels, 
@@ -153,11 +151,21 @@ public:
 private:
     void _InitializeParameters(const std::vector<Eigen::MatrixXd>& input) 
     {
+        if (_optimizer == nullptr) {
+            throw std::invalid_argument("[BatchNormalization]: Optimizer is not set.");
+        }
+		if (input.empty()) {
+			throw std::invalid_argument("[BatchNormalization]: Input is empty.");
+		}
+		if (input[0].rows() == 0 || input[0].cols() == 0) {
+			throw std::invalid_argument("[BatchNormalization]: Input dimensions are zero.");
+		}
         //Initialize variables
         _numChannels = input.size();
         _initialized = true;
         _channelHeight = input[0].rows();
         _channelWidth = input[0].cols();
+
         //Initialize parameters
         _channelMean.assign(_numChannels, 0.0);
 		_channelVariance.assign(_numChannels, 0.0);
