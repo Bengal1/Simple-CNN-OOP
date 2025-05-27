@@ -6,7 +6,6 @@
 #include "../Optimizer.hpp"
 
 
-template <typename T>
 class FullyConnected {
 private:
 	// layer dimensions
@@ -30,6 +29,7 @@ private:
 	Eigen::VectorXd _flatInput;
 	// Optimizer
 	std::unique_ptr<Optimizer> _optimizer;
+
 
 public:
 	FullyConnected(size_t inputSize, size_t outputSize, 
@@ -89,9 +89,9 @@ public:
 		// Perform the forward pass
 		return _weights * _flatInput + _bias;
 	}
-
-	// Backward pass
-	auto backward(const Eigen::VectorXd& dLoss_dOutput) {
+	
+	template<typename T>
+	T backward(const Eigen::VectorXd& dLoss_dOutput) {
 		if (dLoss_dOutput.size() != _outputSize) {
 			throw std::invalid_argument("[FullyConnected]: Loss gradient size does not match.");
 		}
@@ -104,14 +104,14 @@ public:
 		Eigen::VectorXd flatGrad = _weights.transpose() * dLoss_dOutput;
 
 		// Restore gradient to match input shape
-		return _restoreInputShape(flatGrad);
+		T restoredGrad = _restoreInputShape<T>(flatGrad);
+		return restoredGrad;
 	}
 
 	void updateParameters() {
 		// Update weights and bias
 		_optimizer->updateStep(_weights, _weightsGradient);
 		_optimizer->updateStep(_bias, _biasGradient);
-		
 		// Reset gradients
 		_weightsGradient.setZero();
 		_biasGradient.setZero();
@@ -184,16 +184,24 @@ private:
 		}
 	}
 
-	//template <typename T>
+	template <typename T>
 	Eigen::VectorXd _flattenInput(const T& input) {
 		if constexpr (std::is_same_v<T, Eigen::VectorXd>) {
 			return input;
 		}
 		else if constexpr (std::is_same_v<T, Eigen::MatrixXd>) {
-			return _flattenMatrixToVector(input);
+			return Eigen::Map<const Eigen::VectorXd>(input.data(), input.size());
 		}
 		else if constexpr (std::is_same_v<T, std::vector<Eigen::MatrixXd>>) {
-			return _flatten3DToVector(input);
+			Eigen::VectorXd flat(_inputSize);
+			Eigen::Index offset = 0;
+			// Flatten the input data
+			for (const auto& mat : input) {
+				Eigen::Map<const Eigen::VectorXd> map(mat.data(), mat.size());
+				flat.segment(offset, map.size()) = map;
+				offset += map.size();
+			}
+			return flat;
 		}
 		// Handle unsupported types
 		else {
@@ -201,26 +209,31 @@ private:
 		}
 	}
 
-	Eigen::VectorXd _flattenMatrixToVector(const Eigen::MatrixXd& data) {
-		// Flatten the input data
-		Eigen::Map<const Eigen::VectorXd> map(data.data(), data.size());
-		return map;
-	}
-
-	Eigen::VectorXd _flatten3DToVector(const std::vector<Eigen::MatrixXd>& data) {
-		Eigen::VectorXd flat(_inputSize);
-		Eigen::Index offset = 0;
-		// Flatten the input data
-		for (const auto& mat : data) {
-			Eigen::Map<const Eigen::VectorXd> map(mat.data(), mat.size());
-			flat.segment(offset, map.size()) = map;
-			offset += map.size();
+	/*Eigen::MatrixXd _restoreInputMatrix(const Eigen::VectorXd& flat) {
+		if (flat.size() != _inputHeight * _inputWidth) {
+			throw std::invalid_argument("Size mismatch in unflattening Matrix.");
 		}
-		return flat;
+		return Eigen::Map<const Eigen::MatrixXd>(flat.data(), _inputHeight, _inputWidth);
 	}
 
-	//template <typename T>
-	auto _restoreInputShape(const Eigen::VectorXd& flat) {
+	std::vector<Eigen::MatrixXd> _restoreInput3D(const Eigen::VectorXd& flat) {
+		if (flat.size() != _inputChannels * _inputHeight * _inputWidth) {
+			throw std::invalid_argument("Size mismatch in unflattening 3D Tensor.");
+		}
+		std::vector<Eigen::MatrixXd> unflat(_inputChannels,
+			Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+		size_t index = 0;
+		// Unflatten input into 3D tensor
+		for (size_t c = 0; c < _inputChannels; ++c)
+			for (size_t h = 0; h < _inputHeight; ++h)
+				for (size_t w = 0; w < _inputWidth; ++w) {
+					unflat[c](h, w) = flat(index++);
+				}
+		return unflat;
+	}*/
+
+	template <typename T>
+	T _restoreInputShape(const Eigen::VectorXd& flat) {
 		if constexpr (std::is_same_v<T, Eigen::VectorXd>) {
 			if (flat.size() != _inputSize) {
 				throw std::invalid_argument("[FullyConnected]: Size mismatch in unflattenVector.");
@@ -237,7 +250,7 @@ private:
 			if (flat.size() != _inputChannels * _inputHeight * _inputWidth) {
 				throw std::invalid_argument("Size mismatch in unflattening 3D Tensor.");
 			}
-			std::vector<Eigen::MatrixXd> unflat(_inputChannels, 
+			std::vector<Eigen::MatrixXd> unflat(_inputChannels,
 				Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 			size_t index = 0;
 			// Unflatten input into 3D tensor
@@ -252,7 +265,6 @@ private:
 			throw std::invalid_argument("[FullyConnected]: Unsupported type for unflattening.");
 		}
 	}
-};
 
 	/*auto _restoreInputShape(const Eigen::VectorXd& flat) {
 		if (_inputType == InputType::Vector) {
@@ -271,7 +283,7 @@ private:
 			if (flat.size() != _inputChannels * _inputHeight * _inputWidth) {
 				throw std::invalid_argument("Size mismatch in unflattening 3D Tensor.");
 			}
-			std::vector<Eigen::MatrixXd> unflat(_inputChannels, 
+			std::vector<Eigen::MatrixXd> unflat(_inputChannels,
 				Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
 			size_t index = 0;
 			// Unflatten input into 3D tensor
@@ -286,40 +298,6 @@ private:
 			throw std::invalid_argument("[FullyConnected]: Unsupported type for unflattening.");
 		}
 	}*/
-
-
-/*#include <variant>
-std::variant<Eigen::VectorXd, Eigen::MatrixXd, std::vector<Eigen::MatrixXd>>
-_restoreInputShape(const Eigen::VectorXd& flat) {
-	switch (_inputType) {
-	case InputType::Vector:
-		if (flat.size() != _inputSize)
-			throw std::invalid_argument("Mismatch restoring Vector.");
-		return flat;
-
-	case InputType::Matrix:
-		if (flat.size() != _inputHeight * _inputWidth)
-			throw std::invalid_argument("Mismatch restoring Matrix.");
-		return Eigen::Map<const Eigen::MatrixXd>(flat.data(), _inputHeight, _inputWidth);
-
-	case InputType::Tensor3D: {
-		if (flat.size() != _inputChannels * _inputHeight * _inputWidth)
-			throw std::invalid_argument("Mismatch restoring 3D tensor.");
-		std::vector<Eigen::MatrixXd> restored(_inputChannels, Eigen::MatrixXd(_inputHeight, _inputWidth));
-		size_t index = 0;
-		for (size_t c = 0; c < _inputChannels; ++c) {
-			for (size_t h = 0; h < _inputHeight; ++h) {
-				for (size_t w = 0; w < _inputWidth; ++w) {
-					restored[c](h, w) = flat(index++);
-				}
-			}
-		}
-		return restored;
-	}
-
-	default:
-		throw std::logic_error("Unknown input type during shape restore.");
-	}
-}*/
+};
 
 

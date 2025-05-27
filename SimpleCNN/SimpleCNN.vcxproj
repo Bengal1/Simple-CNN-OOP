@@ -145,6 +145,7 @@
     <ClInclude Include="MNISTLoader.hpp" />
     <ClInclude Include="Optimizer.hpp" />
     <ClInclude Include="SimpleCNN.hpp" />
+    <ClInclude Include="Tensor.hpp" />
     <ClInclude Include="Utils.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

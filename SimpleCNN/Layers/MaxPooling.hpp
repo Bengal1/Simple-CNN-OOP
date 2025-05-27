@@ -91,13 +91,13 @@ public:
     }
 
     std::vector<Eigen::MatrixXd> backward(
-                    const std::vector<Eigen::MatrixXd>& lossGradient) 
+                    const std::vector<Eigen::MatrixXd>& gradient) 
     {
         std::vector<Eigen::MatrixXd> inputGradient(_inputChannels, 
-            Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
+                Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
         
-        if (_inputGradientMap.size() != lossGradient.size() * 
-            lossGradient[0].rows() * lossGradient[0].cols()) {
+        if (_inputGradientMap.size() != gradient.size() * 
+            gradient[0].rows() * gradient[0].cols()) {
             throw std::runtime_error("[MaxPooling]: Gradient map size mismatch");
         }
 
@@ -108,7 +108,7 @@ public:
                     size_t channel, row, col;
                     _getDataLocation(channel, row, col, mapIndex);
 
-                    inputGradient[channel](row, col) = lossGradient[c](h, w);
+                    inputGradient[channel](row, col) = gradient[c](h, w);
                 }
             }
         }
@@ -116,16 +116,16 @@ public:
         return inputGradient;
     }
 
-    std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(const std::vector<
-        std::vector<Eigen::MatrixXd>>& lossGradientBatch) 
+    std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(
+            const std::vector<std::vector<Eigen::MatrixXd>>& gradientBatch) 
     {
         std::vector<std::vector<Eigen::MatrixXd>> inputGradientBatch(_batchSize, 
                                     std::vector<Eigen::MatrixXd>(_inputChannels,
                              Eigen::MatrixXd::Zero(_inputHeight, _inputWidth)));
 
-        if(_inputGradientMapBatch.size() != lossGradientBatch.size() * 
-            lossGradientBatch[0].size() * lossGradientBatch[0][0].rows() * 
-            lossGradientBatch[0][0].cols()){
+        if(_inputGradientMapBatch.size() != gradientBatch.size() * 
+            gradientBatch[0].size() * gradientBatch[0][0].rows() * 
+            gradientBatch[0][0].cols()){
             throw std::runtime_error("[MaxPooling]: Gradient map size mismatch");
         }
 		size_t mapIndex = 0;
@@ -137,7 +137,7 @@ public:
                         _getDataLocation(batch, channel, row, col, mapIndex);
 
                         inputGradientBatch[batch][channel](row, col) = 
-                                        lossGradientBatch[b][c](h, w);
+                                        gradientBatch[b][c](h, w);
                     }
                 }
             }
@@ -160,14 +160,11 @@ private:
         if (_batchSize == 1) {
             _output.assign(_inputChannels, Eigen::MatrixXd::Zero(
                 _outputHeight, _outputWidth));
-            _inputGradientMap.reserve(_inputChannels * _outputHeight *
-                _outputWidth);
         }
         else if (_batchSize > 1) {
-            _outputBatch.assign(_batchSize, std::vector<Eigen::MatrixXd>(_inputChannels,
-                Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
-            _inputGradientMapBatch.reserve(_batchSize * _inputChannels *
-                _outputHeight * _outputWidth);
+            _outputBatch.assign(_batchSize, 
+                std::vector<Eigen::MatrixXd>(_inputChannels,
+                    Eigen::MatrixXd::Zero(_outputHeight, _outputWidth)));
         }
     }
 
@@ -192,7 +189,8 @@ private:
         }
 	}
 
-    void _getDataLocation(size_t& dataChannel, size_t& dataRow, size_t& dataColumn, size_t& mapIndex) {
+    void _getDataLocation(size_t& dataChannel, size_t& dataRow, 
+                          size_t& dataColumn, size_t& mapIndex) {
         if (mapIndex >= _inputGradientMap.size()) {
             throw std::out_of_range("[MaxPooling]: Gradient map index out of range.");
         }

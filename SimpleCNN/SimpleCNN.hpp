@@ -22,50 +22,44 @@ private:
         VALIDATION_ACCURACY,
         NUM_TRAIN_STATS
     };
-
     // **Training statistics**
     std::vector<std::vector<double>> _trainingStats;
     double _testAccuracy;
-
     // Layers
     Convolution2D _conv1;
     Convolution2D _conv2;
-    FullyConnected<std::vector<Eigen::MatrixXd>> _fc1;
-    FullyConnected<Eigen::VectorXd> _fc2;
+    FullyConnected _fc1;
+    FullyConnected _fc2;
     MaxPooling _pool1;
     MaxPooling _pool2;
-
     // Regularization
     BatchNormalization _bn1;
     BatchNormalization _bn2;
     Dropout _dropout1;
     Dropout _dropout2;
-
     // Activation functions
     ReLU<std::vector<Eigen::MatrixXd>> _relu1;
     ReLU<std::vector<Eigen::MatrixXd>> _relu2;
     ReLU<Eigen::VectorXd> _relu3;
     Softmax<Eigen::VectorXd> _softmax;
-
     // Loss function
     CrossEntropy CEloss;
-
     // **Training parameters**
     const size_t _classes;
 
 public:
-    SimpleCNN(size_t classes = 10) :
-        _conv1(28, 28, 1, 32, 5, /*maxGradNorm*/5.0, /*weightDecay*/0.5),
+    SimpleCNN(size_t classes = 10, double maxGradNorm = 0.5, double weightDecay = 5e-3) :
+        _conv1(28, 28, 1, 32, 5, maxGradNorm, weightDecay),
         _pool1(24, 24, 32, 2),
-        _conv2(12, 12, 32, 64, 5, /*maxGradNorm*/3.0, /*weightDecay*/0.5),
+        _conv2(12, 12, 32, 64, 5, maxGradNorm, weightDecay),
         _pool2(8, 8, 64, 2),
-        _fc1(4 * 4 * 64, 512, /*maxGradNorm*/2.0, /*weightDecay*/10.0),
-        _fc2(512, classes, /*maxGradNorm*/1.5, /*weightDecay*/1.5),
+        _fc1(4 * 4 * 64, 512, maxGradNorm, weightDecay),
+        _fc2(512, classes, maxGradNorm, weightDecay),
 
         _dropout1(/*dropoutRate*/0.45),
         _dropout2(/*dropoutRate*/0.35),
-        _bn1(/*maxGradNorm*/ 2.0, /*weightDecay*/0.05),
-        _bn2(/*maxGradNorm*/ 2.0, /*weightDecay*/0.05),
+        _bn1(maxGradNorm, weightDecay),
+        _bn2(maxGradNorm, weightDecay),
 
         _classes(classes),
         _testAccuracy(0.0)
@@ -77,7 +71,7 @@ public:
     }
 
     void trainSimpleCNN(MNISTLoader& dataLoader,
-        const size_t epochs = 10)
+                        const size_t epochs = 10)
     {
         if (epochs <= 0) {
             throw std::invalid_argument("[SimpleCNN]: Number of epochs must be greater than 0.");
@@ -132,7 +126,7 @@ public:
         /* Load MNIST Test dataset */
         const std::vector<Eigen::MatrixXd>& testImages = dataLoader.getTestImages();
         const std::vector<Eigen::VectorXd>& oneHotTestLabels =
-            dataLoader.getOneHotTestLabels();
+                               dataLoader.getOneHotTestLabels();
         size_t numTestImages = dataLoader.getNumTest();
 
         std::vector<Eigen::VectorXd> testOutput(numTestImages,
@@ -210,6 +204,7 @@ private:
         Eigen::VectorXd outputFc1 = _fc1.forward(outputDrop2);
         Eigen::VectorXd outputRelu3 = _relu3.Activate(outputFc1);
         Eigen::VectorXd outputFc2 = _fc2.forward(outputRelu3);
+		//std::cout << "Output logits: " << outputFc2 << std::endl; //Debug!
         Eigen::VectorXd outputSoftmax = _softmax.Activate(outputFc2);
 
         return outputSoftmax;
@@ -218,9 +213,10 @@ private:
     void _Backpropagation(const Eigen::VectorXd& lossGradient) {
         // Fully connected layers
         Eigen::VectorXd softmaxBackGrad = _softmax.computeGradient(lossGradient);
-        Eigen::VectorXd fc2BackGrad = _fc2.backward(softmaxBackGrad);
+        Eigen::VectorXd fc2BackGrad = _fc2.backward<Eigen::VectorXd>(softmaxBackGrad);
         Eigen::VectorXd relu3BackGrad = _relu3.computeGradient(fc2BackGrad);
-        std::vector<Eigen::MatrixXd> fc1BackGrad = _fc1.backward(relu3BackGrad);
+        std::vector<Eigen::MatrixXd> fc1BackGrad = _fc1.backward<
+                                std::vector<Eigen::MatrixXd>>(relu3BackGrad);
         // Second convolution block
         std::vector<Eigen::MatrixXd> dropout2BackGrad = _dropout2.backward(fc1BackGrad);
         std::vector<Eigen::MatrixXd> pool2BackGrad = _pool2.backward(dropout2BackGrad);
@@ -275,7 +271,8 @@ private:
                     exit(-1);
                 }
             }
-            if (trainImageNum % 10000 == 0 and trainImageNum != 0) {
+			int numcheck = 10000;
+            if (trainImageNum % numcheck == 0 and trainImageNum != 0) {
                 std::vector<Eigen::VectorXd> tempTrainO(&trainOutput[0], &trainOutput[trainImageNum]);
                 std::vector<Eigen::VectorXd> tempTrainL(&oneHotTrainLabels[0], &oneHotTrainLabels[trainImageNum]);
                 std::cout << "Train Accuracy: " << accuracyCalculation(tempTrainO, tempTrainL) << "%\n" << std::endl;
@@ -340,5 +337,12 @@ private:
         }
     }
 
+};
+
+class TrainableLayer {
+public:
+    virtual void updateParameters() = 0;
+    virtual void assignOptimizer(std::unique_ptr<Optimizer> opt) = 0;
+    virtual ~TrainableLayer() = default;
 };
 

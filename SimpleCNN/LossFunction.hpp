@@ -10,6 +10,16 @@ protected:
 	const double _epsilon;
 public:
 	LossFunction() :_epsilon(1.0e-10) {}
+	LossFunction(double epsilon) : _epsilon(epsilon) {
+		if (epsilon <= 0.0) {
+			throw std::invalid_argument("Epsilon must be greater than zero.");
+		}
+	}
+	LossFunction(const LossFunction&) = default;
+	LossFunction& operator=(const LossFunction&) = default;
+	LossFunction(LossFunction&&) = default;
+	LossFunction& operator=(LossFunction&&) = default;
+
 	virtual double calculateLoss(const Eigen::VectorXd& predictions,
 								 const Eigen::VectorXd& targets) const = 0;
 	virtual Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
@@ -55,6 +65,7 @@ public:
 // Cross-Entropy loss
 class CrossEntropy : public LossFunction {
 public:
+	CrossEntropy(double epsilon = 1.0e-10) : LossFunction(epsilon) {}
 
 	double calculateLoss(const Eigen::VectorXd& predictions,
 						 const Eigen::VectorXd& targets) const override {

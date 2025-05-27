@@ -36,39 +36,27 @@ public:
 		_weightDecay = lambda;
 	}
 protected:
-	// Clip the gradient to prevent exploding gradients
-	void _clipGradient(Eigen::MatrixXd& gradient) {
-		if (_maxGradNorm > 0) {
-			double norm = gradient.norm();
-			if (norm > _maxGradNorm) {
-				gradient *= (_maxGradNorm / norm);
-			}
+	template <typename Derived>
+	void _clipGradient(Eigen::MatrixBase<Derived>& gradient) const {
+		if (_maxGradNorm <= 0.0) return; // No clipping
+
+		double norm = gradient.norm();
+		if (norm == 0.0) return; // No clipping - zero gradient
+
+		if (norm > _maxGradNorm) {
+			double scale = _maxGradNorm / std::max(norm, 1e-8);
+			gradient *= scale;
 		}
 	}
 
-	void _clipGradient(Eigen::VectorXd& gradient) {
-		if (_maxGradNorm > 0) {
-			double norm = gradient.norm();
-			if (norm > _maxGradNorm) {
-				gradient *= (_maxGradNorm / norm);
-			}
-		}
-	}
-
-	// Apply weight decay to the gradients
-	void _applyWeightDecay(Eigen::MatrixXd& grad, 
-						   const Eigen::MatrixXd& weights) const {
+	template <typename Derived>
+	void _applyWeightDecay(Eigen::MatrixBase<Derived>& grad,
+						   const Eigen::MatrixBase<Derived>& weights) const {
 		if (_weightDecay > 0) {
 			grad += _weightDecay * weights;
 		}
 	}
 
-	void _applyWeightDecay(Eigen::VectorXd& grad, 
-						   const Eigen::VectorXd& weights) const {
-		if (_weightDecay > 0) {
-			grad += _weightDecay * weights;
-		}
-	}
 };
 
 // Stochastic Gradient Descent optimizer
@@ -97,14 +85,15 @@ public:
 		parameters -= _learningRate * grad;
 	}
 
-	void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients, 
+	void updateStep(Eigen::VectorXd& parameters, 
+					const Eigen::VectorXd& gradients, 
 					const int paramIndex = 0) override
 	{ // Vectors version
 
 		if (parameters.size() != gradients.size()) {
 			throw std::invalid_argument("[Optimizer]: Parameters and gradients must have the same size.");
 		}
-		Eigen::MatrixXd grad = gradients;
+		Eigen::VectorXd grad = gradients;
 		_applyWeightDecay(grad, parameters);
 		_clipGradient(grad);
 
@@ -159,7 +148,7 @@ private:
 
 public:
 	AdamOptimizer(int numParams, double maxGradNorm = -1.0, double weightDecay = 0.0,
-		double learningRate = 0.001, double beta1 = 0.9,
+		double learningRate = 0.0001, double beta1 = 0.9,
 		double beta2 = 0.999, double epsilon = 1.0e-8)
 		: Optimizer(learningRate, maxGradNorm, weightDecay),
 		_numParams(numParams),
@@ -192,9 +181,9 @@ public:
 		}
 
 		Eigen::MatrixXd grad = gradients;
-		// Apply weight decay and gradient clipping
-		_applyWeightDecay(grad, parameters);
+		// Apply gradient clipping and weight decay
 		_clipGradient(grad);
+		_applyWeightDecay(grad, parameters);
 
 		// calculate moments - m_t, v_t
 		_firstMomentEstimate[paramIndex] = _beta1 * _firstMomentEstimate[paramIndex].
@@ -213,7 +202,7 @@ public:
 
 	void updateStep(Eigen::VectorXd& parameters, 
 					const Eigen::VectorXd& gradients, 
-					const int paramIndex = 0)  override
+					const int paramIndex = 0) override
 	{
 		if (parameters.size() != gradients.size()) {
 			throw std::invalid_argument("[Optimizer]: Parameters and gradients must have the same size.");
@@ -221,14 +210,14 @@ public:
 		if (!_isInitialized) {
 			_initializeMoments(parameters.size(), parameters.size());
 		}
-
 		Eigen::VectorXd grad = gradients;
+		// Apply gradient clipping and weight decay
+		_clipGradient(grad);
 		if (paramIndex == 0 && _numParams == BatchNormalization) { //only for BN - Gamma
+			_applyWeightDecay(grad, parameters);
 			_timeStep++;
 			_updateEffectiveLearningRate();
-			_applyWeightDecay(grad, parameters);
 		}
-		_clipGradient(grad);
 
 		// calculate moments - m_t, v_t
 		_firstMomentEstimateVector[paramIndex] = _beta1 * _firstMomentEstimateVector[paramIndex].
@@ -267,17 +256,17 @@ private:
 	}
 	void _initializeMoments(size_t rows, size_t cols)
 	{
-		if (_numParams == FullyConnected) { //Fully-Connected - weights and bias
+		if (_numParams == FullyConnected) { //Weights and Bias
 			_firstMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_secondMomentEstimate.assign(1, Eigen::MatrixXd::Zero(rows, cols));
 			_firstMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
 			_secondMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
 		}
-		else if (_numParams == BatchNormalization) { //BatchNormalization - 2 vectors
+		else if (_numParams == BatchNormalization) { //Gamma and Beta
 			_firstMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
 			_secondMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
 		}
-		else { //Convolution2D - filters and bias
+		else { //Convolution2D - Filters and Bias
 			_firstMomentEstimate.assign(_numParams, Eigen::MatrixXd::Zero(rows, cols));
 			_secondMomentEstimate.assign(_numParams, Eigen::MatrixXd::Zero(rows, cols));
 			_firstMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(_numParams));

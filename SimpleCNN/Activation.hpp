@@ -117,8 +117,6 @@ private:
 			throw std::invalid_argument("[ReLU]: Unsupported gradient type.");
 		}
 	}
-
-
     
 };
 
