@@ -4,6 +4,8 @@
 #include <random>
 #include <memory>
 #include "../Optimizer.hpp"
+#include <variant>
+
 
 class Convolution2D {
 private:
@@ -97,8 +99,7 @@ public:
 	}
 
 
-	auto backward(const std::vector<Eigen::MatrixXd>& dLoss_dOutput)
-	{
+	auto backward(const std::vector<Eigen::MatrixXd>& dLoss_dOutput) {
 		if (dLoss_dOutput.size() != _numFilters) {
 			throw std::invalid_argument("[Convolution2D]: Loss gradient size must match number of filters.");
 		}
@@ -129,6 +130,7 @@ public:
 				dLoss_dInput[c] += _Convolve2D(dLoss_dOutput[f], reversedFilter, _kernelSize - 1);
 			}
 		}
+		
 
 		return dLoss_dInput;
 	}
@@ -136,23 +138,19 @@ public:
 
 	void updateParameters()
 	{
-		if (_batchSize == 1) {
-			// Update filters
-			for (int f = 0; f < _numFilters; ++f) {
-				for (size_t c = 0; c < _inputChannels; ++c) {
+		// Update filters
+		for (int f = 0; f < _numFilters; ++f) {
+			//for (size_t c = 0; c < _inputChannels; ++c) {
 
-					_optimizer->updateStep(_filters[f][c], _filtersGradient[f][c], f);
-					// Reset filter's gradient
-					_filtersGradient[f][c].setZero();
-				}
-			}
-			// Update biases
-			_optimizer->updateStep(_biases, _biasesGradient);
-			_biasesGradient.setZero();
+			_optimizer->updateStep(_filters[f], _filtersGradient[f], f);
+			// Reset filter's gradient
+			for (size_t c = 0; c < _inputChannels; ++c)
+				_filtersGradient[f][c].setZero();
+			//}
 		}
-		else if (_batchSize > 1) {
-			// feature batch code
-		}
+		// Update biases
+		_optimizer->updateStep(_biases, _biasesGradient);
+		_biasesGradient.setZero();
 	}
 
 	std::vector<std::vector<Eigen::MatrixXd>> getFilters() {

@@ -6,6 +6,7 @@
 #include "../Optimizer.hpp"
 
 
+
 class FullyConnected {
 private:
 	// layer dimensions
@@ -13,9 +14,9 @@ private:
 	const size_t _outputSize;
 	const size_t _batchSize;
 	// input dimensions
-	size_t _inputChannels;
-	size_t _inputHeight;
-	size_t _inputWidth;
+	size_t _inputChannels = 0;
+	size_t _inputHeight = 0;
+	size_t _inputWidth = 0;
 	// Input type enum
 	enum class InputType { Vector, Matrix, Tensor3D };
 	InputType _inputType;
@@ -38,9 +39,6 @@ public:
 		: _inputSize(inputSize),
 		_outputSize(outputSize),
 		_batchSize(batchSize),
-		_inputChannels(0),
-		_inputHeight(0),
-		_inputWidth(0),
 		_optimizer(std::make_unique<AdamOptimizer>(-1, maxGradNorm, weightDecay))
 	{
 		if (_inputSize == 0) {
@@ -57,6 +55,7 @@ public:
 		// Initialize input
 		_flatInput = Eigen::VectorXd::Zero(_inputSize);
 	}
+	~FullyConnected() = default;
 
 	// Forward pass
 	template<typename T>
@@ -104,7 +103,7 @@ public:
 		Eigen::VectorXd flatGrad = _weights.transpose() * dLoss_dOutput;
 
 		// Restore gradient to match input shape
-		T restoredGrad = _restoreInputShape<T>(flatGrad);
+		auto restoredGrad = _restoreInputShape<T>(flatGrad);
 		return restoredGrad;
 	}
 
@@ -209,7 +208,7 @@ private:
 		}
 	}
 
-	/*Eigen::MatrixXd _restoreInputMatrix(const Eigen::VectorXd& flat) {
+	Eigen::MatrixXd _restoreInputMatrix(const Eigen::VectorXd& flat) {
 		if (flat.size() != _inputHeight * _inputWidth) {
 			throw std::invalid_argument("Size mismatch in unflattening Matrix.");
 		}
@@ -230,7 +229,7 @@ private:
 					unflat[c](h, w) = flat(index++);
 				}
 		return unflat;
-	}*/
+	}
 
 	template <typename T>
 	T _restoreInputShape(const Eigen::VectorXd& flat) {
@@ -265,39 +264,6 @@ private:
 			throw std::invalid_argument("[FullyConnected]: Unsupported type for unflattening.");
 		}
 	}
-
-	/*auto _restoreInputShape(const Eigen::VectorXd& flat) {
-		if (_inputType == InputType::Vector) {
-			if (flat.size() != _inputSize) {
-				throw std::invalid_argument("[FullyConnected]: Size mismatch in unflattenVector.");
-			}
-			return flat;  // No reshape needed
-		}
-		else if (_inputType == InputType::Matrix) {// Restore to matrix
-			if (flat.size() != _inputHeight * _inputWidth) {
-				throw std::invalid_argument("Size mismatch in unflattening Matrix.");
-			}
-			return Eigen::Map<const Eigen::MatrixXd>(flat.data(), _inputHeight, _inputWidth);
-		}
-		else if (_inputType == InputType::Tensor3D) {// Restore to 3D tensor
-			if (flat.size() != _inputChannels * _inputHeight * _inputWidth) {
-				throw std::invalid_argument("Size mismatch in unflattening 3D Tensor.");
-			}
-			std::vector<Eigen::MatrixXd> unflat(_inputChannels,
-				Eigen::MatrixXd::Zero(_inputHeight, _inputWidth));
-			size_t index = 0;
-			// Unflatten input into 3D tensor
-			for (size_t c = 0; c < _inputChannels; ++c)
-				for (size_t h = 0; h < _inputHeight; ++h)
-					for (size_t w = 0; w < _inputWidth; ++w) {
-						unflat[c](h, w) = flat(index++);
-					}
-			return unflat;
-		}
-		else {
-			throw std::invalid_argument("[FullyConnected]: Unsupported type for unflattening.");
-		}
-	}*/
 };
 
 

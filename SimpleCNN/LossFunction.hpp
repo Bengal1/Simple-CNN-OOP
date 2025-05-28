@@ -9,23 +9,18 @@ class LossFunction {
 protected:
 	const double _epsilon;
 public:
-	LossFunction() :_epsilon(1.0e-10) {}
+	LossFunction() :_epsilon(1.0e-8) {}
 	LossFunction(double epsilon) : _epsilon(epsilon) {
 		if (epsilon <= 0.0) {
 			throw std::invalid_argument("Epsilon must be greater than zero.");
 		}
 	}
-	LossFunction(const LossFunction&) = default;
-	LossFunction& operator=(const LossFunction&) = default;
-	LossFunction(LossFunction&&) = default;
-	LossFunction& operator=(LossFunction&&) = default;
-	~LossFunction() = default;
 
 	virtual double calculateLoss(const Eigen::VectorXd& predictions,
 								 const Eigen::VectorXd& targets) const = 0;
 	virtual Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
 											  const Eigen::VectorXd& targets) const = 0;
-	virtual ~LossFunction() {}
+	virtual ~LossFunction() = default;
 };
 
 // Mean Squared Error (MSE) loss
@@ -84,7 +79,7 @@ public:
 	}
 
 	double calculateLossBatch(const std::vector<Eigen::VectorXd>& predictionBatch,
-		const std::vector<Eigen::VectorXd>& targetBatch) const 
+							  const std::vector<Eigen::VectorXd>& targetBatch) const 
 	{
 		if (predictionBatch.size() != targetBatch.size()) {
 			throw std::invalid_argument("Predictions and targets must have the same size.");
@@ -114,7 +109,7 @@ public:
 	}
 
 	Eigen::VectorXd softmaxCrossEntropyGradient(const Eigen::VectorXd& predictions,
-		const Eigen::VectorXd& targets) const
+												const Eigen::VectorXd& targets) const
 	{
 		if (predictions.size() != targets.size()) {
 			throw std::invalid_argument("Predictions and targets must have the same size.");

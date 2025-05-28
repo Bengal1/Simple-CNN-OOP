@@ -26,12 +26,12 @@ private:
     std::vector<Eigen::VectorXd> _oneHotTestLabels;
     std::vector<Eigen::VectorXd> _oneHotValidationLabels;
 	// Number of images
-    size_t _numTrain;
-    size_t _numValidation;
-    size_t _numTest;
-	size_t _numClasses;	
+    size_t _numTrain = 0;
+    size_t _numValidation = 0;
+    size_t _numTest = 0;
+	size_t _numClasses = 10; // MNIST has 10 classes (0-9)
     // Validation
-    bool _splitValidation;
+    bool _splitValidation = false;
     double _validationRatio;
 
 public:
@@ -46,12 +46,7 @@ public:
           _trainLabelsFile(trainLabelsFile),
           _testImagesFile(testImagesFile), 
           _testLabelsFile(testLabelsFile),
-          _validationRatio(validationRatio), 
-          _splitValidation(false),
-          _numTrain(0), 
-          _numValidation(0), 
-		  _numTest(0),
-		  _numClasses(10) // MNIST has 10 classes (0-9)
+          _validationRatio(validationRatio)
     {
 		// Check that the file paths are not empty
         if (_trainImagesFile.empty() || _trainLabelsFile.empty() ||
@@ -74,6 +69,7 @@ public:
 		// Check if validation split is needed
 		_splitValidation = (_validationRatio > 0) ? true : false;
     }
+	~MNISTLoader() = default;
 
     bool loadTrainData() {
         return _loadImages(_trainImagesFile, _trainLabelsFile, 

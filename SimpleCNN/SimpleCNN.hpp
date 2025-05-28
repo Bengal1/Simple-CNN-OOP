@@ -24,7 +24,7 @@ private:
     };
     // **Training statistics**
     std::vector<std::vector<double>> _trainingStats;
-    double _testAccuracy;
+    double _testAccuracy = 0.0;
     // Layers
     Convolution2D _conv1;
     Convolution2D _conv2;
@@ -50,21 +50,20 @@ private:
     Eigen::VectorXd testLogit;//Debug!
 
 public:
-    SimpleCNN(size_t classes = 10, double maxGradNorm = -1.0, double weightDecay = 0.0) :
-        _conv1(28, 28, 1, 32, 5, maxGradNorm, weightDecay),
+    SimpleCNN(size_t classes = 10) :
+        _conv1(28, 28, 1, 32, 5),
         _pool1(24, 24, 32, 2),
-        _conv2(12, 12, 32, 64, 5, maxGradNorm, weightDecay),
+        _conv2(12, 12, 32, 64, 5),
         _pool2(8, 8, 64, 2),
-        _fc1(4 * 4 * 64, 512, maxGradNorm, weightDecay),
-        _fc2(512, classes, maxGradNorm, weightDecay),
+        _fc1(4 * 4 * 64, 512),
+        _fc2(512, classes),
 
         _dropout1(/*dropoutRate*/0.45),
         _dropout2(/*dropoutRate*/0.35),
-        _bn1(maxGradNorm, weightDecay),
-        _bn2(maxGradNorm, weightDecay),
+        _bn1(),
+        _bn2(),
 
-        _classes(classes),
-        _testAccuracy(0.0)
+        _classes(classes)
     {
         if (classes < 2) {
             throw std::invalid_argument("[SimpleCNN]: Number of classes must be greater than 1.");
@@ -262,7 +261,7 @@ private:
             if (trainImageNum % 1000 == 0) {
                 std::cout << trainImageNum << ": " << std::endl;
                 //std::cout << singleTrainOutput << std::endl << std::endl;
-                std::cout << singleTrainOutput << std::endl << std::endl;
+                std::cout << testLogit << std::endl << std::endl;
                 if (isnan(singleTrainOutput[0])) {
                     std::cout << "\nimage No. : " << trainImageNum << std::endl;
                     exit(-1);

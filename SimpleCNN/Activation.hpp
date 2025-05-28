@@ -11,7 +11,7 @@ class Activation {
 public:
 	virtual T Activate(const T& preActivationOutput) = 0;
 	virtual T computeGradient(const T& lossGradient) = 0;
-	~Activation() = decltype
+	virtual ~Activation() = default;
 
 };
 
@@ -28,8 +28,8 @@ public:
 		if (!_initialized) {
 			_initialize(preActivationOutput);
 		}
-		_reluInput = preActivationOutput;
 		// ReLU activation function: f(x) = max(0, x)
+		_reluInput = preActivationOutput;
 		return _applyReLU(preActivationOutput);
 	}
 
@@ -41,17 +41,14 @@ public:
 private:
 	void _initialize(const T& input) {
 		if constexpr (std::is_same_v<T, Eigen::VectorXd>) {
-			// For VectorXd
 			_reluInput = Eigen::VectorXd::Zero(input.size());
 			_reluGradient = Eigen::VectorXd::Zero(input.size());
 		}
 		else if constexpr (std::is_same_v<T, Eigen::MatrixXd>) {
-			// For MatrixXd
 			_reluInput = Eigen::MatrixXd::Zero(input.rows(), input.cols());
 			_reluGradient = Eigen::MatrixXd::Zero(input.rows(), input.cols());
 		}
 		else if constexpr (std::is_same_v<T, std::vector<Eigen::MatrixXd>>) {
-			// For std::vector<Eigen::MatrixXd>
 			_reluInput.assign(input.size(), Eigen::MatrixXd::Zero(
 				input[0].rows(), input[0].cols()));
 			_reluGradient.assign(input.size(), Eigen::MatrixXd::Zero(

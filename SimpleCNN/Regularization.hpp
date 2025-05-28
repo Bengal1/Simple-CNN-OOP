@@ -10,14 +10,14 @@
 class BatchNormalization {
 private:
 	// Input dimensions
-    size_t _numChannels;
-    size_t _channelHeight;
-    size_t _channelWidth;
+    size_t _numChannels = 0;
+    size_t _channelHeight = 0;
+    size_t _channelWidth = 0;
     // Operations flags
-    bool _initialized;
-    bool _isTraining;
+    bool _initialized = false;
+    bool _isTraining = true;
 	// Hyperparameters
-    double _epsilon;
+    double _epsilon = 1e-6;
     double _momentum;
 	// Mean and variance
     std::vector<double> _channelMean;
@@ -35,22 +35,16 @@ private:
 	std::unique_ptr<Optimizer> _optimizer;
 
 public:
-    BatchNormalization(double maxGradNorm = -1.0, double weightDecay = 0.0, 
-        double momentum = 0.1)
-        : _numChannels(0),
-        _channelHeight(0),
-        _channelWidth(0),
-        _epsilon(1e-6),
-        _initialized(false),
-        _isTraining(true),
-        _momentum(momentum),
+    BatchNormalization(double maxGradNorm = -1.0, 
+        double weightDecay = 0.0, double momentum = 0.1)
+        :_momentum(momentum),
         _optimizer(std::make_unique<AdamOptimizer>(-2, maxGradNorm, weightDecay))
     {
         if (_momentum <= 0.0 || _momentum > 1.0) {
             throw std::invalid_argument("[BatchNormalization]: Momentum must be in the range [0, 1).");
         }
     }
-	
+    ~BatchNormalization() = default;
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input) 
     {
@@ -217,10 +211,7 @@ public:
             throw std::invalid_argument("[Dropout]: Dropout rate must be in the range [0, 1).");
         }
     }
-	Dropout(const Dropout&) = delete; // Disable copy constructor
-	Dropout& operator=(const Dropout&) = delete; // Disable copy assignment operator
-	Dropout(Dropout&&) = default; // Enable move constructor
-	Dropout& operator=(Dropout&&) = default; // Enable move assignment operator
+	~Dropout() = default;
 
 	template<typename T>
 	T forward(const T& input) {
