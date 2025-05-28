@@ -132,6 +132,7 @@ private:
 	const double _beta2;
 	const double _epsilon;
 	const int _numParams;
+	size_t _numChannels;
 	// Time step
 	size_t _timeStep;
 	// Initialization flag
@@ -152,6 +153,7 @@ public:
 		double beta2 = 0.999, double epsilon = 1.0e-8)
 		: Optimizer(learningRate, maxGradNorm, weightDecay),
 		_numParams(numParams),
+		_numChannels(1),
 		_beta1(beta1),
 		_beta2(beta2),
 		_epsilon(epsilon),

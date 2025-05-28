@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cmath>
 #include <vector>
@@ -19,6 +19,7 @@ public:
 	LossFunction& operator=(const LossFunction&) = default;
 	LossFunction(LossFunction&&) = default;
 	LossFunction& operator=(LossFunction&&) = default;
+	~LossFunction() = default;
 
 	virtual double calculateLoss(const Eigen::VectorXd& predictions,
 								 const Eigen::VectorXd& targets) const = 0;
@@ -62,7 +63,7 @@ public:
 	}
 };
 
-// Cross-Entropy loss
+// Cross-Entropy loss 
 class CrossEntropy : public LossFunction {
 public:
 	CrossEntropy(double epsilon = 1.0e-10) : LossFunction(epsilon) {}
@@ -74,10 +75,8 @@ public:
 			throw std::invalid_argument("Predictions and targets must have the same size.");
 		}
 
-		size_t classNum = predictions.size();
 		double loss = 0.0;
-		for (size_t c = 0; c < classNum; ++c) {
-
+		for (int c = 0; c < predictions.size(); ++c) {
 			loss -= targets(c) * std::log(std::max(predictions(c), _epsilon));
 		}
 
@@ -85,15 +84,14 @@ public:
 	}
 
 	double calculateLossBatch(const std::vector<Eigen::VectorXd>& predictionBatch,
-							  const std::vector<Eigen::VectorXd>& targetBatch) const 
+		const std::vector<Eigen::VectorXd>& targetBatch) const 
 	{
 		if (predictionBatch.size() != targetBatch.size()) {
 			throw std::invalid_argument("Predictions and targets must have the same size.");
 		}
 
-		size_t batchSize = predictionBatch.size();
 		double batchLoss = 0.0;
-		for (size_t b = 0; b < batchSize; ++b) {
+		for (size_t b = 0; b < predictionBatch.size(); ++b) {
 			batchLoss += calculateLoss(predictionBatch[b], targetBatch[b]);
 		}
 
@@ -101,31 +99,42 @@ public:
 	}
 
 	Eigen::VectorXd calculateGradient(const Eigen::VectorXd& predictions,
-									  const Eigen::VectorXd& targets) const override 
+									  const Eigen::VectorXd& targets) const override
 	{
-		if(predictions.size() != targets.size()){
+		if (predictions.size() != targets.size()) {
+			throw std::invalid_argument("Predictions and targets must have the same size.");
+		}
+
+		Eigen::VectorXd gradient(predictions.size());
+		for (int i = 0; i < predictions.size(); ++i) {
+			gradient(i) = -targets(i) / std::max(predictions(i), _epsilon);
+		}
+
+		return gradient;
+	}
+
+	Eigen::VectorXd softmaxCrossEntropyGradient(const Eigen::VectorXd& predictions,
+		const Eigen::VectorXd& targets) const
+	{
+		if (predictions.size() != targets.size()) {
 			throw std::invalid_argument("Predictions and targets must have the same size.");
 		}
 		return (predictions - targets);
 	}
 
 	std::vector<Eigen::VectorXd> calculateGradientBatch(
-		const std::vector<Eigen::VectorXd>& predictionBatch, 
+		const std::vector<Eigen::VectorXd>& predictionBatch,
 		const std::vector<Eigen::VectorXd>& targetBatch) const 
 	{
-
 		if (predictionBatch.size() != targetBatch.size()) {
 			throw std::invalid_argument("Predictions and targets must have the same size.");
 		}
 
-		size_t batchSize = predictionBatch.size();
-		size_t classNum = predictionBatch[0].size();
-		std::vector<Eigen::VectorXd> gradientBatch(batchSize, 
-									Eigen::VectorXd(classNum));
+		std::vector<Eigen::VectorXd> gradientBatch;
+		gradientBatch.reserve(predictionBatch.size());
 
-		for (size_t b = 0; b < batchSize; ++b) {
-			gradientBatch[b] = calculateGradient(predictionBatch[b], 
-				targetBatch[b]);
+		for (size_t b = 0; b < predictionBatch.size(); ++b) {
+			gradientBatch.push_back(calculateGradient(predictionBatch[b], targetBatch[b]));
 		}
 
 		return gradientBatch;

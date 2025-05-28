@@ -47,8 +47,10 @@ private:
     // **Training parameters**
     const size_t _classes;
 
+    Eigen::VectorXd testLogit;//Debug!
+
 public:
-    SimpleCNN(size_t classes = 10, double maxGradNorm = 0.5, double weightDecay = 5e-3) :
+    SimpleCNN(size_t classes = 10, double maxGradNorm = -1.0, double weightDecay = 0.0) :
         _conv1(28, 28, 1, 32, 5, maxGradNorm, weightDecay),
         _pool1(24, 24, 32, 2),
         _conv2(12, 12, 32, 64, 5, maxGradNorm, weightDecay),
@@ -67,7 +69,7 @@ public:
         if (classes < 2) {
             throw std::invalid_argument("[SimpleCNN]: Number of classes must be greater than 1.");
         }
-
+		testLogit = Eigen::VectorXd::Zero(classes);//Debug!
     }
 
     void trainSimpleCNN(MNISTLoader& dataLoader,
@@ -111,13 +113,8 @@ public:
                 validationOutput);
             _trainingStats[VALIDATION_ACCURACY][epoch - 1] = accuracyCalculation(validationOutput,
                 oneHotValidationLabels);
-
-            std::cout << "Epoch " << epoch << ": "
-                << "Train Loss = " << _trainingStats[TRAIN_LOSS][epoch - 1] << " ; "
-                << "Train Accuracy = " << _trainingStats[TRAIN_ACCURACY][epoch - 1] << "% | "
-                << "Validation Loss = " << _trainingStats[VALIDATION_LOSS][epoch - 1] << " ; "
-                << "Validation Accuracy = " << _trainingStats[VALIDATION_ACCURACY][epoch - 1] << "%"
-                << std::endl;
+			// Print epoch statistics
+			_printEpoch(epoch);
         }
     }
 
@@ -204,16 +201,15 @@ private:
         Eigen::VectorXd outputFc1 = _fc1.forward(outputDrop2);
         Eigen::VectorXd outputRelu3 = _relu3.Activate(outputFc1);
         Eigen::VectorXd outputFc2 = _fc2.forward(outputRelu3);
-		//std::cout << "Output logits: " << outputFc2 << std::endl; //Debug!
+		testLogit = outputFc2; // Debug: store logits for testing
         Eigen::VectorXd outputSoftmax = _softmax.Activate(outputFc2);
 
         return outputSoftmax;
     }
 
-    void _Backpropagation(const Eigen::VectorXd& lossGradient) {
+    void _Backpropagation(const Eigen::VectorXd& softmaxCrossEntropyGradient) {
         // Fully connected layers
-        Eigen::VectorXd softmaxBackGrad = _softmax.computeGradient(lossGradient);
-        Eigen::VectorXd fc2BackGrad = _fc2.backward<Eigen::VectorXd>(softmaxBackGrad);
+        Eigen::VectorXd fc2BackGrad = _fc2.backward<Eigen::VectorXd>(softmaxCrossEntropyGradient);
         Eigen::VectorXd relu3BackGrad = _relu3.computeGradient(fc2BackGrad);
         std::vector<Eigen::MatrixXd> fc1BackGrad = _fc1.backward<
                                 std::vector<Eigen::MatrixXd>>(relu3BackGrad);
@@ -255,7 +251,7 @@ private:
             /*Loss*/
             trainLoss += CEloss.calculateLoss(singleTrainOutput,
                 oneHotTrainLabels[trainImageNum]);
-            Eigen::VectorXd lossGrad = CEloss.calculateGradient(
+            Eigen::VectorXd lossGrad = CEloss.softmaxCrossEntropyGradient(
                 singleTrainOutput, oneHotTrainLabels[trainImageNum]);
             /*Backpropagation*/
             _Backpropagation(lossGrad);
@@ -265,6 +261,7 @@ private:
             /*Debug!*/
             if (trainImageNum % 1000 == 0) {
                 std::cout << trainImageNum << ": " << std::endl;
+                //std::cout << singleTrainOutput << std::endl << std::endl;
                 std::cout << singleTrainOutput << std::endl << std::endl;
                 if (isnan(singleTrainOutput[0])) {
                     std::cout << "\nimage No. : " << trainImageNum << std::endl;
@@ -320,6 +317,19 @@ private:
         _trainingStats.clear();
         _trainingStats.resize(NUM_TRAIN_STATS, std::vector<double>(epochs, 0.0));
     }
+
+	void _printEpoch(const size_t epoch) const {
+		if (epoch < 1 || epoch > _trainingStats[TRAIN_LOSS].size()) {
+			std::cerr << "[SimpleCNN]: Invalid epoch number." << std::endl;
+			return;
+		}
+		std::cout << "Epoch " << epoch << ": "
+			<< "Train Loss: " << _trainingStats[TRAIN_LOSS][epoch - 1] << ", "
+			<< "Train Accuracy: " << _trainingStats[TRAIN_ACCURACY][epoch - 1] << "% | "
+			<< "Validation Loss: " << _trainingStats[VALIDATION_LOSS][epoch - 1] << ", "
+			<< "Validation Accuracy: " << _trainingStats[VALIDATION_ACCURACY][epoch - 1] << "%"
+			<< std::endl;
+	}
 
     void _printTrainingStats() const {
         if (_trainingStats.empty()) {
