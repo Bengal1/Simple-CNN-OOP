@@ -257,7 +257,7 @@ private:
             /*Optimizer step*/
             _updateParameters();
 
-            /*Debug!
+            /*Debug!*/
             if (trainImageNum % 1000 == 0) {
                 std::cout << trainImageNum << ": " << std::endl;
                 //std::cout << singleTrainOutput << std::endl << std::endl;
