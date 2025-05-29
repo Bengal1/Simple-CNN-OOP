@@ -246,7 +246,6 @@ private:
                 throw std::out_of_range("[MNISTLoader]: Label exceeds number of classes.");
             }
 
-            // Construct in-place: no temporary vector needed
             Eigen::VectorXd oneHot = Eigen::VectorXd::Zero(_numClasses);
             oneHot(static_cast<int>(label)) = 1.0;
             oneHotLabels.emplace_back(std::move(oneHot));

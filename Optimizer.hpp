@@ -141,13 +141,13 @@ private:
 	size_t _timeStep = 0;
 	// Initialization flag
 	bool _isInitialized = false;
-	bool _isScheduled = false;
+	bool _isScheduled = true;
 	// Bias correction
 	double _biasCorrection1 = 1.0;
 	double _biasCorrection2 = 1.0;
 	// Learning rate & Scheduler
-	double _effectiveLearningRate;
-	double _initialLearningRate;
+	double _effectiveLearningRate = 0.0;
+	double _initialLearningRate = 0.0;
 	const size_t _warmupSteps = 4000;
 	// Moments
 	std::vector<Eigen::VectorXd> _firstMomentEstimateVector;
@@ -166,8 +166,7 @@ public:
 		_numParams(numParams),
 		_beta1(beta1),
 		_beta2(beta2),
-		_epsilon(epsilon),
-		_effectiveLearningRate(learningRate)
+		_epsilon(epsilon)
 	{
 		_validateInputParameters();
 		_initialLearningRate = learningRate;
@@ -331,16 +330,15 @@ private:
 
 	void _learningRateScheduler()
 	{
-		if (_isScheduled ) {
-			if (_timeStep < _warmupSteps) {
+		if (!_isScheduled) return;
+		if (_timeStep < _warmupSteps) {
 				// Linear warmup
 				double warmupRatio = static_cast<double>(_timeStep) / _warmupSteps;
-				_learningRate = _learningRate + warmupRatio * (_initialLearningRate - _learningRate);
-			}
-			else if (_timeStep % 1000 == 0) {
-				// Step decay after warmup
+				//_learningRate = _learningRate + warmupRatio * (_initialLearningRate - _learningRate);
+				_learningRate = _initialLearningRate * warmupRatio;
+		}
+		else if (_timeStep % 10000 == 0) {
 				_learningRate *= 0.5;
-			}
 		}
 	}
 };
