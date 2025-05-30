@@ -3,6 +3,11 @@ This repository is an implementation of [*SimpleCNN*](https://github.com/Bengal1
 In this project, I have built the same *SimpleCNN*, Convolutional Neural Network (CNN) in a lower level language, C++, and in a form of object oriented programming. The mechanism of the network can be seen more clear, because the CNN is written from scratch without any Machine learning library containing predefined models, structures or functions. <br/>
 I advise you before diving in to this project, see [*SimpleCNN*](https://github.com/Bengal1/Simple-CNN-Guide).
 
+## Requirements
+- [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
+- [![Eigen](https://img.shields.io/badge/Eigen-3.4%2B-lightgrey?logo=eigen&logoColor=blue)](https://eigen.tuxfamily.org)
+
+
 ## *MNIST Database*
 This network is trained on MNIST database, a simple gray-scale images of a writen one-digit numbers (0-9), such that the network gets an image and it's target to classify it as the correct number (class).
 
