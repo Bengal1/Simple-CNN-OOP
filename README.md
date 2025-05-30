@@ -4,9 +4,9 @@ In this project, I have built the same *SimpleCNN*, Convolutional Neural Network
 I advise you before diving in to this project, see [*SimpleCNN*](https://github.com/Bengal1/Simple-CNN-Guide).
 
 ## Requirements
-- C++17 compatible compiler
+- C++17 compatible compiler<br/>
   ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
-- Eigen Library
+- Eigen Library<br/>
   ![Eigen](https://img.shields.io/badge/Eigen-3.4%2B-lightgrey?logo=eigen&logoColor=blue)
 
 ## *MNIST Database*
