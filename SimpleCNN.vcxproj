@@ -133,19 +133,57 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\LossFunction\LossFunction.cpp" />
+    <ClCompile Include="src\LossFunction\LossTypes.cpp" />
+    <ClCompile Include="src\Optimizer\Adam.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\Layers\Convolution2D.cpp" />
+    <ClCompile Include="src\Layers\FullyConnected.cpp" />
+    <ClCompile Include="src\Layers\MaxPooling.cpp" />
+    <ClCompile Include="src\MNISTLoader.cpp" />
+    <ClCompile Include="src\Optimizer\Optimizer.cpp" />
+    <ClCompile Include="src\Optimizer\SGD.cpp" />
+    <ClCompile Include="src\Regularization\BatchNormalization.cpp" />
+    <ClCompile Include="src\Regularization\Dropout.cpp" />
+    <ClCompile Include="src\SimpleCNN.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Activation.hpp" />
-    <ClInclude Include="Regularization.hpp" />
-    <ClInclude Include="Layers\Convolution2D.hpp" />
-    <ClInclude Include="Layers\FullyConnected.hpp" />
-    <ClInclude Include="LossFunction.hpp" />
-    <ClInclude Include="Layers\MaxPooling.hpp" />
-    <ClInclude Include="MNISTLoader.hpp" />
-    <ClInclude Include="Optimizer.hpp" />
-    <ClInclude Include="SimpleCNN.hpp" />
+    <ClInclude Include="include\Regularization\BatchNormalization.hpp" />
+    <ClInclude Include="include\Regularization\Dropout.hpp" />
+    <ClInclude Include="include\Optimizer\Optimizer.tpp">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
+    <ClInclude Include="include\Optimizer\Adam.hpp" />
+    <ClInclude Include="include\FulltConnected.tpp" />
+    <ClInclude Include="include\Activation\Activation.hpp" />
+    <ClInclude Include="include\Layers\Convolution2D.hpp" />
+    <ClInclude Include="include\Layers\FullyConnected.hpp" />
+    <ClInclude Include="include\LossFunction\LossFunction.hpp" />
+    <ClInclude Include="include\Layers\MaxPooling.hpp" />
+    <ClInclude Include="include\MNISTLoader.hpp" />
+    <ClInclude Include="include\Optimizer\Optimizer.hpp" />
+    <ClInclude Include="include\SimpleCNN.hpp" />
+    <ClInclude Include="include\Optimizer\SGD.hpp" />
+    <ClInclude Include="include\Activation\ReLU.hpp" />
+    <ClInclude Include="include\Activation\Softmax.hpp" />
+    <ClInclude Include="include\Activation\ReLU.tpp" />
+    <ClInclude Include="include\Activation\Softmax.tpp" />
+    <ClInclude Include="include\LossFunction\LossTypes.hpp" />
     <ClInclude Include="Utils.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\Layers\FullyConnected.tpp">
+      <FileType>CppHeader</FileType>
+      <DeploymentContent>false</DeploymentContent>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Layers\Convolution2D.tpp">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="include\Regularization\Dropout.tpp">
+      <FileType>CppHeader</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

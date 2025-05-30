@@ -21,37 +21,106 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Layers\MaxPooling.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\FullyConnected.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Convolution2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SimpleCNN.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Optimizer\Optimizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Optimizer\Adam.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MNISTLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Optimizer\SGD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Regularization\BatchNormalization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Regularization\Dropout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LossFunction\LossTypes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LossFunction\LossFunction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Activation.hpp">
+    <ClInclude Include="include\Activation\Activation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Optimizer.hpp">
+    <ClInclude Include="include\Optimizer\Optimizer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MNISTLoader.hpp">
+    <ClInclude Include="include\MNISTLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LossFunction.hpp">
+    <ClInclude Include="include\LossFunction\LossFunction.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Layers\MaxPooling.hpp">
+    <ClInclude Include="include\Layers\MaxPooling.hpp">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="Layers\Convolution2D.hpp">
+    <ClInclude Include="include\Layers\Convolution2D.hpp">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="Layers\FullyConnected.hpp">
+    <ClInclude Include="include\Layers\FullyConnected.hpp">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="Regularization.hpp">
+    <ClInclude Include="include\SimpleCNN.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SimpleCNN.hpp">
+    <ClInclude Include="include\FulltConnected.tpp" />
+    <ClInclude Include="include\Layers\FullyConnected.tpp" />
+    <ClInclude Include="include\Optimizer\Adam.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Optimizer\SGD.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Optimizer\Optimizer.tpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Activation\ReLU.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Activation\Softmax.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Activation\ReLU.tpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Activation\Softmax.tpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Regularization\BatchNormalization.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Regularization\Dropout.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LossFunction\LossTypes.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Layers\Convolution2D.tpp" />
+    <None Include="include\Regularization\Dropout.tpp" />
   </ItemGroup>
 </Project>

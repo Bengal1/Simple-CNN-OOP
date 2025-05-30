@@ -1,4 +1,4 @@
-#include "SimpleCNN.hpp"
+#include "include/SimpleCNN.hpp"
 
 int main()
 {
