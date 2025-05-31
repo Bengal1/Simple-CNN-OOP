@@ -1,13 +1,15 @@
-//BatchNormalization.hpp
+// BatchNormalization.hpp
 #pragma once
 
 #include <Eigen/Dense>
-#include <vector>
 #include <memory>
+#include <vector>
+
 #include "../Optimizer/Optimizer.hpp"
 
-class BatchNormalization {
-private:
+class BatchNormalization
+{
+   private:
     // Input dimensions
     size_t _numChannels = 0;
     size_t _channelHeight = 0;
@@ -39,10 +41,8 @@ private:
     // Optimizer
     std::unique_ptr<Optimizer> _optimizer;
 
-public:
-    BatchNormalization(double maxGradNorm = -1.0,
-        double weightDecay = 0.0,
-        double momentum = 0.1);
+   public:
+    BatchNormalization(double maxGradNorm = -1.0, double weightDecay = 0.0, double momentum = 0.1);
     ~BatchNormalization() = default;
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input);
@@ -50,6 +50,6 @@ public:
     void updateParameters();
     void setTrainingMode(bool isTraining);
 
-private:
+   private:
     void _InitializeParameters(const std::vector<Eigen::MatrixXd>& input);
 };

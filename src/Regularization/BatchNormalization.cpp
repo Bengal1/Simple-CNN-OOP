@@ -1,60 +1,78 @@
 #include "../../include/Regularization//BatchNormalization.hpp"
-#include "../Optimizer/Adam.hpp"
-#include <stdexcept>
+
 #include <cmath>
+#include <stdexcept>
+
+#include "../Optimizer/Adam.hpp"
 
 BatchNormalization::BatchNormalization(double maxGradNorm, double weightDecay, double momentum)
-    : _momentum(momentum),
-    _optimizer(std::make_unique<Adam>(-2, maxGradNorm, weightDecay)) {
-    if (_momentum <= 0.0 || _momentum > 1.0) {
+    : _momentum(momentum), _optimizer(std::make_unique<Adam>(-2, maxGradNorm, weightDecay))
+{
+    if (_momentum <= 0.0 || _momentum > 1.0)
+    {
         throw std::invalid_argument("[BatchNormalization]: Momentum must be in the range (0, 1].");
     }
 }
 
-std::vector<Eigen::MatrixXd> BatchNormalization::forward(const std::vector<Eigen::MatrixXd>& input) {
-    if (!_initialized) {
+std::vector<Eigen::MatrixXd> BatchNormalization::forward(const std::vector<Eigen::MatrixXd>& input)
+{
+    if (!_initialized)
+    {
         _InitializeParameters(input);
     }
 
-    if (input.empty()) {
+    if (input.empty())
+    {
         throw std::invalid_argument("[BatchNormalization]: Input is empty.");
     }
 
-    if (input.size() != _numChannels ||
-        input[0].rows() != _channelHeight || input[0].cols() != _channelWidth) {
+    if (input.size() != _numChannels || input[0].rows() != _channelHeight ||
+        input[0].cols() != _channelWidth)
+    {
         throw std::invalid_argument("[BatchNormalization]: Input shape mismatch.");
     }
 
-    std::vector<Eigen::MatrixXd> outputBN(_numChannels, Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
+    std::vector<Eigen::MatrixXd> outputBN(_numChannels,
+                                          Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
     _input = input;
 
-    for (size_t c = 0; c < _numChannels; ++c) {
+    for (size_t c = 0; c < _numChannels; ++c)
+    {
         _channelMean[c] = input[c].sum() / (_channelHeight * _channelWidth);
-        _channelVariance[c] = (input[c].array() - _channelMean[c]).square().sum() / (_channelHeight * _channelWidth);
+        _channelVariance[c] =
+            (input[c].array() - _channelMean[c]).square().sum() / (_channelHeight * _channelWidth);
 
-        if (_isTraining) {
+        if (_isTraining)
+        {
             _runningMean[c] = (1.0 - _momentum) * _runningMean[c] + _momentum * _channelMean[c];
-            _runningVariance[c] = (1.0 - _momentum) * _runningVariance[c] + _momentum * _channelVariance[c];
+            _runningVariance[c] =
+                (1.0 - _momentum) * _runningVariance[c] + _momentum * _channelVariance[c];
         }
 
         double mean = _isTraining ? _channelMean[c] : _runningMean[c];
         double var = _isTraining ? _channelVariance[c] : _runningVariance[c];
 
-        outputBN[c] = _gamma[c] * ((input[c].array() - mean) / std::sqrt(var + _epsilon)) + _beta[c];
+        outputBN[c] =
+            _gamma[c] * ((input[c].array() - mean) / std::sqrt(var + _epsilon)) + _beta[c];
     }
 
     return outputBN;
 }
 
-std::vector<Eigen::MatrixXd> BatchNormalization::backward(const std::vector<Eigen::MatrixXd>& dOutput) {
-    if (dOutput.size() != _numChannels) {
+std::vector<Eigen::MatrixXd> BatchNormalization::backward(
+    const std::vector<Eigen::MatrixXd>& dOutput)
+{
+    if (dOutput.size() != _numChannels)
+    {
         throw std::invalid_argument("[BatchNormalization]: Gradient size mismatch.");
     }
 
-    std::vector<Eigen::MatrixXd> inputGradient(_numChannels, Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
+    std::vector<Eigen::MatrixXd> inputGradient(
+        _numChannels, Eigen::MatrixXd::Zero(_channelHeight, _channelWidth));
     size_t N = _channelHeight * _channelWidth;
 
-    for (size_t c = 0; c < _numChannels; ++c) {
+    for (size_t c = 0; c < _numChannels; ++c)
+    {
         double mean = _channelMean[c];
         double var = _channelVariance[c];
         double invStd = 1.0 / std::sqrt(var + _epsilon);
@@ -75,23 +93,28 @@ std::vector<Eigen::MatrixXd> BatchNormalization::backward(const std::vector<Eige
     return inputGradient;
 }
 
-void BatchNormalization::updateParameters() {
+void BatchNormalization::updateParameters()
+{
     _optimizer->updateStep(_gamma, _dGamma, 0);
     _optimizer->updateStep(_beta, _dBeta, 1);
     _dGamma.setZero();
     _dBeta.setZero();
 }
 
-void BatchNormalization::setTrainingMode(bool isTraining) {
+void BatchNormalization::setTrainingMode(bool isTraining)
+{
     _isTraining = isTraining;
 }
 
-void BatchNormalization::_InitializeParameters(const std::vector<Eigen::MatrixXd>& input) {
-    if (_optimizer == nullptr) {
+void BatchNormalization::_InitializeParameters(const std::vector<Eigen::MatrixXd>& input)
+{
+    if (_optimizer == nullptr)
+    {
         throw std::invalid_argument("[BatchNormalization]: Optimizer is not set.");
     }
 
-    if (input.empty() || input[0].rows() == 0 || input[0].cols() == 0) {
+    if (input.empty() || input[0].rows() == 0 || input[0].cols() == 0)
+    {
         throw std::invalid_argument("[BatchNormalization]: Invalid input dimensions.");
     }
 

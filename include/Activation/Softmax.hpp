@@ -2,19 +2,21 @@
 
 #include <Eigen/Dense>
 #include <vector>
+
 #include "Activation.hpp"
 
-template<typename T>
-class Softmax : public Activation<T> {
-private:
+template <typename T>
+class Softmax : public Activation<T>
+{
+   private:
     T _softmaxOutput;
     bool _initialized = false;
 
-public:
+   public:
     T Activate(const T& preActivationOutput) override;
     T computeGradient(const T& lossGradient) override;
 
-private:
+   private:
     void _initialize(const T& input);
     T _applySoftmax(const T& input);
     T _computeSoftmaxGradient(const T& gradient);

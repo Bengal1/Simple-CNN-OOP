@@ -13,10 +13,10 @@ int main()
     // Create a SimpleCNN model
     SimpleCNN model(classes);
 
-    try {
+    try
+    {
         // Load MNIST dataset
-        MNISTLoader loader(trainImages, trainLabels,
-            testImages, testLabels, validationRatio);
+        MNISTLoader loader(trainImages, trainLabels, testImages, testLabels, validationRatio);
         loader.loadTrainData();
         loader.loadTestData();
 
@@ -26,7 +26,8 @@ int main()
         // Test the model
         model.testSimpleCNN(loader);
     }
-    catch (const std::exception& e) {
+    catch (const std::exception& e)
+    {
         std::cerr << "Error: " << e.what() << std::endl;
         return -1;
     }

@@ -1,14 +1,15 @@
 #include "../../include/Layers/FullyConnected.hpp"
-#include <stdexcept>
-#include <random>
 
-FullyConnected::FullyConnected(size_t inputSize, size_t outputSize,
-    double maxGradNorm, double weightDecay,
-    size_t batchSize)
+#include <random>
+#include <stdexcept>
+
+FullyConnected::FullyConnected(size_t inputSize, size_t outputSize, double maxGradNorm,
+                               double weightDecay, size_t batchSize)
     : _inputSize(inputSize),
-    _outputSize(outputSize),
-    _batchSize(batchSize),
-    _optimizer(std::make_unique<Adam>(-1, maxGradNorm, weightDecay)) {
+      _outputSize(outputSize),
+      _batchSize(batchSize),
+      _optimizer(std::make_unique<Adam>(-1, maxGradNorm, weightDecay))
+{
     if (_inputSize == 0)
         throw std::invalid_argument("[FullyConnected]: Input size must be greater than zero.");
     if (_outputSize == 0)
@@ -20,22 +21,26 @@ FullyConnected::FullyConnected(size_t inputSize, size_t outputSize,
     _flatInput = Eigen::VectorXd::Zero(_inputSize);
 }
 
-void FullyConnected::updateParameters() {
+void FullyConnected::updateParameters()
+{
     _optimizer->updateStep(_weights, _weightsGradient);
     _optimizer->updateStep(_bias, _biasGradient);
     _weightsGradient.setZero();
     _biasGradient.setZero();
 }
 
-Eigen::MatrixXd FullyConnected::getWeights() {
+Eigen::MatrixXd FullyConnected::getWeights()
+{
     return _weights;
 }
 
-Eigen::VectorXd FullyConnected::getBias() {
+Eigen::VectorXd FullyConnected::getBias()
+{
     return _bias;
 }
 
-void FullyConnected::setParameters(const Eigen::MatrixXd& weights, const Eigen::VectorXd& bias) {
+void FullyConnected::setParameters(const Eigen::MatrixXd& weights, const Eigen::VectorXd& bias)
+{
     if (weights.rows() != _outputSize || weights.cols() != _inputSize)
         throw std::invalid_argument("[FullyConnected]: Weights size does not match.");
     if (bias.size() != _outputSize)
@@ -45,7 +50,8 @@ void FullyConnected::setParameters(const Eigen::MatrixXd& weights, const Eigen::
     _bias = bias;
 }
 
-void FullyConnected::_initializeWeights() {
+void FullyConnected::_initializeWeights()
+{
     _weights.resize(_outputSize, _inputSize);
     _bias.resize(_outputSize);
 

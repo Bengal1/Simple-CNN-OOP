@@ -169,7 +169,6 @@
     <ClInclude Include="include\Activation\ReLU.tpp" />
     <ClInclude Include="include\Activation\Softmax.tpp" />
     <ClInclude Include="include\LossFunction\LossTypes.hpp" />
-    <ClInclude Include="Utils.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Layers\FullyConnected.tpp">

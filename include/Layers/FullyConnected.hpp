@@ -1,21 +1,22 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include <vector>
 #include <memory>
+#include <vector>
+
 #include "../Optimizer/Adam.hpp"
 
-class FullyConnected {
-public:
-    FullyConnected(size_t inputSize, size_t outputSize,
-        double maxGradNorm = -1.0, double weightDecay = 0.0,
-        size_t batchSize = 1);
+class FullyConnected
+{
+   public:
+    FullyConnected(size_t inputSize, size_t outputSize, double maxGradNorm = -1.0,
+                   double weightDecay = 0.0, size_t batchSize = 1);
     ~FullyConnected() = default;
 
-    template<typename T>
+    template <typename T>
     Eigen::VectorXd forward(const T& input);
 
-    template<typename T>
+    template <typename T>
     T backward(const Eigen::VectorXd& dLoss_dOutput);
 
     void updateParameters();
@@ -24,8 +25,13 @@ public:
     Eigen::VectorXd getBias();
     void setParameters(const Eigen::MatrixXd& weights, const Eigen::VectorXd& bias);
 
-private:
-    enum class InputType { Vector, Matrix, Tensor3D };
+   private:
+    enum class InputType
+    {
+        Vector,
+        Matrix,
+        Tensor3D
+    };
 
     const size_t _inputSize;
     const size_t _outputSize;

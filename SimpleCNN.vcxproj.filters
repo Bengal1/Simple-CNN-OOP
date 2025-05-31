@@ -71,9 +71,6 @@
     <ClInclude Include="include\LossFunction\LossFunction.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\Layers\MaxPooling.hpp">
       <Filter>Header Files\Layers</Filter>
     </ClInclude>

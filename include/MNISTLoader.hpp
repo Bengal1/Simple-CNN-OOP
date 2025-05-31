@@ -1,13 +1,14 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <vector>
 #include <Eigen/Dense>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <vector>
 
-class MNISTLoader {
-private:
+class MNISTLoader
+{
+   private:
     // MNIST file paths
     const std::filesystem::path _trainImagesFile;
     const std::filesystem::path _trainLabelsFile;
@@ -24,12 +25,11 @@ private:
     bool _splitValidation = false;
     double _validationRatio;
 
-public:
+   public:
     MNISTLoader(const std::filesystem::path& trainImagesFile,
                 const std::filesystem::path& trainLabelsFile,
                 const std::filesystem::path& testImagesFile,
-                const std::filesystem::path& testLabelsFile,
-                double validationRatio = 0.0);
+                const std::filesystem::path& testLabelsFile, double validationRatio = 0.0);
 
     ~MNISTLoader() = default;
 
@@ -48,12 +48,10 @@ public:
     const size_t getNumValidation() const;
     const size_t getNumTest() const;
 
-private:
+   private:
     bool _loadImages(const std::filesystem::path& imagesFile,
-                     const std::filesystem::path& labelsFile,
-                     std::vector<Eigen::MatrixXd>& images,
-                     std::vector<uint8_t>& labels,
-                     bool isTrain);
+                     const std::filesystem::path& labelsFile, std::vector<Eigen::MatrixXd>& images,
+                     std::vector<uint8_t>& labels, bool isTrain);
 
     void _splitTrainValidation(double ratio);
 

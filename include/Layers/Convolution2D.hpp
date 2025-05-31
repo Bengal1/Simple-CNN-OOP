@@ -1,12 +1,14 @@
 ﻿#pragma once
 
-#include <vector>
-#include <memory>
 #include <Eigen/Dense>
+#include <memory>
+#include <vector>
+
 #include "../Optimizer/Adam.hpp"
 
-class Convolution2D {
-private:
+class Convolution2D
+{
+   private:
     // Input dimensions
     const size_t _inputHeight;
     const size_t _inputWidth;
@@ -38,13 +40,12 @@ private:
     // Optimizer
     std::unique_ptr<Optimizer> _optimizer;
 
-public:
-    Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels,
-        size_t numFilters, size_t kernelSize,
-        double maxGradNorm = -1.0, double weightDecay = 0.0,
-        size_t batchSize = 1, size_t stride = 1, size_t padding = 0);
+   public:
+    Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels, size_t numFilters,
+                  size_t kernelSize, double maxGradNorm = -1.0, double weightDecay = 0.0,
+                  size_t batchSize = 1, size_t stride = 1, size_t padding = 0);
 
-    template<typename T>
+    template <typename T>
     std::vector<Eigen::MatrixXd> forward(const T& input);
 
     std::vector<Eigen::MatrixXd> backward(const std::vector<Eigen::MatrixXd>& dLoss_dOutput);
@@ -53,15 +54,18 @@ public:
     std::vector<std::vector<Eigen::MatrixXd>> getFilters();
     Eigen::VectorXd getBiases();
 
-private:
+   private:
     void _initialize();
     void _initializeFilters();
     void _validateInputParameters() const;
 
-    const Eigen::MatrixXd _padWithZeros(const Eigen::MatrixXd& input, size_t promptPadding = 0) const;
-    const std::vector<Eigen::MatrixXd> _padWithZeros(const std::vector<Eigen::MatrixXd>& input, size_t promptPadding = 0) const;
+    const Eigen::MatrixXd _padWithZeros(const Eigen::MatrixXd& input,
+                                        size_t promptPadding = 0) const;
+    const std::vector<Eigen::MatrixXd> _padWithZeros(const std::vector<Eigen::MatrixXd>& input,
+                                                     size_t promptPadding = 0) const;
 
-    Eigen::MatrixXd _Convolve2D(const Eigen::MatrixXd& input, const Eigen::MatrixXd& kernel, size_t padding = 0) const;
+    Eigen::MatrixXd _Convolve2D(const Eigen::MatrixXd& input, const Eigen::MatrixXd& kernel,
+                                size_t padding = 0) const;
 };
 
 #include "Convolution2D.tpp"

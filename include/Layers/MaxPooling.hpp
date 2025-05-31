@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <tuple>
 #include <Eigen/Dense>
+#include <tuple>
+#include <vector>
 
-class MaxPooling {
-private:
+class MaxPooling
+{
+   private:
     using Index3D = std::tuple<size_t, size_t, size_t>;
     using Index4D = std::tuple<size_t, size_t, size_t, size_t>;
 
@@ -26,9 +27,9 @@ private:
     std::vector<Index3D> _inputGradientMap;
     std::vector<Index4D> _inputGradientMapBatch;
 
-public:
-    MaxPooling(size_t inputHeight, size_t inputWidth, size_t inputChannels,
-        size_t poolSize, size_t batchSize = 1, size_t stride = 2);
+   public:
+    MaxPooling(size_t inputHeight, size_t inputWidth, size_t inputChannels, size_t poolSize,
+               size_t batchSize = 1, size_t stride = 2);
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input);
     std::vector<std::vector<Eigen::MatrixXd>> forwardBatch(
@@ -38,13 +39,13 @@ public:
     std::vector<std::vector<Eigen::MatrixXd>> backwardBatch(
         const std::vector<std::vector<Eigen::MatrixXd>>& gradientBatch);
 
-private:
+   private:
     void _initialize();
     void _validate() const;
 
-    void _getDataLocation(size_t& dataChannel, size_t& dataRow,
-        size_t& dataColumn, size_t& mapIndex);
+    void _getDataLocation(size_t& dataChannel, size_t& dataRow, size_t& dataColumn,
+                          size_t& mapIndex);
 
-    void _getDataLocation(size_t& dataBatch, size_t& dataChannel,
-        size_t& dataRow, size_t& dataColumn, size_t& mapIndex);
+    void _getDataLocation(size_t& dataBatch, size_t& dataChannel, size_t& dataRow,
+                          size_t& dataColumn, size_t& mapIndex);
 };
