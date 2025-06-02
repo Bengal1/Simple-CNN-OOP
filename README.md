@@ -114,7 +114,7 @@ $$ReLU(x) = max(0, x)$$
 
 * **Softmax** is usually used in the output layer for classification, especially multi-class problems.<br/>
 
-$$\text{Softmax}(\mathbf{z}) = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}} \quad \text{for } i = 1, 2, \ldots, K \quad ; \quad \mathbf{z} \in \mathbb{R}^{K}$$
+$$\text{Softmax}(\mathbf{z})_i = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}} \quad \text{for } i = 1, 2, \ldots, K \quad ; \quad \mathbf{z} \in \mathbb{R}^{K}$$
 
 ### Regularization
 #### Dropout
