@@ -194,7 +194,7 @@ const double SimpleCNN::_trainEpoch(const std::vector<Eigen::MatrixXd>& trainIma
         /*Optimizer step*/
         _updateParameters();
 
-        /*Debug!
+        /*Debug!*
         if (trainImageNum % 1000 == 0)
         {
             std::cout << trainImageNum << ": " << std::endl;
