@@ -19,6 +19,9 @@
 class SimpleCNN
 {
    private:
+    // Default parameters
+    static constexpr int MNISTClasses = 10;
+    // Training statistics index
     enum TrainingStatIndex
     {
         TRAIN_LOSS = 0,
@@ -46,10 +49,9 @@ class SimpleCNN
     Eigen::VectorXd testLogit; // Debug
 
    public:
-    static constexpr size_t DefaultNumClasses = 10;
-    explicit SimpleCNN(size_t classes = DefaultNumClasses);
+    explicit SimpleCNN(size_t classes = MNISTClasses);
 
-    void trainSimpleCNN(MNISTLoader& dataLoader, size_t epochs = 10);
+    void trainSimpleCNN(MNISTLoader& dataLoader, const size_t epochs = 10);
 
     void testSimpleCNN(MNISTLoader& dataLoader);
 

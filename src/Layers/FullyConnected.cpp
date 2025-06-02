@@ -3,12 +3,11 @@
 #include <random>
 #include <stdexcept>
 
-FullyConnected::FullyConnected(size_t inputSize, size_t outputSize, double maxGradNorm,
-                               double weightDecay, size_t batchSize)
+FullyConnected::FullyConnected(size_t inputSize, size_t outputSize, size_t batchSize)
     : _inputSize(inputSize),
       _outputSize(outputSize),
       _batchSize(batchSize),
-      _optimizer(std::make_unique<Adam>(-1, maxGradNorm, weightDecay))
+      _optimizer(std::make_unique<Adam>(-1))
 {
     if (_inputSize == 0)
         throw std::invalid_argument("[FullyConnected]: Input size must be greater than zero.");

@@ -5,8 +5,8 @@
 
 // Constructor
 Convolution2D::Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels,
-                             size_t numFilters, size_t kernelSize, double maxGradNorm,
-                             double weightDecay, size_t batchSize, size_t stride, size_t padding)
+                             size_t numFilters, size_t kernelSize, size_t batchSize, size_t stride,
+                             size_t padding)
     : _inputHeight(inputHeight),
       _inputWidth(inputWidth),
       _inputChannels(inputChannels),
@@ -15,7 +15,7 @@ Convolution2D::Convolution2D(size_t inputHeight, size_t inputWidth, size_t input
       _batchSize(batchSize),
       _stride(stride),
       _padding(padding),
-      _optimizer(std::make_unique<Adam>(static_cast<int>(numFilters), maxGradNorm, weightDecay))
+      _optimizer(std::make_unique<Adam>(static_cast<int>(numFilters)))
 {
     _validateInputParameters();
     _initialize();
@@ -111,9 +111,9 @@ void Convolution2D::_initializeFilters()
     std::normal_distribution<double> dist(
         0.0, std::sqrt(2.0 / (_kernelSize * _kernelSize * _inputChannels)));
 
-    for (size_t filter = 0; filter < _numFilters; ++filter)
-        for (size_t channel = 0; channel < _inputChannels; ++channel)
-            _filters[filter][channel] =
+    for (size_t f = 0; f < _numFilters; ++f)
+        for (size_t c = 0; c < _inputChannels; ++c)
+            _filters[f][c] =
                 Eigen::MatrixXd::NullaryExpr(_kernelSize, _kernelSize, [&]() { return dist(gen); });
 
     _biases = Eigen::VectorXd::Zero(_numFilters);
@@ -156,10 +156,10 @@ Eigen::MatrixXd Convolution2D::_Convolve2D(const Eigen::MatrixXd& input,
     size_t outW = (paddedInput.cols() - kernel.cols()) / _stride + 1;
     Eigen::MatrixXd result = Eigen::MatrixXd::Zero(outH, outW);
 
-    for (size_t h = 0; h < outH; ++h)
-        for (size_t w = 0; w < outW; ++w)
-            result(h, w) =
-                (paddedInput.block(h * _stride, w * _stride, kernel.rows(), kernel.cols())
+    for (size_t i = 0; i < outH; ++i)
+        for (size_t j = 0; j < outW; ++j)
+            result(i, j) =
+                (paddedInput.block(i * _stride, j * _stride, kernel.rows(), kernel.cols())
                      .cwiseProduct(kernel))
                     .sum();
 

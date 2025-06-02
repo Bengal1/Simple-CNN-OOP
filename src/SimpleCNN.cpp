@@ -1,6 +1,5 @@
 #include "../include/SimpleCNN.hpp"
 
-#include <cmath> //Debug!
 #include <stdexcept>
 
 SimpleCNN::SimpleCNN(size_t classes)
@@ -68,9 +67,9 @@ void SimpleCNN::testSimpleCNN(MNISTLoader& dataLoader)
     std::cout << "\nStart testing...\n" << std::endl;
 
     size_t i = 0;
-    for (Eigen::MatrixXd image : testImages)
+    for (const auto& img : testImages)
     {
-        testOutput[i++] = _ForwardPass(image);
+        testOutput[i++] = _ForwardPass(img);
     }
 
     _testAccuracy = _accuracyCalculation(testOutput, oneHotTestLabels);
@@ -195,25 +194,21 @@ const double SimpleCNN::_trainEpoch(const std::vector<Eigen::MatrixXd>& trainIma
         _updateParameters();
 
         /*Debug!*
-        if (trainImageNum % 1000 == 0)
-        {
+        if (trainImageNum % 1000 == 0) {
             std::cout << trainImageNum << ": " << std::endl;
-            // std::cout << singleTrainOutput << std::endl << std::endl;
+            //std::cout << singleTrainOutput << std::endl << std::endl;
             std::cout << testLogit << std::endl << std::endl;
-            if (std::isnan(singleTrainOutput[0]))
-            {
+            if (isnan(singleTrainOutput[0])) {
                 std::cout << "\nimage No. : " << trainImageNum << std::endl;
                 exit(-1);
             }
         }
         int numcheck = 10000;
-        if (trainImageNum % numcheck == 0 and trainImageNum != 0)
-        {
+        if (trainImageNum % numcheck == 0 and trainImageNum != 0) {
             std::vector<Eigen::VectorXd> tempTrainO(&trainOutput[0], &trainOutput[trainImageNum]);
             std::vector<Eigen::VectorXd> tempTrainL(&oneHotTrainLabels[0],
-                                                    &oneHotTrainLabels[trainImageNum]);
-            std::cout << "Train Accuracy: " << _accuracyCalculation(tempTrainO, tempTrainL) << "%\n"
-                      << std::endl;
+        &oneHotTrainLabels[trainImageNum]); std::cout << "Train Accuracy: " <<
+        _accuracyCalculation(tempTrainO, tempTrainL) << "%\n" << std::endl;
         }
         /*Debug!*/
 

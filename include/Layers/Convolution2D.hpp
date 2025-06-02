@@ -9,6 +9,9 @@
 class Convolution2D
 {
    private:
+    // Default parameters
+    static constexpr int DefaultStride = 1;
+    static constexpr int DefaultPadding = 0;
     // Input dimensions
     const size_t _inputHeight;
     const size_t _inputWidth;
@@ -42,8 +45,8 @@ class Convolution2D
 
    public:
     Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels, size_t numFilters,
-                  size_t kernelSize, double maxGradNorm = -1.0, double weightDecay = 0.0,
-                  size_t batchSize = 1, size_t stride = 1, size_t padding = 0);
+                  size_t kernelSize, size_t batchSize = 1, size_t stride = DefaultStride,
+                  size_t padding = DefaultPadding);
 
     template <typename T>
     std::vector<Eigen::MatrixXd> forward(const T& input);

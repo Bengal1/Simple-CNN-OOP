@@ -1,4 +1,3 @@
-// MNISLoader.hpp
 #pragma once
 
 #include <Eigen/Dense>
@@ -10,6 +9,9 @@
 class MNISTLoader
 {
    private:
+    // Default parameters
+    static constexpr int MNISTClasses = 10;
+    static constexpr double DefaultValRatio = 0.0;
     // MNIST file paths
     const std::filesystem::path _trainImagesFile;
     const std::filesystem::path _trainLabelsFile;
@@ -22,7 +24,7 @@ class MNISTLoader
     std::vector<Eigen::VectorXd> _oneHotTrainLabels, _oneHotValidationLabels, _oneHotTestLabels;
 
     // Metadata
-    size_t _numTrain = 0, _numValidation = 0, _numTest = 0, _numClasses = 10;
+    size_t _numTrain = 0, _numValidation = 0, _numTest = 0, _numClasses = MNISTClasses;
     bool _splitValidation = false;
     double _validationRatio;
 
@@ -30,7 +32,8 @@ class MNISTLoader
     MNISTLoader(const std::filesystem::path& trainImagesFile,
                 const std::filesystem::path& trainLabelsFile,
                 const std::filesystem::path& testImagesFile,
-                const std::filesystem::path& testLabelsFile, double validationRatio = 0.0);
+                const std::filesystem::path& testLabelsFile,
+                double validationRatio = DefaultValRatio);
 
     ~MNISTLoader() = default;
 

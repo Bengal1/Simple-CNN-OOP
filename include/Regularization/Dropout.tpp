@@ -5,7 +5,6 @@
 
 template<typename T>
 T Dropout::forward(const T& input) {
-
 	if (_numChannels == 0) {
 		_getInputDimensions(input);
 	}
@@ -33,10 +32,10 @@ T Dropout::forward(const T& input) {
 		_dropoutMask3D.clear();
 		_dropoutMask3D.reserve(_numChannels);
 
-		for (size_t channel = 0; channel < _numChannels; ++channel) {
+		for (size_t c = 0; c < _numChannels; ++c) {
 			Eigen::MatrixXd mask = (_createRandomMask().array() > _dropoutRate).cast<double>();
 			_dropoutMask3D.push_back(mask);
-			droppedOutInput[channel] = input[channel].array() * mask.array() * _dropoutScale;
+			droppedOutInput[c] = input[c].array() * mask.array() * _dropoutScale;
 		}
 		return droppedOutInput;
 	}
@@ -64,8 +63,8 @@ T Dropout::backward(const T& dOutput) {
 		}
 
 		std::vector<Eigen::MatrixXd> dInput(_numChannels);
-		for (size_t channel = 0; channel < _numChannels; ++channel) {
-			dInput[channel] = dOutput[channel].array() * _dropoutMask3D[channel].array() * _dropoutScale;
+		for (size_t c = 0; c < _numChannels; ++c) {
+			dInput[c] = dOutput[c].array() * _dropoutMask3D[c].array() * _dropoutScale;
 		}
 		return dInput;
 	}

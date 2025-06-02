@@ -8,6 +8,8 @@
 class Dropout
 {
    private:
+    // Default parameters
+    static constexpr double DefaultDropoutRate = 0.5;
     size_t _inputHeight;
     size_t _inputWidth;
     size_t _numChannels;
@@ -24,20 +26,19 @@ class Dropout
     std::uniform_real_distribution<double> _dist;
 
    public:
-    static constexpr double DefaultDropoutRate = 0.5;
     explicit Dropout(double dropoutRate = DefaultDropoutRate);
     ~Dropout() = default;
 
     template <typename T>
-    auto forward(const T& input) -> T;
+    T forward(const T& input);
 
     template <typename T>
-    auto backward(const T& dOutput) -> T;
+    T backward(const T& dOutput);
 
     void setTrainingMode(bool isTraining);
 
    private:
-    auto _createRandomMask() -> Eigen::MatrixXd;
+    Eigen::MatrixXd _createRandomMask();
 
     template <typename T>
     void _getInputDimensions(const T& input);

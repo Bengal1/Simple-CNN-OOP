@@ -46,19 +46,16 @@ void FullyConnected::_getInputDimensions(const T& input) {
         _inputChannels = 1;
         _inputHeight = input.size();
         _inputWidth = 1;
-        _inputType = InputType::Vector;
     }
     else if constexpr (std::is_same_v<T, Eigen::MatrixXd>) {
         _inputChannels = 1;
         _inputHeight = input.rows();
         _inputWidth = input.cols();
-        _inputType = InputType::Matrix;
     }
     else if constexpr (std::is_same_v<T, std::vector<Eigen::MatrixXd>>) {
         _inputChannels = input.size();
         _inputHeight = input[0].rows();
         _inputWidth = input[0].cols();
-        _inputType = InputType::Tensor3D;
     }
     else {
         throw std::invalid_argument("[FullyConnected]: Unsupported input type.");

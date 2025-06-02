@@ -1,8 +1,7 @@
 #include "../../include/Optimizer/Adam.hpp"
 
-Adam::Adam(int numParams, double maxGradNorm, double weightDecay, double learningRate, double beta1,
-           double beta2, double epsilon)
-    : Optimizer(learningRate, maxGradNorm, weightDecay),
+Adam::Adam(int numParams, double learningRate, double beta1, double beta2, double epsilon)
+    : Optimizer(learningRate),
       _numParams(numParams),
       _beta1(beta1),
       _beta2(beta2),

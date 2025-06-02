@@ -1,4 +1,3 @@
-//Convolution2D.tpp
 #pragma once
 
 #include "Convolution2D.hpp"
@@ -24,9 +23,8 @@ std::vector<Eigen::MatrixXd> Convolution2D::forward(const T& input) {
         _input3D = input;
 
         for (size_t f = 0; f < _numFilters; ++f) {
-            for (size_t c = 0; c < _inputChannels; ++c){
+            for (size_t c = 0; c < _inputChannels; ++c)
                 output[f] += _Convolve2D(input[c], _filters[f][c], _padding);
-            }
             output[f].array() += _biases[f];
         }
 

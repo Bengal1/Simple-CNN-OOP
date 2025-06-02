@@ -8,9 +8,28 @@
 
 class FullyConnected
 {
+   private:
+    // layer dimensions
+    const size_t _inputSize;
+    const size_t _outputSize;
+    const size_t _batchSize;
+    // input dimensions
+    size_t _inputChannels = 0;
+    size_t _inputHeight = 0;
+    size_t _inputWidth = 0;
+    // learnable parameters
+    Eigen::MatrixXd _weights;
+    Eigen::VectorXd _bias;
+    // gradients
+    Eigen::MatrixXd _weightsGradient;
+    Eigen::VectorXd _biasGradient;
+    // input data
+    Eigen::VectorXd _flatInput;
+    // Optimizer
+    std::unique_ptr<Optimizer> _optimizer;
+
    public:
-    FullyConnected(size_t inputSize, size_t outputSize, double maxGradNorm = -1.0,
-                   double weightDecay = 0.0, size_t batchSize = 1);
+    FullyConnected(size_t inputSize, size_t outputSize, size_t batchSize = 1);
     ~FullyConnected() = default;
 
     template <typename T>
@@ -26,30 +45,6 @@ class FullyConnected
     void setParameters(const Eigen::MatrixXd& weights, const Eigen::VectorXd& bias);
 
    private:
-    enum class InputType
-    {
-        Vector,
-        Matrix,
-        Tensor3D
-    };
-
-    const size_t _inputSize;
-    const size_t _outputSize;
-    const size_t _batchSize;
-
-    size_t _inputChannels = 0;
-    size_t _inputHeight = 0;
-    size_t _inputWidth = 0;
-    InputType _inputType;
-
-    Eigen::MatrixXd _weights;
-    Eigen::VectorXd _bias;
-    Eigen::MatrixXd _weightsGradient;
-    Eigen::VectorXd _biasGradient;
-    Eigen::VectorXd _flatInput;
-
-    std::unique_ptr<Optimizer> _optimizer;
-
     void _initializeWeights();
 
     template <typename T>

@@ -4,7 +4,12 @@
 class Adam : public Optimizer
 {
    private:
-    // **Optimizer Modes**
+    // Default parameters
+    static constexpr double DefaultLR = 0.0001;
+    static constexpr double DefaultBeta1 = 0.9;
+    static constexpr double DefaultBeta2 = 0.999;
+    static constexpr double DefaultEpsilon = 1.0e-8;
+    // Optimizer Modes
     enum OptimizerMode
     {
         FullyConnected = -1,
@@ -37,9 +42,8 @@ class Adam : public Optimizer
     std::vector<std::vector<Eigen::MatrixXd>> _secondMomentEstimateTensor;
 
    public:
-    Adam(int numParams, double maxGradNorm = -1.0, double weightDecay = 0.0,
-         double learningRate = 0.001, double beta1 = 0.9, double beta2 = 0.999,
-         double epsilon = 1.0e-8);
+    Adam(int numParams, double learningRate = DefaultLR, double beta1 = DefaultBeta1,
+         double beta2 = DefaultBeta2, double epsilon = DefaultEpsilon);
 
     void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients,
                     const int paramIndex = 0) override;

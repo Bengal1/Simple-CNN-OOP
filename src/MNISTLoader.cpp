@@ -1,7 +1,5 @@
 #include "../include/MNISTLoader.hpp"
 
-#include <stdexcept>
-
 MNISTLoader::MNISTLoader(const std::filesystem::path& trainImagesFile,
                          const std::filesystem::path& trainLabelsFile,
                          const std::filesystem::path& testImagesFile,
@@ -175,14 +173,23 @@ bool MNISTLoader::_loadImages(const std::filesystem::path& imagesFile,
     return true;
 }
 
-void MNISTLoader::_splitTrainValidation(double ratio)
+void MNISTLoader::_splitTrainValidation(const double ratio)
 {
     if (_trainImages.empty() || _trainLabels.empty())
+    {
         throw std::runtime_error(
-            "[MNISTLoader]: Train data not loaded. Call loadTrainData() first.");
+            "[MNISTLoader]: Train data not loaded. Call loadTrainData() before splitting.");
+    }
+    if (ratio <= 0.0 || ratio >= 1.0)
+    {
+        throw std::invalid_argument(
+            "[MNISTLoader]: Validation ratio must be between 0 and 1 (exclusive).");
+    }
+    std::cout << "Performing train-validation split." << std::endl;
 
     size_t total = _trainImages.size();
     size_t splitIndex = static_cast<size_t>(total * (1.0 - ratio));
+
     _numValidation = total - splitIndex;
     _numTrain = splitIndex;
 
@@ -191,7 +198,7 @@ void MNISTLoader::_splitTrainValidation(double ratio)
 
     _trainImages.resize(splitIndex);
     _trainLabels.resize(splitIndex);
-    _oneHotTrainLabels.clear();
+    _oneHotTrainLabels.clear(); // force regeneration on next access
 }
 
 void MNISTLoader::_createOneHotLabels(const std::vector<uint8_t>& labels,

@@ -5,11 +5,13 @@
 #include <memory>
 #include <vector>
 
-#include "Optimizer/Adam.hpp"
+#include "../Optimizer/Optimizer.hpp"
 
 class BatchNormalization
 {
    private:
+    // Default parameters
+    static constexpr double DefaultMomentum = 0.1;
     // Input dimensions
     size_t _numChannels = 0;
     size_t _channelHeight = 0;
@@ -42,12 +44,11 @@ class BatchNormalization
     std::unique_ptr<Optimizer> _optimizer;
 
    public:
-    BatchNormalization(double maxGradNorm = -1.0, double weightDecay = 0.0, double momentum = 0.1);
+    BatchNormalization(double momentum = DefaultMomentum);
     ~BatchNormalization() = default;
 
     std::vector<Eigen::MatrixXd> forward(const std::vector<Eigen::MatrixXd>& input);
-    auto backward(const std::vector<Eigen::MatrixXd>& dOutput) -> std::vector<Eigen::MatrixXd>;
-
+    std::vector<Eigen::MatrixXd> backward(const std::vector<Eigen::MatrixXd>& dOutput);
     void updateParameters();
     void setTrainingMode(bool isTraining);
 

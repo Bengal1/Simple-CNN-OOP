@@ -1,4 +1,4 @@
-﻿// LossFunction.hpp
+﻿//// LossFunction.hpp
 #pragma once
 
 #include <Eigen/Dense>

@@ -1,12 +1,12 @@
-#include "../../include/Regularization/BatchNormalization.hpp"
+#include "../../include/Regularization//BatchNormalization.hpp"
 
 #include <cmath>
 #include <stdexcept>
 
-#include "../../include/Optimizer/Adam.hpp"
+#include "../Optimizer/Adam.hpp"
 
-BatchNormalization::BatchNormalization(double maxGradNorm, double weightDecay, double momentum)
-    : _momentum(momentum), _optimizer(std::make_unique<Adam>(-2, maxGradNorm, weightDecay))
+BatchNormalization::BatchNormalization(double momentum)
+    : _momentum(momentum), _optimizer(std::make_unique<Adam>(-2))
 {
     if (_momentum <= 0.0 || _momentum > 1.0)
     {
