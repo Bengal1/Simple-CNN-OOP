@@ -1,0 +1,42 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "Build SimpleCNN-OOP",
+			"command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-O2",
+				"-I${workspaceFolder}/include",
+				"-I${workspaceFolder}/src",
+				"-IC:/Libraries/Eigen-3.4.0",
+				"${workspaceFolder}/main.cpp",
+				"${workspaceFolder}/src/SimpleCNN.cpp",
+				"${workspaceFolder}/src/MNISTLoader.cpp",
+				"${workspaceFolder}/src/LossFunction/LossTypes.cpp",
+				"${workspaceFolder}/src/LossFunction/LossFunction.cpp",
+				"${workspaceFolder}/src/Layers/Convolution2D.cpp",
+				"${workspaceFolder}/src/Layers/FullyConnected.cpp",
+				"${workspaceFolder}/src/Layers/MaxPooling.cpp",
+				"${workspaceFolder}/src/Regularization/Dropout.cpp",
+				"${workspaceFolder}/src/Regularization/BatchNormalization.cpp",
+				"${workspaceFolder}/src/Optimizer/Adam.cpp",
+				"${workspaceFolder}/src/Optimizer/Optimizer.cpp",
+				"-o",
+				"${workspaceFolder}/main.exe"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "Compiler: C:\\msys64\\ucrt64\\bin\\g++.exe"
+		}
+	]
+}
