@@ -1,0 +1,172 @@
+# ========================
+# Visual Studio
+# ========================
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.filters
+*.vcxproj.user
+
+# MonoDevelop/Xamarin
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+[Bb]ld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Cache and build
+.vs/
+Generated\ Files/
+ipch/
+*.VC.db
+*.VC.VC.opendb
+
+# Testing
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+*.coverage
+*.coveragexml
+
+# Misc build artifacts
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+
+# ReSharper, Rider, Code Analysis
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Azure and publish artifacts
+*.publish.xml
+*.azurePubxml
+*.pubxml
+*.publishproj
+PublishScripts/
+artifacts/
+csx/
+*.build.csdef
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+# SQL Server
+*.mdf
+*.ldf
+*.ndf
+
+# Other Tools
+node_modules/
+.paket/
+.fake/
+*.tss
+*.jmconfig
+*.btp.cs
+*.rptproj.bak
+
+# Backup and temp
+*.bak
+~$*
+*~
+*.tmp
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+*.plg
+*.opt
+*.vbw
+
+# Reports, logs
+*.rpt
+*.rptproj.rsuser
+*.log
+
+# ========================
+# VS Code
+# ========================
+
+.vscode/
+.history/
+*.code-workspace
+
+# ========================
+# C++ & CMake (Optional)
+# ========================
+
+*.exe
+*.out
+*.a
+*.so
+*.dll
+*.dylib
+*.o
+*.obj
+*.lo
+*.la
+*.idb
+*.class
+
+# If using CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+build/
+
+# ========================
+# Data files (MNIST etc.)
+# ========================
+
+# Exclude data and generated files
+/SimpleCNN/training_data.csv
+/training_data.csv
+
+# ========================
+# Formatting
+# ========================
+
+# Keep clang-format (used for formatting)
+# Do NOT ignore it
+# .clang-format
