@@ -111,7 +111,7 @@ Without activation functions, a neural network—no matter how deep—would beha
 * **ReLU** (Rectified Linear Unit) is one of the most popular activation functions in deep learning.<br/>
 
 ```math
-\mathrm{ReLU}(\mathbf{x}) = \mathbf{max}(0, \mathbf{x})$$
+\mathrm{ReLU}(\mathbf{x}) = \mathbf{max}(0, \mathbf{x})
 ```
 
 * **Softmax** is usually used in the output layer for classification, especially multi-class problems.<br/>
