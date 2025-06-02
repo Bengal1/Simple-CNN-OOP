@@ -114,7 +114,7 @@ $$ReLU(x) = max(0, x)$$
 
 * **Softmax** is usually used in the output layer for classification, especially multi-class problems.<br/>
 
-$$\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}} \quad \text{for } i = 1, 2, \ldots, K$$
+$$\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}} \quad \text{for } i = 1, 2, \ldots, K ; z\in \mathbb{R}^{K}$$
 
 ### Regularization
 #### Dropout
@@ -202,6 +202,8 @@ $$
 $$
 
 ## Typical Run
+
+![noSplit - 10 epochs](https://github.com/user-attachments/assets/8fb349da-5a39-4406-b4e7-0284386ff36c)
 
 ## References
 [The Back Propagation Method for CNN](https://ieeexplore.ieee.org/abstract/document/409626)
