@@ -3,7 +3,7 @@
 #include <cmath>
 #include <stdexcept>
 
-#include "../Optimizer/Adam.hpp"
+#include "../../include/Optimizer/Adam.hpp"
 
 BatchNormalization::BatchNormalization(double momentum)
     : _momentum(momentum), _optimizer(std::make_unique<Adam>(-2))

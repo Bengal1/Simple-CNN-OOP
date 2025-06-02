@@ -11,7 +11,7 @@
 				"-I${workspaceFolder}/include",
 				"-I${workspaceFolder}/src",
 				"-IC:/Libraries/Eigen-3.4.0",
-				"${workspaceFolder}/main.cpp",
+				"${workspaceFolder}/src/main.cpp",
 				"${workspaceFolder}/src/SimpleCNN.cpp",
 				"${workspaceFolder}/src/MNISTLoader.cpp",
 				"${workspaceFolder}/src/LossFunction/LossTypes.cpp",
