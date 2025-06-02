@@ -60,7 +60,7 @@ Where:
 
 ### MaxPooling
 
-<img src="https://github.com/user-attachments/assets/2942ff2e-c233-4f7d-9837-5af1f92a662b" align="right" height="200"/>
+<img src="https://github.com/user-attachments/assets/fcd91530-7bc2-4610-897a-3ff43bce3335" align="right" height="200"/>
 
 Applies a 2D max pooling over an input signal composed of singular or several data inputs. See [MaxPooling.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/Layers/MaxPooling.hpp). <br/>
 A pooling layer is used in Convolutional Neural Networks (CNNs) to reduce the spatial dimensions (height and width) of feature maps while preserving the most important information.
