@@ -15,12 +15,7 @@ Convolution2D::Convolution2D(size_t inputHeight, size_t inputWidth, size_t input
       _batchSize(batchSize),
       _stride(stride),
       _padding(padding),
-<<<<<<< HEAD
       _optimizer(std::make_unique<Adam>(Adam::OptimizerMode::Convolution2D, static_cast<int>(numFilters)))
-=======
-      _optimizer(
-          std::make_unique<Adam>(Adam::OptimizerMode::Convolution2D, static_cast<int>(numFilters)))
->>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
 {
     _validateInputParameters();
     _initialize();

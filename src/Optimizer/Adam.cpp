@@ -1,11 +1,7 @@
 #include "../../include/Optimizer/Adam.hpp"
 
-<<<<<<< HEAD
-Adam::Adam(OptimizerMode mode, size_t numParams, double learningRate, double beta1, double beta2, double epsilon)
-=======
 Adam::Adam(OptimizerMode mode, size_t numParams, double learningRate, double beta1, double beta2,
            double epsilon)
->>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
     : Optimizer(learningRate),
       _mode(mode),
       _numParams(numParams),
@@ -29,11 +25,7 @@ void Adam::updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradie
     {
         _initializeMoments(parameters.size());
     }
-<<<<<<< HEAD
     if (paramIndex == 0 && _mode == Adam::OptimizerMode::BatchNormalization)
-=======
-    if (paramIndex == 0 && _mode == OptimizerMode::BatchNormalization)
->>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
     { // only for BN - Gamma
         _timeStep++;
         _updateEffectiveLearningRate();
@@ -138,13 +130,8 @@ bool Adam::validateOptimizerMode() const
 {
     switch (_mode)
     {
-<<<<<<< HEAD
         case OptimizerMode::FullyConnected:
         case OptimizerMode::BatchNormalization:
-=======
-        case OptimizerMode::BatchNormalization:
-        case OptimizerMode::FullyConnected:
->>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
         case OptimizerMode::Convolution2D:
             return true;
         default:
@@ -154,11 +141,7 @@ bool Adam::validateOptimizerMode() const
 
 void Adam::_validateInputParameters() const
 {
-<<<<<<< HEAD
     if(!Adam::validateOptimizerMode())
-=======
-    if (!validateOptimizerMode())
->>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
     {
         throw std::invalid_argument("[Optimizer]: Invalid Optimizer Mode.");
     }
@@ -199,11 +182,8 @@ void Adam::_initializeMoments(size_t rows, size_t cols, size_t channels)
         _firstMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
         _secondMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
     }
-<<<<<<< HEAD
     else if(_mode == OptimizerMode::Convolution2D)
-=======
-    else if (_mode == OptimizerMode::Convolution2D)
->>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
+
     { // Convolution2D - Filters and Bias
         _firstMomentEstimateTensor.assign(
             _numParams,
