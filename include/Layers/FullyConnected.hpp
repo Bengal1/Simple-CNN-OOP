@@ -8,11 +8,17 @@
 
 class FullyConnected
 {
+   public:
+    enum class InitMethod
+    {
+        He,
+        Xaviar,
+        Random
+    };
    private:
     // layer dimensions
     const size_t _inputSize;
     const size_t _outputSize;
-    const size_t _batchSize;
     // input dimensions
     size_t _inputChannels = 0;
     size_t _inputHeight = 0;
@@ -29,7 +35,7 @@ class FullyConnected
     std::unique_ptr<Optimizer> _optimizer;
 
    public:
-    FullyConnected(size_t inputSize, size_t outputSize, size_t batchSize = 1);
+    FullyConnected(size_t inputSize, size_t outputSize, InitMethod method = InitMethod::He);
     ~FullyConnected() = default;
 
     template <typename T>
@@ -45,7 +51,7 @@ class FullyConnected
     void setParameters(const Eigen::MatrixXd& weights, const Eigen::VectorXd& bias);
 
    private:
-    void _initializeWeights();
+    void _initializeWeights(InitMethod method);
 
     template <typename T>
     void _getInputDimensions(const T& input);

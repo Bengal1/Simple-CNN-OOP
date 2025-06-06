@@ -8,7 +8,7 @@ SimpleCNN::SimpleCNN(size_t classes)
       _conv2(12, 12, 32, 64, 5),
       _pool2(8, 8, 64, 2),
       _fc1(4 * 4 * 64, 512),
-      _fc2(512, classes),
+      _fc2(512, classes, FullyConnected::InitMethod::Xaviar),
       _dropout1(0.45),
       _dropout2(0.35),
       _classes(classes)
