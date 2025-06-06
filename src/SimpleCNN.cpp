@@ -17,7 +17,6 @@ SimpleCNN::SimpleCNN(size_t classes)
     {
         throw std::invalid_argument("[SimpleCNN]: Number of classes must be greater than 1.");
     }
-    testLogit = Eigen::VectorXd::Zero(classes);
 }
 
 void SimpleCNN::trainSimpleCNN(MNISTLoader& dataLoader, const size_t epochs)
@@ -134,7 +133,6 @@ Eigen::VectorXd SimpleCNN::_ForwardPass(const Eigen::MatrixXd& input)
     Eigen::VectorXd outputFc1 = _fc1.forward(outputDrop2);
     Eigen::VectorXd outputRelu3 = _relu3.Activate(outputFc1);
     Eigen::VectorXd outputFc2 = _fc2.forward(outputRelu3);
-    testLogit = outputFc2; // Debug: store logits for testing
     Eigen::VectorXd outputSoftmax = _softmax.Activate(outputFc2);
 
     return outputSoftmax;
@@ -196,8 +194,7 @@ const double SimpleCNN::_trainEpoch(const std::vector<Eigen::MatrixXd>& trainIma
         /*Debug!*
         if (trainImageNum % 1000 == 0) {
             std::cout << trainImageNum << ": " << std::endl;
-            //std::cout << singleTrainOutput << std::endl << std::endl;
-            std::cout << testLogit << std::endl << std::endl;
+            std::cout << singleTrainOutput << std::endl << std::endl;
             if (isnan(singleTrainOutput[0])) {
                 std::cout << "\nimage No. : " << trainImageNum << std::endl;
                 exit(-1);

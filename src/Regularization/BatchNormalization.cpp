@@ -6,7 +6,12 @@
 #include "../../include/Optimizer/Adam.hpp"
 
 BatchNormalization::BatchNormalization(double momentum)
+<<<<<<< HEAD
     : _momentum(momentum), _optimizer(std::make_unique<Adam>(Adam::OptimizerMode::BatchNormalization))
+=======
+    : _momentum(momentum),
+      _optimizer(std::make_unique<Adam>(Adam::OptimizerMode::BatchNormalization))
+>>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
 {
     if (_momentum <= 0.0 || _momentum > 1.0)
     {

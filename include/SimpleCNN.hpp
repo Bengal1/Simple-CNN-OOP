@@ -21,6 +21,7 @@ class SimpleCNN
    private:
     // Default parameters
     static constexpr int MNISTClasses = 10;
+    static constexpr int DefaultEpochs = 10;
     // Training statistics index
     enum TrainingStatIndex
     {
@@ -46,12 +47,11 @@ class SimpleCNN
     CrossEntropy CEloss;
 
     const size_t _classes;
-    Eigen::VectorXd testLogit; // Debug
 
    public:
     explicit SimpleCNN(size_t classes = MNISTClasses);
 
-    void trainSimpleCNN(MNISTLoader& dataLoader, const size_t epochs = 10);
+    void trainSimpleCNN(MNISTLoader& dataLoader, const size_t epochs = DefaultEpochs);
 
     void testSimpleCNN(MNISTLoader& dataLoader);
 
