@@ -3,29 +3,34 @@
 
 class Adam : public Optimizer
 {
+   public:
+    // Optimizer Modes
+    enum class OptimizerMode
+    {
+        FullyConnected,
+        BatchNormalization,
+        Convolution2D
+    };
+
    private:
     // Default parameters
-    static constexpr double DefaultLR = 0.0001;
+    static constexpr double DefaultLR = 7e-5;
     static constexpr double DefaultBeta1 = 0.9;
     static constexpr double DefaultBeta2 = 0.999;
     static constexpr double DefaultEpsilon = 1.0e-8;
-    // Optimizer Modes
-    enum OptimizerMode
-    {
-        FullyConnected = -1,
-        BatchNormalization = -2
-    };
+    static constexpr size_t DefaultParamNum = 1;
     // Adam optimizer parameters
     const double _beta1;
     const double _beta2;
     const double _epsilon;
-    const int _numParams;
+    const size_t _numParams;
     size_t _numChannels = 0;
     // Time step
     size_t _timeStep = 0;
-    // Initialization flag
+    // Initialization & config
     bool _isInitialized = false;
     bool _isScheduled = false;
+    OptimizerMode _mode;
     // Bias correction
     double _biasCorrection1 = 1.0;
     double _biasCorrection2 = 1.0;
@@ -42,8 +47,8 @@ class Adam : public Optimizer
     std::vector<std::vector<Eigen::MatrixXd>> _secondMomentEstimateTensor;
 
    public:
-    Adam(int numParams, double learningRate = DefaultLR, double beta1 = DefaultBeta1,
-         double beta2 = DefaultBeta2, double epsilon = DefaultEpsilon);
+    Adam(OptimizerMode mode, size_t numParams = DefaultParamNum, double learningRate = DefaultLR,
+         double beta1 = DefaultBeta1, double beta2 = DefaultBeta2, double epsilon = DefaultEpsilon);
 
     void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients,
                     const int paramIndex = 0) override;
@@ -56,6 +61,8 @@ class Adam : public Optimizer
                     const int paramIndex = 0) override;
 
    private:
+    bool validateOptimizerMode() const;
+
     void _validateInputParameters() const;
 
     void _initializeMoments(size_t rows, size_t cols = 0, size_t channels = 0);

@@ -3,7 +3,7 @@
 MNISTLoader::MNISTLoader(const std::filesystem::path& trainImagesFile,
                          const std::filesystem::path& trainLabelsFile,
                          const std::filesystem::path& testImagesFile,
-                         const std::filesystem::path& testLabelsFile, double validationRatio)
+                         const std::filesystem::path& testLabelsFile, const double validationRatio)
     : _trainImagesFile(trainImagesFile),
       _trainLabelsFile(trainLabelsFile),
       _testImagesFile(testImagesFile),
@@ -34,16 +34,15 @@ MNISTLoader::MNISTLoader(const std::filesystem::path& trainImagesFile,
     }
 
     _splitValidation = (_validationRatio > 0.0);
-}
 
-bool MNISTLoader::loadTrainData()
-{
-    return _loadImages(_trainImagesFile, _trainLabelsFile, _trainImages, _trainLabels, true);
-}
-
-bool MNISTLoader::loadTestData()
-{
-    return _loadImages(_testImagesFile, _testLabelsFile, _testImages, _testLabels, false);
+    if (!MNISTLoader::_loadTrainData())
+    {
+        throw std::runtime_error("[MNISTLoader]: Failed to load Train Dataset!");
+    }
+    if (!MNISTLoader::_loadTestData())
+    {
+        throw std::runtime_error("[MNISTLoader]: Failed to load Test Dataset!");
+    }
 }
 
 const std::vector<Eigen::MatrixXd>& MNISTLoader::getTrainImages() const
@@ -89,6 +88,16 @@ const size_t MNISTLoader::getNumValidation() const
 const size_t MNISTLoader::getNumTest() const
 {
     return _numTest;
+}
+
+bool MNISTLoader::_loadTrainData()
+{
+    return _loadImages(_trainImagesFile, _trainLabelsFile, _trainImages, _trainLabels, true);
+}
+
+bool MNISTLoader::_loadTestData()
+{
+    return _loadImages(_testImagesFile, _testLabelsFile, _testImages, _testLabels, false);
 }
 
 bool MNISTLoader::_loadImages(const std::filesystem::path& imagesFile,
@@ -185,7 +194,7 @@ void MNISTLoader::_splitTrainValidation(const double ratio)
         throw std::invalid_argument(
             "[MNISTLoader]: Validation ratio must be between 0 and 1 (exclusive).");
     }
-    std::cout << "Performing train-validation split." << std::endl;
+    std::cout << "Performing Train-Validation split." << std::endl;
 
     size_t total = _trainImages.size();
     size_t splitIndex = static_cast<size_t>(total * (1.0 - ratio));

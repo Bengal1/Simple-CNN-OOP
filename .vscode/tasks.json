@@ -4,7 +4,7 @@
 		{
 			"type": "cppbuild",
 			"label": "Build SimpleCNN-OOP",
-			"command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+			"command": "g++.exe",
 			"args": [
 				"-fdiagnostics-color=always",
 				"-O2",
@@ -24,7 +24,7 @@
 				"${workspaceFolder}/src/Optimizer/Adam.cpp",
 				"${workspaceFolder}/src/Optimizer/Optimizer.cpp",
 				"-o",
-				"${workspaceFolder}/main.exe"
+				"${workspaceFolder}/SimpleCNN.exe"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -36,7 +36,7 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"detail": "Compiler: C:\\msys64\\ucrt64\\bin\\g++.exe"
+			"detail": "Compiler: g++.exe"
 		}
 	]
 }

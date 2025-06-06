@@ -1,7 +1,9 @@
 #include "../../include/Optimizer/Adam.hpp"
 
-Adam::Adam(int numParams, double learningRate, double beta1, double beta2, double epsilon)
+Adam::Adam(OptimizerMode mode, size_t numParams, double learningRate, double beta1, double beta2,
+           double epsilon)
     : Optimizer(learningRate),
+      _mode(mode),
       _numParams(numParams),
       _beta1(beta1),
       _beta2(beta2),
@@ -23,7 +25,7 @@ void Adam::updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradie
     {
         _initializeMoments(parameters.size());
     }
-    if (paramIndex == 0 && _numParams == BatchNormalization)
+    if (paramIndex == 0 && _mode == OptimizerMode::BatchNormalization)
     { // only for BN - Gamma
         _timeStep++;
         _updateEffectiveLearningRate();
@@ -124,9 +126,26 @@ void Adam::updateStep(std::vector<Eigen::MatrixXd>& parameters,
     }
 }
 
+bool Adam::validateOptimizerMode() const
+{
+    switch (_mode)
+    {
+        case OptimizerMode::BatchNormalization:
+        case OptimizerMode::FullyConnected:
+        case OptimizerMode::Convolution2D:
+            return true;
+        default:
+            return false;
+    }
+}
+
 void Adam::_validateInputParameters() const
 {
-    if (_numParams != FullyConnected && _numParams != BatchNormalization && _numParams <= 0)
+    if (!validateOptimizerMode())
+    {
+        throw std::invalid_argument("[Optimizer]: Invalid Optimizer Mode.");
+    }
+    if (_numParams == 0)
     {
         throw std::invalid_argument("[Optimizer]: Invalid number of parameters.");
     }
@@ -151,19 +170,19 @@ void Adam::_validateInputParameters() const
 void Adam::_initializeMoments(size_t rows, size_t cols, size_t channels)
 {
     _numChannels = (channels > 0) ? channels : 1;
-    if (_numParams == FullyConnected)
+    if (_mode == OptimizerMode::FullyConnected)
     { // Weights and Bias
         _firstMomentEstimateMatrix.assign(1, Eigen::MatrixXd::Zero(rows, cols));
         _secondMomentEstimateMatrix.assign(1, Eigen::MatrixXd::Zero(rows, cols));
         _firstMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
         _secondMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(rows));
     }
-    else if (_numParams == BatchNormalization)
+    else if (_mode == OptimizerMode::BatchNormalization)
     { // Gamma and Beta
         _firstMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
         _secondMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
     }
-    else
+    else if (_mode == OptimizerMode::Convolution2D)
     { // Convolution2D - Filters and Bias
         _firstMomentEstimateTensor.assign(
             _numParams,
@@ -173,6 +192,10 @@ void Adam::_initializeMoments(size_t rows, size_t cols, size_t channels)
             std::vector<Eigen::MatrixXd>(_numChannels, Eigen::MatrixXd::Zero(rows, cols)));
         _firstMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(_numParams));
         _secondMomentEstimateVector.assign(1, Eigen::VectorXd::Zero(_numParams));
+    }
+    else
+    {
+        throw std::invalid_argument("[Optimizer]: Invalid Optimizer Mode.");
     }
     _isInitialized = true;
 }

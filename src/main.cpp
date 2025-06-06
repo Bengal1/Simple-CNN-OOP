@@ -2,8 +2,8 @@
 
 int main()
 {
-    size_t epochs = 10, classes = 10;
-    double validationRatio = 0.2;
+    const size_t epochs = 10, classes = 10;
+    const double validationRatio = 0.2;
     // MNIST dataset paths
     std::filesystem::path trainImages = "MNIST/train-images.idx3-ubyte";
     std::filesystem::path trainLabels = "MNIST/train-labels.idx1-ubyte";
@@ -17,8 +17,6 @@ int main()
     {
         // Load MNIST dataset
         MNISTLoader loader(trainImages, trainLabels, testImages, testLabels, validationRatio);
-        loader.loadTrainData();
-        loader.loadTestData();
 
         // Train the model
         model.trainSimpleCNN(loader, epochs);

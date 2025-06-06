@@ -37,9 +37,6 @@ class MNISTLoader
 
     ~MNISTLoader() = default;
 
-    bool loadTrainData();
-    bool loadTestData();
-
     const std::vector<Eigen::MatrixXd>& getTrainImages() const;
     const std::vector<Eigen::MatrixXd>& getValidationImages() const;
     const std::vector<Eigen::MatrixXd>& getTestImages() const;
@@ -53,6 +50,8 @@ class MNISTLoader
     const size_t getNumTest() const;
 
    private:
+    bool _loadTrainData();
+    bool _loadTestData();
     bool _loadImages(const std::filesystem::path& imagesFile,
                      const std::filesystem::path& labelsFile, std::vector<Eigen::MatrixXd>& images,
                      std::vector<uint8_t>& labels, bool isTrain);
