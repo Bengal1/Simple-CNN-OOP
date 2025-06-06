@@ -11,7 +11,10 @@ class Adam : public Optimizer
         BatchNormalization,
         Convolution2D
     };
+<<<<<<< HEAD
+=======
 
+>>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
    private:
     // Default parameters
     static constexpr double DefaultLR = 7e-5;
@@ -47,8 +50,13 @@ class Adam : public Optimizer
     std::vector<std::vector<Eigen::MatrixXd>> _secondMomentEstimateTensor;
 
    public:
+<<<<<<< HEAD
+    Adam(OptimizerMode mode, size_t numParams = DefaultParamNum, double learningRate = DefaultLR, double beta1 = DefaultBeta1,
+         double beta2 = DefaultBeta2, double epsilon = DefaultEpsilon);
+=======
     Adam(OptimizerMode mode, size_t numParams = DefaultParamNum, double learningRate = DefaultLR,
          double beta1 = DefaultBeta1, double beta2 = DefaultBeta2, double epsilon = DefaultEpsilon);
+>>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
 
     void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients,
                     const int paramIndex = 0) override;
@@ -62,7 +70,11 @@ class Adam : public Optimizer
 
    private:
     bool validateOptimizerMode() const;
+<<<<<<< HEAD
+    
+=======
 
+>>>>>>> a5ddb32dc529fc62bbd81954f9f072e9b9c078ab
     void _validateInputParameters() const;
 
     void _initializeMoments(size_t rows, size_t cols = 0, size_t channels = 0);
