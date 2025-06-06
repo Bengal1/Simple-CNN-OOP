@@ -14,7 +14,7 @@ class Adam : public Optimizer
 
    private:
     // Default parameters
-    static constexpr double DefaultLR = 5e-5;
+    static constexpr double DefaultLR = 7e-5;
     static constexpr double DefaultBeta1 = 0.9;
     static constexpr double DefaultBeta2 = 0.999;
     static constexpr double DefaultEpsilon = 1.0e-8;
