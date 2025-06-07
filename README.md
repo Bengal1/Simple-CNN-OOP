@@ -207,7 +207,7 @@ $$
 
 ## Typical Run
 
-![noSplit - 10 epochs](https://github.com/user-attachments/assets/8fb349da-5a39-4406-b4e7-0284386ff36c)
+![vscode_15epochs_lr5e-5](https://github.com/user-attachments/assets/b955aa68-a914-4a26-a91a-ee6471a10035)
 
 ## References
 [The Back Propagation Method for CNN](https://ieeexplore.ieee.org/abstract/document/409626)
