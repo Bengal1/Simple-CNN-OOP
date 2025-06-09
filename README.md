@@ -96,7 +96,8 @@ Where:
 * $`f(\cdot)`$ is an activation function (e.g., ReLU, sigmoid).
 * $`y \in \mathbb{R}^{n_{\text{out}}}`$ is the output vector.
 
- 
+
+
 #### He Weight initialization 
 Weight initialization helps neural networks train efficiently by keeping activations and gradients stable across layers. Xavier initialization works well with sigmoid or tanh activations, using a variance of $`\frac{2}{n_{in}+n_{out}​}`$​. He initialization is better for ReLU-based activations, using $`\frac{2}{n_{in}}`$​ to account for the fact that ReLU drops negative inputs. <br/>
 **He Initialization** (also called Kaiming Initialization) is designed for neural networks that use ReLU or Leaky ReLU activations. Since ReLU sets all negative inputs to zero, it effectively reduces the number of active neurons by half, which can shrink the variance of outputs layer by layer if not handled properly.
