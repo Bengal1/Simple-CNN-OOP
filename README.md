@@ -79,7 +79,7 @@ $$
 
 ### FullyConnected
 
-<img src="https://github.com/Bengal1/Simple-CNN-Guide/assets/34989887/40287168-6e2c-4f0a-aa39-b00da7885c9e" align="right" height="200"/>
+<img src="https://github.com/Bengal1/Simple-CNN-Guide/assets/34989887/40287168-6e2c-4f0a-aa39-b00da7885c9e" align="right" width="350" height="350"/>
 
 Applies a linear transformation to the layer's input on a 2-dimentional input, $`(N,H)`$. See [FullyConnected.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/Layers/FullyConnected.hpp). <br/>
 A fully-connected layer is a type of neural network layer where every neuron is connected to every neuron in the previous layer. It is usually placed at the end of convolutional or recurrent layers to make final predictions. <br/>
