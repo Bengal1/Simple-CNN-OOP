@@ -158,6 +158,7 @@ build/
 # ========================
 # Data files (MNIST etc.)
 # ========================
+# MNIST/*.ubyte
 
 # Exclude data and generated files
 /SimpleCNN/training_data.csv
