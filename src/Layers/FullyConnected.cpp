@@ -56,18 +56,22 @@ void FullyConnected::_initializeWeights(InitMethod method)
 
     std::normal_distribution<double> dist;
 
-    if (method == InitMethod::Xaviar) {
+    if (method == InitMethod::Xaviar)
+    {
         double stddev = std::sqrt(1.0 / (_inputSize + _outputSize));
         dist = std::normal_distribution<double>(0, stddev);
     }
-    else if (method == InitMethod::He) {
+    else if (method == InitMethod::He)
+    {
         double stddev = std::sqrt(2.0 / _inputSize);
         dist = std::normal_distribution<double>(0, stddev);
     }
-    else if (method == InitMethod::Random) {
-        dist = std::normal_distribution<double>(0, 1.0);  
+    else if (method == InitMethod::Random)
+    {
+        dist = std::normal_distribution<double>(0, 1.0);
     }
-    else {
+    else
+    {
         throw std::invalid_argument("[FullyConnected]: Unknown initialization method.");
     }
 

@@ -141,7 +141,7 @@ bool Adam::validateOptimizerMode() const
 
 void Adam::_validateInputParameters() const
 {
-    if(!Adam::validateOptimizerMode())
+    if (!Adam::validateOptimizerMode())
     {
         throw std::invalid_argument("[Optimizer]: Invalid Optimizer Mode.");
     }
@@ -182,7 +182,7 @@ void Adam::_initializeMoments(size_t rows, size_t cols, size_t channels)
         _firstMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
         _secondMomentEstimateVector.assign(2, Eigen::VectorXd::Zero(rows));
     }
-    else if(_mode == OptimizerMode::Convolution2D)
+    else if (_mode == OptimizerMode::Convolution2D)
 
     { // Convolution2D - Filters and Bias
         _firstMomentEstimateTensor.assign(

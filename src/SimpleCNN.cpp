@@ -191,24 +191,6 @@ const double SimpleCNN::_trainEpoch(const std::vector<Eigen::MatrixXd>& trainIma
         /*Optimizer step*/
         _updateParameters();
 
-        /*Debug!*
-        if (trainImageNum % 1000 == 0) {
-            std::cout << trainImageNum << ": " << std::endl;
-            std::cout << singleTrainOutput << std::endl << std::endl;
-            if (isnan(singleTrainOutput[0])) {
-                std::cout << "\nimage No. : " << trainImageNum << std::endl;
-                exit(-1);
-            }
-        }
-        int numcheck = 10000;
-        if (trainImageNum % numcheck == 0 and trainImageNum != 0) {
-            std::vector<Eigen::VectorXd> tempTrainO(&trainOutput[0], &trainOutput[trainImageNum]);
-            std::vector<Eigen::VectorXd> tempTrainL(&oneHotTrainLabels[0],
-        &oneHotTrainLabels[trainImageNum]); std::cout << "Train Accuracy: " <<
-        _accuracyCalculation(tempTrainO, tempTrainL) << "%\n" << std::endl;
-        }
-        /*Debug!*/
-
         ++trainImageNum;
     }
 

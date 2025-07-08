@@ -15,7 +15,7 @@ class FullyConnected
         Xaviar,
         Random
     };
-    
+
    private:
     // layer dimensions
     const size_t _inputSize;

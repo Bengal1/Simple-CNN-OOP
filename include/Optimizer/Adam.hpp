@@ -50,7 +50,6 @@ class Adam : public Optimizer
     Adam(OptimizerMode mode, size_t numParams = DefaultParamNum, double learningRate = DefaultLR,
          double beta1 = DefaultBeta1, double beta2 = DefaultBeta2, double epsilon = DefaultEpsilon);
 
-
     void updateStep(Eigen::VectorXd& parameters, const Eigen::VectorXd& gradients,
                     const int paramIndex = 0) override;
 
