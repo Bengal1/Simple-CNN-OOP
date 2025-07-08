@@ -152,7 +152,7 @@ node_modules/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
+# Makefile
 build/
 
 # ========================
