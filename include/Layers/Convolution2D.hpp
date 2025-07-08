@@ -2,7 +2,6 @@
 
 #include <Eigen/Dense>
 #include <memory>
-#include <vector>
 
 #include "../Optimizer/Adam.hpp"
 

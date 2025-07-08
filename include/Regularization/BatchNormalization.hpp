@@ -3,7 +3,6 @@
 
 #include <Eigen/Dense>
 #include <memory>
-#include <vector>
 
 #include "../Optimizer/Optimizer.hpp"
 
