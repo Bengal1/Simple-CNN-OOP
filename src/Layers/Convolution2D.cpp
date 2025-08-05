@@ -1,9 +1,19 @@
+/**
+ * @file Convolution2D.cpp
+ * @brief Implementation file for the Convolution2D class.
+ *
+ * This file contains the implementation of the constructor, forward and backward
+ * passes, and all helper methods for the Convolution2D layer.
+ */
 #include "../../include/Layers/Convolution2D.hpp"
 
 #include <random>
 #include <stdexcept>
 
-// Constructor
+/**
+ * @brief Constructs a new Convolution2D object.
+ * @copydoc Convolution2D::Convolution2D
+ */
 Convolution2D::Convolution2D(size_t inputHeight, size_t inputWidth, size_t inputChannels,
                              size_t numFilters, size_t kernelSize, size_t batchSize, size_t stride,
                              size_t padding)

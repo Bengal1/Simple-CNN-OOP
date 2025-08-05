@@ -1,7 +1,24 @@
+/**
+ * @file SimpleCNN.cpp
+ * @brief Implementation of the SimpleCNN class.
+ *
+ * This file contains the implementation for a simple Convolutional Neural Network (CNN)
+ * designed for image classification tasks, specifically using the MNIST dataset.
+ */
 #include "../include/SimpleCNN.hpp"
 
 #include <stdexcept>
 
+/**
+ * @brief Constructs a new SimpleCNN object.
+ *
+ * This constructor initializes all layers of the CNN, including convolutional,
+ * pooling, and fully connected layers, based on the specified number of classes.
+ * It also performs a validation check on the number of classes.
+ *
+ * @param classes The number of output classes for classification.
+ * @throws std::invalid_argument if the number of classes is less than 2.
+ */
 SimpleCNN::SimpleCNN(size_t classes)
     : _conv1(28, 28, 1, 32, 5),
       _pool1(24, 24, 32, 2),

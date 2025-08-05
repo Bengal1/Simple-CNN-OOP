@@ -1,3 +1,12 @@
+/**
+ * @file SimpleCNN.hpp
+ * @brief Header file for the SimpleCNN class.
+ *
+ * This header defines the SimpleCNN class, a basic Convolutional Neural Network
+ * implementation designed for image classification tasks, such as the MNIST dataset.
+ * The class provides methods for training, testing, and managing the model's
+ * state and data.
+ */
 #pragma once
 
 #include "../include/Layers/Convolution2D.hpp"
@@ -10,6 +19,15 @@
 #include "Regularization/BatchNormalization.hpp"
 #include "Regularization/Dropout.hpp"
 
+/**
+ * @class SimpleCNN
+ * @brief A simple Convolutional Neural Network implementation.
+ *
+ * The SimpleCNN class encapsulates a complete CNN architecture with convolutional,
+ * pooling, and fully connected layers, along with helper methods for training,
+ * testing, and data management. It uses a series of layers to process image data
+ * and classify it into one of several predefined classes.
+ */
 class SimpleCNN
 {
    private:

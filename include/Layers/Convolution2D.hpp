@@ -1,10 +1,26 @@
-﻿#pragma once
+﻿/**
+ * @file Convolution2D.hpp
+ * @brief Header file for the Convolution2D layer.
+ *
+ * This header defines the Convolution2D class, which implements a 2D
+ * convolutional layer for a neural network. It handles the forward and
+ * backward passes, parameter updates, and manages filters and biases.
+ */
+#pragma once
 
 #include <Eigen/Dense>
 #include <memory>
 
 #include "../Optimizer/Adam.hpp"
 
+/**
+ * @class Convolution2D
+ * @brief Implements a 2D convolutional layer.
+ *
+ * This class provides the core functionality of a convolutional layer,
+ * including convolution operations, forward and backward passes, and
+ * parameter updates via an optimizer.
+ */
 class Convolution2D
 {
    private:

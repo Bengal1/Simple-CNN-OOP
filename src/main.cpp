@@ -1,3 +1,17 @@
+/**
+ * @file main.cpp
+ * @brief Demonstrates the functionality of the SimpleCNN model.
+ *
+ * This program serves as the main entry point to train and test a SimpleCNN
+ * model on the MNIST dataset. It handles data loading, model training,
+ * evaluation on a test set, and exports the training history to a CSV file.
+ * The program is designed to showcase a complete training and testing pipeline
+ * for an object-oriented CNN implementation.
+ *
+ * @author Bengal1
+ * @version 1.0
+ * @date May 2025
+ */
 #include "../include/SimpleCNN.hpp"
 
 int main()

@@ -1,9 +1,24 @@
+/**
+ * @file Convolution2D.tpp
+ * @brief Template implementation file for the Convolution2D layer's methods.
+ *
+ * This file contains the implementation details for the template-based
+ * methods of the Convolution2D class, specifically the forward pass.
+ */
 #pragma once
 
 #include <type_traits>
 
 #include "Convolution2D.hpp"
 
+/**
+ * @brief Performs the forward pass of the convolutional layer.
+ * @copydoc Convolution2D::forward(const T&)
+ *
+ * @details This method uses `if constexpr` to handle different input types
+ * (single matrix vs. vector of matrices) at compile time, performing the
+ * appropriate convolution and adding biases.
+ */
 template <typename T>
 std::vector<Eigen::MatrixXd> Convolution2D::forward(const T& input)
 {
