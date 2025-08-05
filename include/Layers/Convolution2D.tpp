@@ -11,14 +11,6 @@
 
 #include "Convolution2D.hpp"
 
-/**
- * @brief Performs the forward pass of the convolutional layer.
- * @copydoc Convolution2D::forward(const T&)
- *
- * @details This method uses `if constexpr` to handle different input types
- * (single matrix vs. vector of matrices) at compile time, performing the
- * appropriate convolution and adding biases.
- */
 template <typename T>
 std::vector<Eigen::MatrixXd> Convolution2D::forward(const T& input)
 {

@@ -1,3 +1,11 @@
+/**
+ * @file FullyConnected.tpp
+ * @brief Template implementation file for the FullyConnected layer.
+ *
+ * This file contains the implementation details for the template-based
+ * methods of the FullyConnected class, including the forward and backward
+ * passes and various input/output helper functions.
+ */
 #pragma once
 
 #include <type_traits>

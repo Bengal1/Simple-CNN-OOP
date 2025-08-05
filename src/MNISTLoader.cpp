@@ -1,5 +1,28 @@
+/**
+ * @file MNISTLoader.cpp
+ * @brief Implementation file for the MNISTLoader class.
+ *
+ * This file contains the implementation of the MNISTLoader class, which
+ * handles loading, preprocessing, and providing access to the MNIST dataset.
+ */
 #include "../include/MNISTLoader.hpp"
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
+    // For Microsoft Visual C++ and MinGW (Windows)
+    #include <cstdlib>
+#else
+    // For GCC and Clang on Linux/macOS
+    #include <byteswap.h>
+#endif
+
+/**
+ * @brief Constructs a new MNISTLoader object and loads the data.
+ * @copydoc MNISTLoader::MNISTLoader
+ *
+ * @details This constructor performs initial validation checks on the provided
+ * file paths and the validation ratio. It then proceeds to load the training
+ * and testing data from the specified files.
+ */
 MNISTLoader::MNISTLoader(const std::filesystem::path& trainImagesFile,
                          const std::filesystem::path& trainLabelsFile,
                          const std::filesystem::path& testImagesFile,

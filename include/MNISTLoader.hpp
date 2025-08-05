@@ -1,3 +1,11 @@
+/**
+ * @file MNISTLoader.hpp
+ * @brief Header file for the MNISTLoader class.
+ *
+ * This header defines the MNISTLoader class, a utility for loading the
+ * MNIST dataset from its binary files, including handling train/test splits
+ * and optional validation set creation.
+ */
 #pragma once
 
 #include <Eigen/Dense>
@@ -6,6 +14,15 @@
 #include <iostream>
 #include <vector>
 
+/**
+ * @class MNISTLoader
+ * @brief A utility class for loading and preprocessing the MNIST dataset.
+ *
+ * The MNISTLoader class handles the loading of image and label data from
+ * the standard MNIST dataset files. It provides functionality to split a
+ * portion of the training data into a validation set and to convert labels
+ * to a one-hot encoded format.
+ */
 class MNISTLoader
 {
    private:

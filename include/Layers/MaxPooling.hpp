@@ -1,9 +1,25 @@
+/**
+ * @file MaxPooling.hpp
+ * @brief Header file for the MaxPooling layer.
+ *
+ * This header defines the MaxPooling class, which implements a pooling layer
+ * for downsampling feature maps in a neural network. It supports both
+ * single-image and batch processing.
+ */
 #pragma once
 
 #include <Eigen/Dense>
 #include <tuple>
 #include <vector>
 
+/**
+ * @class MaxPooling
+ * @brief Implements a max pooling layer for downsampling feature maps.
+ *
+ * The MaxPooling class reduces the spatial dimensions of its input by
+ * taking the maximum value within a specified kernel. This helps to reduce
+ * computation and provides a degree of translation invariance.
+ */
 class MaxPooling
 {
    private:

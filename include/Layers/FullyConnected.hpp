@@ -1,3 +1,11 @@
+/**
+ * @file FullyConnected.hpp
+ * @brief Header file for the FullyConnected layer.
+ *
+ * This header defines the FullyConnected class, which implements a fully
+ * connected (dense) neural network layer. It handles the forward and backward
+ * passes, parameter initialization, and updates.
+ */
 #pragma once
 
 #include <Eigen/Dense>
@@ -5,14 +13,22 @@
 
 #include "../Optimizer/Adam.hpp"
 
+/**
+ * @class FullyConnected
+ * @brief Implements a fully connected (dense) neural network layer.
+ *
+ * This class provides the functionality of a fully connected layer, including
+ * handling different input shapes, forward and backward passes, and
+ * parameter updates.
+ */
 class FullyConnected
 {
    public:
     enum class InitMethod
     {
-        He,
-        Xaviar,
-        Random
+        He,     ///< He initialization.
+        Xaviar, ///< Xaviar initialization.
+        Random  ///< Simple random initialization.
     };
 
    private:

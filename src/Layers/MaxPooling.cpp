@@ -1,7 +1,18 @@
+/**
+ * @file MaxPooling.cpp
+ * @brief Implementation file for the MaxPooling layer.
+ *
+ * This file contains the implementation of the MaxPooling class, including the
+ * constructor, forward and backward passes, and all helper methods.
+ */
 #include "../../include/Layers/MaxPooling.hpp"
 
 #include <stdexcept>
 
+/**
+ * @brief Constructs a new MaxPooling object.
+ * @copydoc MaxPooling::MaxPooling
+ */
 MaxPooling::MaxPooling(size_t inputHeight, size_t inputWidth, size_t inputChannels, size_t poolSize,
                        size_t batchSize, size_t stride)
     : _inputHeight(inputHeight),

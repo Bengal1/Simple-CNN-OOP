@@ -1,8 +1,19 @@
+/**
+ * @file FullyConnected.cpp
+ * @brief Implementation file for the FullyConnected layer.
+ *
+ * This file contains the implementation of the constructor, parameter updates,
+ * getters, setters, and private helper methods for the FullyConnected class.
+ */
 #include "../../include/Layers/FullyConnected.hpp"
 
 #include <random>
 #include <stdexcept>
 
+/**
+ * @brief Constructs a new FullyConnected object.
+ * @copydoc FullyConnected::FullyConnected
+ */
 FullyConnected::FullyConnected(size_t inputSize, size_t outputSize, InitMethod method)
     : _inputSize(inputSize),
       _outputSize(outputSize),
