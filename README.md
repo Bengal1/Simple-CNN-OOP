@@ -1,6 +1,8 @@
 # Simple-CNN-OOP
-This repository is an implementation of [*SimpleCNN*](https://github.com/Bengal1/Simple-CNN-Guide) in Object Oriented Programming (OOP) in C++ language. *SimpleCNN* is a repository I have written as practical guidance for codeing a simple Convolutional Neural Network using python (Pytorch).<br/>
-In this project, I have built the same *SimpleCNN*, Convolutional Neural Network (CNN) in a lower level language, C++, and in a form of object oriented programming. The mechanism of the network can be seen more clear, because the CNN is written from scratch without any Machine learning library containing predefined models, structures or functions. <br/>
+This project is a C++ Object-Oriented Programming (OOP) version of my earlier SimpleCNN implementation in Python (PyTorch). While the original project served as a practical introduction to coding a simple CNN, this C++ version takes a lower-level approach: the entire network is built from scratch, without predefined ML frameworks or utilities.
+
+By implementing each layer, operation, and optimization step manually, this project highlights the inner workings of convolutional networks—such as convolution, activation functions, pooling, normalization, and backpropagation. The OOP design ensures modularity, making it easier to extend, experiment with new components, or adapt the network to different tasks.
+
 I advise you before diving in to this project, see [*SimpleCNN*](https://github.com/Bengal1/Simple-CNN-Guide).
 
 ## Requirements
