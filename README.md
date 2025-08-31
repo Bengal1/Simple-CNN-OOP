@@ -37,7 +37,7 @@ Also see [SimpleCNN.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/master/S
 ## The Layers & Model's Components
 ### Convolution2D
 
-<img align="right" width="350" alt="conv_cnn" src="https://github.com/user-attachments/assets/6ed279be-7253-49c4-9b9b-22e6a104c9f9" />
+<img align="right" width="370" alt="conv_cnn" src="https://github.com/user-attachments/assets/6ed279be-7253-49c4-9b9b-22e6a104c9f9" />
 
 Applies a 2D convolution over an input signal composed of singular or several data inputs. See [Convolution2D.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/Layers/Convolution2D.hpp).<br/>
 
