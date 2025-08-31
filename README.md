@@ -1,5 +1,5 @@
 # Simple-CNN-OOP
-This project is a C++ Object-Oriented Programming (OOP) version of my earlier SimpleCNN implementation in Python (PyTorch). While the original project served as a practical introduction to coding a simple CNN, this C++ version takes a lower-level approach: the entire network is built from scratch, without predefined ML frameworks or utilities.
+This project is a C++ Object-Oriented Programming (OOP) version of my earlier *SimpleCNN* implementation in Python (PyTorch). While the original project served as a practical introduction to coding a simple CNN, this C++ version takes a lower-level approach: the entire network is built from scratch, without predefined ML frameworks or utilities.
 
 By implementing each layer, operation, and optimization step manually, this project highlights the inner workings of convolutional networks—such as convolution, activation functions, pooling, normalization, and backpropagation. The OOP design ensures modularity, making it easier to extend, experiment with new components, or adapt the network to different tasks.
 
