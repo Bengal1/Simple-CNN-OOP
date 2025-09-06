@@ -12,12 +12,12 @@ I advise you before diving in to this project, see [*SimpleCNN*](https://github.
 - [![Eigen](https://img.shields.io/badge/Eigen-3.4%2B-lightgrey?logo=eigen&logoColor=blue)](https://eigen.tuxfamily.org)
 
 
-## *MNIST Database*
-This network is trained on MNIST database, a simple gray-scale images of a writen one-digit numbers (0-9), such that the network gets an image and it's target to classify it as the correct number (class).
+## *MNIST Dataset*
+This network is trained on MNIST dataset, a simple gray-scale images of a writen one-digit numbers (0-9), such that the network gets an image and it's target to classify it as the correct number (class).
 
 <img src="https://user-images.githubusercontent.com/34989887/204675687-03f39aeb-1039-4abc-aec5-7f1d6cbbe52e.png" align="center" width="350" height="350"/>
 
-The MNIST database has 70,000 images, such that the training dataset is 60,000 images and the test dataset is 10,000 images that is commonly used for training various image processing systems. The MNIST database of handwritten digits, it is a subset of a larger set available from NIST. The digits have been size-normalized and centered in a fixed-size image. The binary format of the dataset is also available for download on [Yann LeCun - THE MNIST DATABASE](http://yann.lecun.com/exdb/mnist/), and available for download on [Kaggle](https://www.kaggle.com/datasets/hojjatk/mnist-dataset?select=t10k-images.idx3-ubyte).
+The MNIST dataset has 70,000 images, such that the training dataset is 60,000 images and the test dataset is 10,000 images that is commonly used for training various image processing systems. The MNIST dataset of handwritten digits, it is a subset of a larger set available from NIST. The digits have been size-normalized and centered in a fixed-size image. The binary format of the dataset is also available for download on [Yann LeCun - THE MNIST DATABASE](http://yann.lecun.com/exdb/mnist/), and available for download on [Kaggle](https://www.kaggle.com/datasets/hojjatk/mnist-dataset?select=t10k-images.idx3-ubyte).
 
 For more imformation on [MNIST Dataset](https://en.wikipedia.org/wiki/MNIST_database).
 
