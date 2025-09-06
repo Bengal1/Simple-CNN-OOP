@@ -36,14 +36,14 @@ Our Network is consist of 6 layers:
 The Simple CNN is implemented in C++ as Object Oriented Programming. In order to implement the network layers and methods [Eigen Library](https://eigen.tuxfamily.org/index.php?title=Main_Page) is being used. Eigen is a C++-based open-source linear algebra library. 
 
 Every Layer apart of the fully connected can gets an input of 4-dimentions *(N,C,H,W)*, were *N* is the batch size, *C* is the number of the channels and *H,W* are height and width respectively, the resolution of the images. <br/>
-Also see [SimpleCNN.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/master/SimpleCNN/SimpleCNN.hpp).
+Also see [SimpleCNN.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/include/SimpleCNN.hpp).
 
 ## The Layers & Model's Components
 ### Convolution2D
 
 <img align="right" width="370" alt="conv_cnn" src="https://github.com/user-attachments/assets/6ed279be-7253-49c4-9b9b-22e6a104c9f9" />
 
-Applies a 2D convolution over an input signal composed of singular or several data inputs. See [Convolution2D.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/Layers/Convolution2D.hpp).<br/>
+Applies a 2D convolution over an input signal composed of singular or several data inputs. See [Convolution2D.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/include/Layers/Convolution2D.hpp).<br/>
 
 The *Convolutional Layer* is the core building block of a Convolutional Neural Network (CNN), commonly used in image processing and computer vision. A convolutional layer applies a small filter (or kernel) across the input to extract features such as edges, textures, and shapes. <br/>
 Given an input $`X`$ of size $`H×W`$ and a kernel $`K`$ of size $`k×k`$:
@@ -66,7 +66,7 @@ Where:
 
 <img align="right" width="350" alt="max_pooling" src="https://github.com/user-attachments/assets/64d79582-196d-4832-a2a8-b46655abebdf" />
 
-Applies a 2D max pooling over an input signal composed of singular or several data inputs. See [MaxPooling.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/Layers/MaxPooling.hpp). <br/>
+Applies a 2D max pooling over an input signal composed of singular or several data inputs. See [MaxPooling.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/include/Layers/MaxPooling.hpp). <br/>
 A pooling layer is used in Convolutional Neural Networks (CNNs) to reduce the spatial dimensions (height and width) of feature maps while preserving the most important information.
 Max pooling is the most common type of pooling. It works by sliding a small window (like 2×2 or 3×3) over the input and taking the maximum value in each region. <br/>
 For an input of size $`H×W`$ and a pooling window (kernel) of size $`k×k`$ on each step, the max pooling layer applies:
@@ -85,7 +85,7 @@ $$
 
 <img align="right" width="350" alt="fc_cnn" src="https://github.com/user-attachments/assets/3cb0895f-58fc-45f5-b2b9-064d0603f0fd" />
 
-Applies a linear transformation to the layer's input on a 2-dimentional input, $`(N,H)`$. See [FullyConnected.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/Layers/FullyConnected.hpp). <br/>
+Applies a linear transformation to the layer's input on a 2-dimentional input, $`(N,H)`$. See [FullyConnected.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/include/Layers/FullyConnected.hpp). <br/>
 A fully-connected layer is a type of neural network layer where every neuron is connected to every neuron in the previous layer. It is usually placed at the end of convolutional or recurrent layers to make final predictions. <br/>
 Each output neuron computes a weighted sum of all inputs, adds a bias, and then applies an activation function.
 
@@ -153,7 +153,7 @@ where $`γ`$ and $`β`$ are learned scale and shift parameters. This stabilizes 
 
 ## *Loss & Optimization*
 ### Cross-Entropy Loss Function
-This criterion computes the cross entropy loss between input logits and target. [Loss function](https://en.wikipedia.org/wiki/Loss_function) is a function that maps an event or values of one or more variables onto a real number intuitively representing some "loss" associated with the event. [The Cross Enthropy Loss function](https://wandb.ai/sauravmaheshkar/cross-entropy/reports/What-Is-Cross-Entropy-Loss-A-Tutorial-With-Code--VmlldzoxMDA5NTMx) is commonly used in classification tasks both in traditional ML and deep learning. It compares the predicted probability distribution over classes (logits) with the true class labels and penalizes incorrect or uncertain predictions. Also see [LossFunction.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/LossFunction.hpp).
+This criterion computes the cross entropy loss between input logits and target. [Loss function](https://en.wikipedia.org/wiki/Loss_function) is a function that maps an event or values of one or more variables onto a real number intuitively representing some "loss" associated with the event. [The Cross Enthropy Loss function](https://wandb.ai/sauravmaheshkar/cross-entropy/reports/What-Is-Cross-Entropy-Loss-A-Tutorial-With-Code--VmlldzoxMDA5NTMx) is commonly used in classification tasks both in traditional ML and deep learning. It compares the predicted probability distribution over classes (logits) with the true class labels and penalizes incorrect or uncertain predictions. 
 
 $$
 Loss = - \sum_{i=1}^{C} y_i \log(\hat{y}_i)
@@ -165,7 +165,7 @@ Where:
 * $`\hat{y}_i`$  is the predicted probability for class *i*.
 
 ### Adam Optimizer
-The Adam optimization algorithm is an extension to stochastic gradient descent (SGD). Unlike SGD, The method computes individual adaptive learning rates for different parameters from estimates of first and second moments of the gradients Adam combines the benefits of two other methods: momentum and RMSProp. For more information on [Stochastic gradient descent, extensions and variants](https://en.wikipedia.org/wiki/Stochastic_gradient_descent). Also see [Optimizer.hpp](https://github.com/Bengal1/Simple-CNN-OOP/blob/main/Optimizer.hpp)
+The Adam optimization algorithm is an extension to stochastic gradient descent (SGD). Unlike SGD, The method computes individual adaptive learning rates for different parameters from estimates of first and second moments of the gradients Adam combines the benefits of two other methods: momentum and RMSProp. For more information on [Stochastic gradient descent, extensions and variants](https://en.wikipedia.org/wiki/Stochastic_gradient_descent).
 
 #### Adam Algorithm:
 * $`\theta_t`$​ : parameters at time step *t*.
