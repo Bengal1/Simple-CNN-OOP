@@ -126,36 +126,30 @@ Without activation functions, a neural network—no matter how deep—would beha
 ```
 
 ### Regularization
+Regularization refers to a set of techniques used to prevent a machine learning model from overfitting the training data, improving its generalization to unseen data. It works by constraining or penalizing the model’s complexity, encouraging simpler solutions that are less sensitive to noise in the data.
+
+In our model, Simple CNN, we use *Dropout* and *Batch Normalization* methods.
+
 #### Dropout
-Dropout is a regularization technique used in neural networks to prevent overfitting by randomly "dropping out" (setting to zero) a fraction of the neurons during training. This forces the network to learn redundant representations and helps it generalize better on unseen data. with a given probability *p* using samples from a Bernoulli distribution. Each channel will be zeroed out independently on every forward call.
+Dropout is a regularization technique where, during training, a fixed percentage of neurons (e.g. 50%) are randomly set to zero in each forward pass, preventing co-adaptation of neurons. This prevents over-reliance on specific neurons and encourages redundancy and robustness. <br/> At inference time, all neurons are active, and their outputs are scaled to match the expected value during training. <br/>
 
 $$
-y = \begin{cases} 
-\frac{x}{1 - p} & \text{with probability } 1 - p \\
-0 & \text{with probability } p
-\end{cases}
+\tilde{h_i} = \begin{cases}0 & \; & with & probability & p  \\\ \frac{h_i}{1-p} & \; & with & probability & 1-p\end{cases}
 $$
 
-Where $`p`$ is the probability of a neuron being dropped.
+During inference, all units are used as-is: $$\tilde{h_i} = h_i$$
 
-#### BatchNormalization
-Batch Normalization (BatchNorm) is a  regularization technique used to improve the training of deep neural networks by normalizing the activations of each layer. It ensures that the output of each layer has a consistent distribution, reducing issues related to internal covariate shift, where the distribution of activations changes as the model trains. By doing so, BatchNorm can make the network train faster, stabilize training, and reduce the reliance on careful initialization or dropout.<br/>
-The Batch Normalization process steps:
-1. Compute Mean and Variance:
-
-$$ \mu_B = \frac{1}{m} \sum_{i=1}^m x_i \quad;\quad \sigma_B^2 = \frac{1}{m} \sum_{i=1}^m (x_i - \mu_B)^2$$
-
-2. Normalize the Input:
-
-$$ \hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} $$
-
-&emsp;Where $`\epsilon`$ is a small constant to avoid division by zero.
-
-3. Scale and Shift:
-
-$$ y_i = \gamma \hat{x}_i + \beta $$
-
-&emsp;Where $`\gamma`$ and $`\beta`$ are learned scale and shift parameters.
+#### Batch Normalization
+Batch Normalization aims to stabilize and accelerate training by ensuring each channel’s activations have consistent statistics across mini‑batches. This method normalizes each feature channel’s activations to zero mean and unit variance over a mini-batch thereby It reduces internal covariate shift and can have a slight regularizing effect (due to batch noise). <br/> 
+For a layer’s inputs $`x`$, we compute per‑channel mean, $`μ`$, and variance, $`σ^2`$, then transform: <br/>
+```math
+\hat{x} = \frac{(x - μ)}{\sqrt{σ^{2} + ε}}
+```
+Then we scale ($`γ`$) and shift ($`β`$):
+```math
+⇨  y = γ·\hat{x} + β
+```
+where $`γ`$ and $`β`$ are learned scale and shift parameters. This stabilizes and speeds up training and adds a bit of regularization through batch noise.
 
 ## *Loss & Optimization*
 ### Cross-Entropy Loss Function
