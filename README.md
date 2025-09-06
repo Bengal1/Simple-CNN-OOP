@@ -195,46 +195,7 @@ Its adaptive nature makes Adam particularly effective for large-scale problems a
    $$\theta_{t+1} = \theta_t - \alpha \cdot \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}$$
    </div>
 
-
-### Adam Optimizer
-The Adam optimization algorithm is an extension to stochastic gradient descent (SGD). Unlike SGD, The method computes individual adaptive learning rates for different parameters from estimates of first and second moments of the gradients Adam combines the benefits of two other methods: momentum and RMSProp. For more information on [Stochastic gradient descent, extensions and variants](https://en.wikipedia.org/wiki/Stochastic_gradient_descent).
-
-#### Adam Algorithm:
-* $`\theta_t`$​ : parameters at time step *t*.
-* $`\beta_1,\beta_2​`$: exponential decay rates for moments estimation.
-* $`\alpha`$ : learning rate.
-* $`\epsilon`$ : small constant to prevent division by zero.
-* $`\lambda`$ : weight decay coefficient. <br/>
-
-1. Compute gradients:
-
-$$
-g_t = \nabla_{\theta} J(\theta_t)
-$$
-
-2. Update first moment estimate (mean):
-
-$$
-m_t = \beta_1 \cdot m_{t-1} + (1 - \beta_1) \cdot g_t
-$$
-
-3. Update second moment estimate (uncentered variance):
-
-$$
-v_t = \beta_2 \cdot v_{t-1} + (1 - \beta_2) \cdot g_t^2
-$$
-
-4. Bias correction:
-
-$$
-\hat{v}_t = \frac{v_t}{1 - \beta_2^t} \quad ; \quad \hat{m}_t = \frac{m_t}{1 - \beta_1^t}
-$$
-
-5. Update parameters:
-
-$$
-\theta_{t+1} = \theta_t - \alpha \cdot \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
-$$
+For more information on [Stochastic gradient descent, extensions and variants](https://en.wikipedia.org/wiki/Stochastic_gradient_descent).
 
 ## Typical Run
 
