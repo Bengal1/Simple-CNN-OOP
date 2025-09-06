@@ -163,7 +163,7 @@ This loss penalizes confident incorrect predictions more heavily than less certa
 
 
 ### Adam Optimizer
-[**Adam (Adaptive Moment Estimation)**](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) is a widely used optimization algorithm in machine learning. It combines the benefits of Momentum and RMSProp, maintaining running estimates of both the mean and the uncentered variance of gradients to adaptively adjust the learning rate for each parameter.
+Adam (Adaptive Moment Estimation is a widely used optimization algorithm in machine learning. It combines the benefits of Momentum and RMSProp, maintaining running estimates of both the mean and the uncentered variance of gradients to adaptively adjust the learning rate for each parameter.
 By using these adaptive estimates, Adam can converge faster and more reliably on complex models, handle noisy gradients, and often requires less manual tuning of the learning rate compared to standard stochastic gradient descent.
 Its adaptive nature makes Adam particularly effective for large-scale problems and deep neural networks, where gradients can vary significantly across parameters.
 
