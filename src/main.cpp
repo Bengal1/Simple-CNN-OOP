@@ -38,22 +38,23 @@
  */
 int main()
 {
+    // Training configuration
     const size_t epochs = 10;
     const size_t classes = 10;
     const double validationRatio = 0.2;
-    
+
     // MNIST dataset paths
     std::filesystem::path trainImages = "MNIST/train-images.idx3-ubyte";
     std::filesystem::path trainLabels = "MNIST/train-labels.idx1-ubyte";
     std::filesystem::path testImages = "MNIST/t10k-images.idx3-ubyte";
     std::filesystem::path testLabels = "MNIST/t10k-labels.idx1-ubyte";
 
-    // Create a SimpleCNN model
+    // Instantiate the CNN model
     SimpleCNN model(classes);
 
     try
     {
-        // Load MNIST dataset
+        // Load and preprocess the MNIST dataset
         MNISTLoader loader(
             trainImages, 
             trainLabels, 
@@ -62,10 +63,10 @@ int main()
             validationRatio
         );
 
-        // Train the model
+        // Train and validate the CNN model
         model.trainSimpleCNN(loader, epochs);
 
-        // Test the model
+        // Test the CNN model
         model.testSimpleCNN(loader);
     }
     catch (const std::exception& e)
