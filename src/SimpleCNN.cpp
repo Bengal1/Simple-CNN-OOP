@@ -1,23 +1,40 @@
 /**
  * @file SimpleCNN.cpp
- * @brief Implementation of the SimpleCNN class.
+ * @brief Implementation of the SimpleCNN convolutional neural network.
  *
- * This file contains the implementation for a simple Convolutional Neural Network (CNN)
- * designed for image classification tasks, specifically using the MNIST dataset.
+ * This file provides the concrete implementation of the SimpleCNN class,
+ * encapsulating the forward and backward passes, parameter updates, training
+ * loop orchestration, validation, testing, and performance metric tracking.
+ *
+ * The network architecture is tailored for grayscale image classification
+ * tasks (e.g., MNIST) and follows a conventional CNN design consisting of:
+ *  - Two convolutional blocks (Conv → BatchNorm → ReLU → Pool → Dropout)
+ *  - Two fully connected layers
+ *  - Softmax output with cross-entropy loss
+ *
+ * This compilation unit contains no high-level orchestration logic; all
+ * dataset handling and execution control are delegated to external components.
+ *
+ * @author Bengal1
+ * @version 1.0
+ * @date May 2025
  */
+
 #include "../include/SimpleCNN.hpp"
 
 #include <stdexcept>
 
 /**
- * @brief Constructs a new SimpleCNN object.
+ * @brief Constructs a SimpleCNN instance.
  *
- * This constructor initializes all layers of the CNN, including convolutional,
- * pooling, and fully connected layers, based on the specified number of classes.
- * It also performs a validation check on the number of classes.
+ * Initializes all network layers according to the predefined architecture
+ * and validates the number of output classes. Layer dimensions are derived
+ * from the MNIST input resolution (28×28) and fixed kernel/pooling parameters.
  *
- * @param classes The number of output classes for classification.
- * @throws std::invalid_argument if the number of classes is less than 2.
+ * @param classes Number of output classes for classification.
+ *
+ * @throws std::invalid_argument
+ *         Thrown if the number of classes is less than 2.
  */
 SimpleCNN::SimpleCNN(size_t classes)
     : _conv1(28, 28, 1, 32, 5),
@@ -36,6 +53,21 @@ SimpleCNN::SimpleCNN(size_t classes)
     }
 }
 
+
+/**
+ * @brief Trains the network for a fixed number of epochs.
+ *
+ * Executes the training loop using data provided by the MNISTLoader, including
+ * forward propagation, loss computation, backpropagation, and parameter updates.
+ * Validation is performed at the end of each epoch, and performance metrics
+ * are recorded internally.
+ *
+ * @param dataLoader Reference to an initialized MNISTLoader instance.
+ * @param epochs Number of training epochs to execute.
+ *
+ * @throws std::invalid_argument
+ *         Thrown if the number of epochs is zero.
+ */
 void SimpleCNN::trainSimpleCNN(MNISTLoader& dataLoader, const size_t epochs)
 {
     if (epochs <= 0)
@@ -73,6 +105,15 @@ void SimpleCNN::trainSimpleCNN(MNISTLoader& dataLoader, const size_t epochs)
     }
 }
 
+
+/**
+ * @brief Evaluates the trained model on the test dataset.
+ *
+ * Performs inference on the test split and computes the final classification
+ * accuracy. No parameter updates are performed during testing.
+ *
+ * @param dataLoader Reference to an initialized MNISTLoader instance.
+ */
 void SimpleCNN::testSimpleCNN(MNISTLoader& dataLoader)
 {
     const auto& testImages = dataLoader.getTestImages();
@@ -92,16 +133,40 @@ void SimpleCNN::testSimpleCNN(MNISTLoader& dataLoader)
     std::cout << "\nTest Accuracy: " << _testAccuracy << "%\n" << std::endl;
 }
 
+
+/**
+ * @brief Returns the training statistics from the most recent run.
+ *
+ * @return std::vector<std::vector<double>>
+ *         A matrix containing loss and accuracy metrics per epoch.
+ */
 std::vector<std::vector<double>> SimpleCNN::getLastTrainingStats() const
 {
     return _trainingStats;
 }
 
+/**
+ * @brief Returns the test accuracy from the most recent evaluation.
+ *
+ * @return double Test accuracy in percentage.
+ */
 double SimpleCNN::getLastTestAccuracy() const
 {
     return _testAccuracy;
 }
 
+
+/**
+ * @brief Exports training and validation metrics to a CSV file.
+ *
+ * The generated file contains per-epoch loss and accuracy values for both
+ * training and validation sets.
+ *
+ * @param path Output file path. If empty, defaults to "training_data.csv".
+ *
+ * @throws std::ios_base::failure
+ *         Thrown if the output file cannot be opened.
+ */
 void SimpleCNN::exportTrainingDataToCSV(std::filesystem::path path) const
 {
     if (_trainingStats.empty())
@@ -122,16 +187,35 @@ void SimpleCNN::exportTrainingDataToCSV(std::filesystem::path path) const
     }
 
     file << "Epoch,Train Loss,Train Accuracy,Validation Loss,Validation Accuracy\n";
+
     for (size_t i = 0; i < _trainingStats[0].size(); ++i)
     {
-        file << (i + 1) << "," << _trainingStats[TRAIN_LOSS][i] << ","
-             << _trainingStats[TRAIN_ACCURACY][i] << "," << _trainingStats[VALIDATION_LOSS][i]
-             << "," << _trainingStats[VALIDATION_ACCURACY][i] << "\n";
+        file << (i + 1) << "," 
+        << _trainingStats[TRAIN_LOSS][i] << ","
+        << _trainingStats[TRAIN_ACCURACY][i] << "," 
+        << _trainingStats[VALIDATION_LOSS][i] << "," 
+        << _trainingStats[VALIDATION_ACCURACY][i] << "\n";
     }
 
     file.close();
 }
 
+/**
+ * @brief Executes a forward pass through the network.
+ *
+ * Propagates a single input image through all network layers in inference
+ * order:
+ *  - Convolution → BatchNorm → ReLU → Pool → Dropout (×2)
+ *  - Fully connected layers
+ *  - Softmax activation
+ *
+ * This method is used for both training and inference. Layer behavior
+ * (e.g., batch normalization and dropout) depends on the current training
+ * mode.
+ *
+ * @param input Grayscale input image represented as a 2D matrix.
+ * @return Eigen::VectorXd Softmax-normalized class probabilities.
+ */
 Eigen::VectorXd SimpleCNN::_ForwardPass(const Eigen::MatrixXd& input)
 {
     // First convolution block
@@ -155,10 +239,21 @@ Eigen::VectorXd SimpleCNN::_ForwardPass(const Eigen::MatrixXd& input)
     return outputSoftmax;
 }
 
+
+/**
+ * @brief Performs backpropagation through the entire network.
+ *
+ * Propagates gradients backward from the softmax-cross-entropy loss through
+ * all trainable layers, computing parameter gradients for subsequent updates.
+ *
+ * @param softmaxCrossEntropyGradient Gradient of the loss with respect to
+ *                                    the softmax output.
+ */
 void SimpleCNN::_Backpropagation(const Eigen::VectorXd& softmaxCrossEntropyGradient)
 {
     // Fully connected layers
-    Eigen::VectorXd fc2BackGrad = _fc2.backward<Eigen::VectorXd>(softmaxCrossEntropyGradient);
+    Eigen::VectorXd fc2BackGrad = 
+        _fc2.backward<Eigen::VectorXd>(softmaxCrossEntropyGradient);
     Eigen::VectorXd relu3BackGrad = _relu3.computeGradient(fc2BackGrad);
     std::vector<Eigen::MatrixXd> fc1BackGrad =
         _fc1.backward<std::vector<Eigen::MatrixXd>>(relu3BackGrad);
@@ -176,6 +271,12 @@ void SimpleCNN::_Backpropagation(const Eigen::VectorXd& softmaxCrossEntropyGradi
     _conv1.backward(bn1BackGrad);
 }
 
+/**
+ * @brief Updates all trainable parameters in the network.
+ *
+ * Applies optimizer updates to each layer based on gradients computed during
+ * backpropagation.
+ */
 void SimpleCNN::_updateParameters()
 {
     _conv1.updateParameters();
@@ -186,9 +287,22 @@ void SimpleCNN::_updateParameters()
     _fc2.updateParameters();
 }
 
-const double SimpleCNN::_trainEpoch(const std::vector<Eigen::MatrixXd>& trainImages,
-                                    const std::vector<Eigen::VectorXd>& oneHotTrainLabels,
-                                    std::vector<Eigen::VectorXd>& trainOutput)
+/**
+ * @brief Executes a single training epoch.
+ *
+ * Iterates over the training dataset, performing forward passes, loss
+ * computation, backpropagation, and parameter updates for each sample.
+ *
+ * @param trainImages Input training images.
+ * @param oneHotTrainLabels Corresponding one-hot encoded labels.
+ * @param trainOutput Output buffer for model predictions.
+ *
+ * @return double Average training loss for the epoch.
+ */
+const double SimpleCNN::_trainEpoch(
+    const std::vector<Eigen::MatrixXd>& trainImages,
+    const std::vector<Eigen::VectorXd>& oneHotTrainLabels,
+    std::vector<Eigen::VectorXd>& trainOutput)
 {
     size_t trainImageNum = 0;
     double trainLoss = 0.0;
@@ -200,9 +314,13 @@ const double SimpleCNN::_trainEpoch(const std::vector<Eigen::MatrixXd>& trainIma
         Eigen::VectorXd singleTrainOutput = _ForwardPass(image);
         trainOutput[trainImageNum] = singleTrainOutput;
         /*Loss*/
-        trainLoss += CEloss.calculateLoss(singleTrainOutput, oneHotTrainLabels[trainImageNum]);
+        trainLoss += CEloss.calculateLoss(
+            singleTrainOutput, oneHotTrainLabels[trainImageNum]
+        );
         Eigen::VectorXd lossGrad =
-            CEloss.softmaxCrossEntropyGradient(singleTrainOutput, oneHotTrainLabels[trainImageNum]);
+            CEloss.softmaxCrossEntropyGradient(
+                singleTrainOutput, oneHotTrainLabels[trainImageNum]
+            );
         /*Backpropagation*/
         _Backpropagation(lossGrad);
         /*Optimizer step*/
@@ -214,20 +332,36 @@ const double SimpleCNN::_trainEpoch(const std::vector<Eigen::MatrixXd>& trainIma
     return trainLoss / static_cast<double>(trainImageNum);
 }
 
-const double SimpleCNN::_validateEpoch(const std::vector<Eigen::MatrixXd>& validationImages,
-                                       const std::vector<Eigen::VectorXd>& oneHotValidationLabels,
-                                       std::vector<Eigen::VectorXd>& validationOutput)
+/**
+ * @brief Executes a single validation epoch.
+ *
+ * Performs inference on the validation dataset and computes the average loss.
+ * No gradients are computed and no parameters are updated.
+ *
+ * @param validationImages Input validation images.
+ * @param oneHotValidationLabels Corresponding one-hot encoded labels.
+ * @param validationOutput Output buffer for model predictions.
+ *
+ * @return double Average validation loss for the epoch.
+ */
+const double SimpleCNN::_validateEpoch(
+    const std::vector<Eigen::MatrixXd>& validationImages,
+    const std::vector<Eigen::VectorXd>& oneHotValidationLabels,
+    std::vector<Eigen::VectorXd>& validationOutput)
 {
     size_t validationImageNum = 0;
     double validationLoss = 0.0;
+    
     _setTrainingMode(false);
 
     for (Eigen::MatrixXd image : validationImages)
     {
         Eigen::VectorXd singleValidationOutput = _ForwardPass(image);
         validationOutput[validationImageNum] = singleValidationOutput;
-        validationLoss += CEloss.calculateLoss(singleValidationOutput,
-                                               oneHotValidationLabels[validationImageNum]);
+        
+        validationLoss += CEloss.calculateLoss(
+            singleValidationOutput,oneHotValidationLabels[validationImageNum]
+        );
 
         ++validationImageNum;
     }
@@ -235,8 +369,22 @@ const double SimpleCNN::_validateEpoch(const std::vector<Eigen::MatrixXd>& valid
     return validationLoss / static_cast<double>(validationImageNum);
 }
 
-const double SimpleCNN::_accuracyCalculation(const std::vector<Eigen::VectorXd>& modelOutput,
-                                             const std::vector<Eigen::VectorXd>& oneHotTargets)
+/**
+ * @brief Computes classification accuracy.
+ *
+ * Compares predicted class indices against ground-truth labels.
+ *
+ * @param modelOutput Model predictions.
+ * @param oneHotTargets One-hot encoded ground-truth labels.
+ *
+ * @return double Accuracy in percentage.
+ *
+ * @throws std::invalid_argument
+ *         Thrown if input vectors differ in size.
+ */
+const double SimpleCNN::_accuracyCalculation(
+    const std::vector<Eigen::VectorXd>& modelOutput,
+    const std::vector<Eigen::VectorXd>& oneHotTargets)
 {
     if (modelOutput.size() != oneHotTargets.size())
     {
@@ -260,6 +408,14 @@ const double SimpleCNN::_accuracyCalculation(const std::vector<Eigen::VectorXd>&
     return static_cast<double>(correctPredictions) / static_cast<double>(dataSize) * 100.0;
 }
 
+
+/**
+ * @brief Sets training or inference mode for relevant layers.
+ *
+ * Controls behavior of batch normalization and dropout layers.
+ *
+ * @param isTraining True for training mode, false for inference mode.
+ */
 void SimpleCNN::_setTrainingMode(bool isTraining)
 {
     _bn1.setTrainingMode(isTraining);
@@ -268,6 +424,15 @@ void SimpleCNN::_setTrainingMode(bool isTraining)
     _dropout2.setTrainingMode(isTraining);
 }
 
+
+/**
+ * @brief Initializes per-epoch training statistics storage.
+ *
+ * @param epochs Number of training epochs.
+ *
+ * @throws std::invalid_argument
+ *         Thrown if epochs is zero.
+ */
 void SimpleCNN::_initializeTrainingStats(size_t epochs)
 {
     if (epochs <= 0)
@@ -279,6 +444,12 @@ void SimpleCNN::_initializeTrainingStats(size_t epochs)
     _trainingStats.resize(NUM_TRAIN_STATS, std::vector<double>(epochs, 0.0));
 }
 
+
+/**
+ * @brief Prints training and validation metrics for a single epoch.
+ *
+ * @param epoch Current epoch index (1-based).
+ */
 void SimpleCNN::_printEpoch(const size_t epoch) const
 {
     if (epoch < 1 || epoch > _trainingStats[TRAIN_LOSS].size())
@@ -294,6 +465,9 @@ void SimpleCNN::_printEpoch(const size_t epoch) const
               << std::endl;
 }
 
+/**
+ * @brief Prints all recorded training statistics.
+ */
 void SimpleCNN::_printTrainingStats() const
 {
     if (_trainingStats.empty())
