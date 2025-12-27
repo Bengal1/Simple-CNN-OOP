@@ -1,40 +1,59 @@
 /**
  * @file MNISTLoader.cpp
- * @brief Implementation file for the MNISTLoader class.
+ * @brief Implementation of the MNISTLoader class.
  *
- * This file contains the implementation of the MNISTLoader class, which
- * handles loading, preprocessing, and providing access to the MNIST dataset.
+ * This file provides the full implementation of the MNISTLoader class,
+ * responsible for loading, validating, preprocessing, and exposing the
+ * MNIST dataset in a format suitable for numerical computation using Eigen.
+ *
+ * The implementation includes:
+ *  - Binary parsing of MNIST IDX image and label files
+ *  - Endianness handling across platforms
+ *  - Optional train/validation splitting
+ *  - Lazy one-hot encoding of labels
  */
+
 #include "../include/MNISTLoader.hpp"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
-    // For Microsoft Visual C++ and MinGW (Windows)
+    // Windows (MSVC / MinGW)
     #include <cstdlib>
 #else
-    // For GCC and Clang on Linux/macOS
+    // Linux / macOS (GCC / Clang)
     #include <byteswap.h>
 #endif
 
 /**
- * @brief Constructs a new MNISTLoader object and loads the data.
- * @copydoc MNISTLoader::MNISTLoader
+ * @brief Constructs an MNISTLoader instance and loads the dataset.
  *
- * @details This constructor performs initial validation checks on the provided
- * file paths and the validation ratio. It then proceeds to load the training
- * and testing data from the specified files.
+ * Performs validation of file paths and configuration parameters, then
+ * loads the training and test datasets into memory. If a validation ratio
+ * is specified, the training set is split accordingly.
+ *
+ * @param trainImagesFile Path to the training images IDX file.
+ * @param trainLabelsFile Path to the training labels IDX file.
+ * @param testImagesFile  Path to the test images IDX file.
+ * @param testLabelsFile  Path to the test labels IDX file.
+ * @param validationRatio Fraction of training data reserved for validation.
+ *
+ * @throws std::invalid_argument If file paths are empty or validation ratio is invalid.
+ * @throws std::runtime_error    If files are missing, malformed, or loading fails.
  */
-MNISTLoader::MNISTLoader(const std::filesystem::path& trainImagesFile,
-                         const std::filesystem::path& trainLabelsFile,
-                         const std::filesystem::path& testImagesFile,
-                         const std::filesystem::path& testLabelsFile, const double validationRatio)
+MNISTLoader::MNISTLoader(
+    const std::filesystem::path& trainImagesFile,
+    const std::filesystem::path& trainLabelsFile,
+    const std::filesystem::path& testImagesFile,
+    const std::filesystem::path& testLabelsFile, 
+    const double validationRatio)
     : _trainImagesFile(trainImagesFile),
       _trainLabelsFile(trainLabelsFile),
       _testImagesFile(testImagesFile),
       _testLabelsFile(testLabelsFile),
       _validationRatio(validationRatio)
 {
-    if (_trainImagesFile.empty() || _trainLabelsFile.empty() || _testImagesFile.empty() ||
-        _testLabelsFile.empty())
+    // Validate input paths
+    if (_trainImagesFile.empty() || _trainLabelsFile.empty() || 
+        _testImagesFile.empty() || _testLabelsFile.empty())
     {
         throw std::invalid_argument("[MNISTLoader]: File paths cannot be empty.");
     }
@@ -51,6 +70,7 @@ MNISTLoader::MNISTLoader(const std::filesystem::path& trainImagesFile,
         }
     }
 
+    // Validate validation ratio
     if (_validationRatio < 0.0 || _validationRatio >= 1.0)
     {
         throw std::invalid_argument("[MNISTLoader]: Validation ratio must be in the range [0, 1).");
@@ -58,24 +78,26 @@ MNISTLoader::MNISTLoader(const std::filesystem::path& trainImagesFile,
 
     _splitValidation = (_validationRatio > 0.0);
 
+    // Load datasets
     if (!MNISTLoader::_loadTrainData())
-    {
         throw std::runtime_error("[MNISTLoader]: Failed to load Train Dataset!");
-    }
+
     if (!MNISTLoader::_loadTestData())
-    {
         throw std::runtime_error("[MNISTLoader]: Failed to load Test Dataset!");
-    }
 }
+
+/* ============================ Public Accessors ============================ */
 
 const std::vector<Eigen::MatrixXd>& MNISTLoader::getTrainImages() const
 {
     return _trainImages;
 }
+
 const std::vector<Eigen::MatrixXd>& MNISTLoader::getValidationImages() const
 {
     return _validationImages;
 }
+
 const std::vector<Eigen::MatrixXd>& MNISTLoader::getTestImages() const
 {
     return _testImages;
@@ -83,7 +105,8 @@ const std::vector<Eigen::MatrixXd>& MNISTLoader::getTestImages() const
 
 const std::vector<Eigen::VectorXd>& MNISTLoader::getOneHotTrainLabels()
 {
-    if (_oneHotTrainLabels.empty()) _createOneHotLabels(_trainLabels, _oneHotTrainLabels);
+    if (_oneHotTrainLabels.empty()) 
+        _createOneHotLabels(_trainLabels, _oneHotTrainLabels);
     return _oneHotTrainLabels;
 }
 
@@ -96,7 +119,8 @@ const std::vector<Eigen::VectorXd>& MNISTLoader::getOneHotValidationLabels()
 
 const std::vector<Eigen::VectorXd>& MNISTLoader::getOneHotTestLabels()
 {
-    if (_oneHotTestLabels.empty()) _createOneHotLabels(_testLabels, _oneHotTestLabels);
+    if (_oneHotTestLabels.empty()) 
+        _createOneHotLabels(_testLabels, _oneHotTestLabels);
     return _oneHotTestLabels;
 }
 
@@ -104,14 +128,18 @@ const size_t MNISTLoader::getNumTrain() const
 {
     return _numTrain;
 }
+
 const size_t MNISTLoader::getNumValidation() const
 {
     return _numValidation;
 }
+
 const size_t MNISTLoader::getNumTest() const
 {
     return _numTest;
 }
+
+/* ========================== Internal Load Helpers ========================== */
 
 bool MNISTLoader::_loadTrainData()
 {
@@ -123,10 +151,28 @@ bool MNISTLoader::_loadTestData()
     return _loadImages(_testImagesFile, _testLabelsFile, _testImages, _testLabels, false);
 }
 
-bool MNISTLoader::_loadImages(const std::filesystem::path& imagesFile,
-                              const std::filesystem::path& labelsFile,
-                              std::vector<Eigen::MatrixXd>& images, std::vector<uint8_t>& labels,
-                              bool isTrain)
+/**
+ * @brief Loads MNIST images and labels from IDX binary files.
+ *
+ * Reads image and label metadata, validates file integrity, normalizes
+ * pixel values to the range [0, 1], and stores the data in Eigen matrices.
+ *
+ * @param imagesFile Path to the images IDX file.
+ * @param labelsFile Path to the labels IDX file.
+ * @param images     Output container for images.
+ * @param labels     Output container for raw labels.
+ * @param isTrain    Indicates whether the data is training data.
+ *
+ * @return True on successful load.
+ *
+ * @throws std::runtime_error If file format is invalid or reading fails.
+ */
+bool MNISTLoader::_loadImages(
+    const std::filesystem::path& imagesFile,
+    const std::filesystem::path& labelsFile,
+    std::vector<Eigen::MatrixXd>& images, 
+    std::vector<uint8_t>& labels,
+    bool isTrain)
 {
     std::ifstream fImages(imagesFile, std::ios::binary);
     if (!fImages)
@@ -205,6 +251,13 @@ bool MNISTLoader::_loadImages(const std::filesystem::path& imagesFile,
     return true;
 }
 
+/**
+ * @brief Splits the training dataset into training and validation subsets.
+ *
+ * The split is performed deterministically using the provided ratio.
+ *
+ * @param ratio Fraction of training data assigned to validation.
+ */
 void MNISTLoader::_splitTrainValidation(const double ratio)
 {
     if (_trainImages.empty() || _trainLabels.empty())
@@ -233,6 +286,14 @@ void MNISTLoader::_splitTrainValidation(const double ratio)
     _oneHotTrainLabels.clear(); // force regeneration on next access
 }
 
+/**
+ * @brief Converts class labels to one-hot encoded vectors.
+ *
+ * @param labels         Input vector of class indices.
+ * @param oneHotLabels   Output vector of one-hot encoded Eigen vectors.
+ *
+ * @throws std::out_of_range If a label exceeds the number of classes.
+ */
 void MNISTLoader::_createOneHotLabels(const std::vector<uint8_t>& labels,
                                       std::vector<Eigen::VectorXd>& oneHotLabels)
 {
