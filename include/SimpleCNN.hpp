@@ -1,16 +1,31 @@
 /**
  * @file SimpleCNN.hpp
- * @brief Declaration of the SimpleCNN convolutional neural network.
+ * @brief Compact convolutional neural network for grayscale image classification.
  *
- * This header defines the SimpleCNN class, which encapsulates a complete
- * convolutional neural network architecture for image classification tasks.
- * The class exposes a minimal public interface for training, evaluation, and
- * metric export, while hiding all implementation details related to network
- * structure, optimization, and gradient propagation.
+ * Declares the SimpleCNN class: a small, end-to-end CNN intended for datasets such
+ * as MNIST (single-channel / grayscale images). The class owns all layers and
+ * provides a minimal public API for:
+ *  - training with per-epoch metrics (loss/accuracy for train + validation)
+ *  - evaluation on a held-out test set
+ *  - exporting metrics to CSV for plotting/analysis
  *
- * The implementation is designed around grayscale image inputs (e.g., MNIST)
- * and follows a conventional CNN architecture consisting of convolutional,
- * pooling, normalization, and fully connected layers.
+ * The network follows a conventional pipeline:
+ *   [Conv -> ReLU -> BatchNorm -> Pool] x 2
+ *    -> [FullyConnected -> ReLU -> Dropout]
+ *    -> [FullyConnected -> Softmax]
+ *
+ * Input/Output conventions:
+ *  - Input image: Eigen::MatrixXd of shape (H x W) representing one grayscale sample.
+ *  - Model output: Eigen::VectorXd of length @c classes containing class probabilities.
+ *  - Labels: one-hot Eigen::VectorXd of length @c classes.
+ *
+ * Training mode vs inference mode:
+ *  - BatchNormalization uses batch statistics during training and stored running
+ *    statistics during inference.
+ *  - Dropout is enabled only during training.
+ *
+ * @note This class is designed as a reference implementation and educational baseline.
+ *       It aims for clear structure and reproducible metrics rather than maximal speed.
  *
  * @author Bengal1
  * @version 1.0
@@ -122,7 +137,9 @@ class SimpleCNN
      * Initializes all network layers and validates the requested number of
      * output classes.
      *
-     * @param classes Number of output classes.
+     * @param classes Number of output classes. Must be >= 2.
+     *
+     * @throws std::invalid_argument If @p classes is invalid.
      */
     explicit SimpleCNN(size_t classes = MNISTClasses);
 
