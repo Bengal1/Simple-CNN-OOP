@@ -2,7 +2,6 @@
 
 A from-scratch implementation of a Convolutional Neural Network in modern C++ using Object-Oriented Programming.
 
-
 ## 📌 Overview
 
 Simple-CNN-OOP implements a Convolutional Neural Network for MNIST digit classification without using machine learning frameworks such as PyTorch or TensorFlow.
@@ -72,6 +71,7 @@ After building the project with CMake, run the generated executable from the `bu
 ```bash
 ./SimpleCNN
 ```
+
 On Windows:
 
 ```bash
@@ -217,11 +217,9 @@ The comparison shows that the manually implemented C++ model can achieve strong 
 
 
 ## 📚 References
-[The Back Propagation Method for CNN](https://ieeexplore.ieee.org/abstract/document/409626)
-
-[Adam: A Method for Stochastic Optimization](https://arxiv.org/abs/1412.6980)
-
-[Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift](https://arxiv.org/abs/1502.03167)
+- [The Back Propagation Method for CNN](https://ieeexplore.ieee.org/abstract/document/409626)
+- [Adam: A Method for Stochastic Optimization](https://arxiv.org/abs/1412.6980)
+- [Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift](https://arxiv.org/abs/1502.03167)
 
 
 ## 📄 License
