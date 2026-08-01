@@ -1,4 +1,24 @@
 # Simple-CNN-OOP
+
+A beginner-friendly Convolutional Neural Network implemented from scratch in modern C++ using Object-Oriented Programming.
+
+## Overview
+
+This project implements a simple Convolutional Neural Network for MNIST digit classification.
+
+Unlike projects that use machine learning frameworks such as PyTorch or TensorFlow, this project implements the main CNN components manually in C++. The goal is to make the internal mechanics of a neural network easier to understand.
+
+The project is designed for learning. It focuses on clarity, modularity, and step-by-step implementation rather than maximum performance.
+
+If you are new to CNNs, I recommend starting with my **Simple CNN Guide** project first. That project introduces CNN concepts using Python and PyTorch, making it easier to understand the high-level training pipeline before diving into this lower-level C++ implementation.
+
+After going through the Simple CNN Guide, this project can help you understand what happens behind the scenes when a neural network is trained.
+
+
+
+
+
+
 This project is a C++ Object-Oriented Programming (OOP) version of my earlier *SimpleCNN* implementation in Python (PyTorch). While the original project served as a practical introduction to coding a simple CNN, this C++ version takes a lower-level approach: the entire network is built from scratch, without predefined ML frameworks or utilities.
 
 By implementing each layer, operation, and optimization step manually, this project highlights the inner workings of convolutional networks such as convolution, activation functions, pooling, normalization, and backpropagation. The OOP design ensures modularity, making it easier to extend, experiment with new components, or adapt the network to different tasks.
