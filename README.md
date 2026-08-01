@@ -168,10 +168,15 @@ SimpleCNN
 Each component is responsible for a specific part of the CNN pipeline:
 
 Layers perform the main neural network computations.
+
 Activations apply non-linear transformations.
+
 Loss functions measure prediction error.
+
 Optimizers update trainable parameters.
+
 Regularization components help improve training behavior.
+
 Data loading handles the MNIST IDX files.
 
 This design allows individual components to be developed, tested, and extended independently. For example, a new optimizer, activation function, or layer can be added without rewriting the full model pipeline
