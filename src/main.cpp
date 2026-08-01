@@ -44,10 +44,10 @@ int main()
     const double validationRatio = 0.2;
 
     // MNIST dataset paths
-    std::filesystem::path trainImages = "MNIST/train-images.idx3-ubyte";
-    std::filesystem::path trainLabels = "MNIST/train-labels.idx1-ubyte";
-    std::filesystem::path testImages = "MNIST/t10k-images.idx3-ubyte";
-    std::filesystem::path testLabels = "MNIST/t10k-labels.idx1-ubyte";
+    std::filesystem::path trainImages = "Data/MNIST/train-images.idx3-ubyte";
+    std::filesystem::path trainLabels = "Data/MNIST/train-labels.idx1-ubyte";
+    std::filesystem::path testImages = "Data/MNIST/t10k-images.idx3-ubyte";
+    std::filesystem::path testLabels = "Data/MNIST/t10k-labels.idx1-ubyte";
 
     // Instantiate the CNN model
     SimpleCNN model(classes);
