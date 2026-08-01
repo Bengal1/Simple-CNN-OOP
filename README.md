@@ -12,12 +12,9 @@ The goal of this project is to better understand how convolutional neural networ
 
 This project is based on my earlier Simple CNN Guide project in Python/PyTorch. While that project demonstrates the high-level CNN training pipeline using a machine learning framework, this version takes a lower-level approach by implementing the network logic from scratch.
 
-For beginners in CNNs and deep learning, I highly recommend my earlier project [*Simple CNN Guide*](https://github.com/Bengal1/Simple-CNN-Guide), which is more beginner-friendly and theoretical, focusing on building intuition and explaining the fundamental concepts of CNNs in a clearer and more accessible way before diving into implementation details.
-
+For readers who are new to CNNs and deep learning, I recommend starting with my earlier project [*Simple CNN Guide*](https://github.com/Bengal1/Simple-CNN-Guide). It focuses more on intuition and CNN fundamentals before diving into lower-level implementation details.
 
 ## 🛠️ Build and Run
-
-Before running the program, make sure the MNIST dataset files are available in the expected dataset directory.
 
 ### ✅ Requirements
 
