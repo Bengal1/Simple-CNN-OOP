@@ -39,7 +39,7 @@ MNIST/
 ├── t10k-images.idx3-ubyte
 └── t10k-labels.idx1-ubyte
 ```
-
+### ▶️ Run
 
 ## 🔨 Building the CNN, Not Just Using It
 
