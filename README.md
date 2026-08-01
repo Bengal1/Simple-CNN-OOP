@@ -42,20 +42,21 @@ The architecture follows a standard image-classification pipeline: convolutional
 
 ### Model Breakdown
 
-The network receives a single-channel `28x28` grayscale MNIST image and processes it through two main stages: **feature extraction** and **classification**.
+This architecture uses MNIST as a controlled environment for demonstrating the core CNN pipeline.
 
-During the feature extraction stage, convolution layers apply learnable filters to detect local visual patterns such as edges, curves, and digit-related shapes. ReLU activation is applied after the convolution operations to introduce non-linearity, allowing the model to learn more complex representations.
+The convolutional part of the model acts as a feature extractor. It gradually transforms the input image from raw pixel values into a set of learned feature maps. The first convolution layer captures simple local patterns, while the second convolution layer builds on them to form more useful digit-level representations.
 
-Max pooling layers reduce the spatial dimensions of the feature maps while preserving the strongest local activations. This creates a more compact representation and reduces the amount of computation required by the following layers.
+Pooling is used after each convolution block to reduce spatial resolution and keep the representation compact. This helps the later fully connected layers operate on a smaller, more focused feature representation instead of the full image.
 
-After the convolution and pooling stages, the feature maps are flattened into a one-dimensional vector. This vector connects the spatial feature extraction part of the network to the classification part.
+After feature extraction, the model flattens the feature maps into a vector and passes it through fully connected layers. At this point, the network is no longer working with spatial image regions, but with a learned representation of the digit.
 
-The fully connected layers use the extracted features to produce the final class scores. The output layer contains 10 values, corresponding to the 10 MNIST digit classes. Softmax is then used to convert these values into class probabilities.
+The final output contains 10 class scores, one for each MNIST digit. Softmax converts these scores into probabilities for prediction.
 
 ### Design Goal
-The architecture is intentionally simple and compact. MNIST is used as a controlled classification task so the project can focus on the CNN implementation itself: how the main building blocks are implemented, connected, and used during training and inference.
 
-The goal is not to maximize benchmark performance, but to make the full CNN pipeline clear, traceable, and easy to reason about.
+The architecture is intentionally compact. It is large enough to demonstrate the main CNN building blocks, but simple enough to keep the implementation readable and traceable.
+
+The focus of this project is not on reaching state-of-the-art MNIST accuracy, but on showing how the CNN pipeline can be implemented clearly from scratch in C++.
 
 
 ------------------
