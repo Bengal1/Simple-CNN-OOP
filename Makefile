@@ -1,5 +1,7 @@
 CXX       := g++
-CXXFLAGS  := -Wall -Wextra -std=c++17 -O2 -Iinclude -IC:/Libraries/Eigen-3.4.0
+EIGEN_PATH ?= C:/Libraries/Eigen-3.4.0
+
+CXXFLAGS  := -Wall -Wextra -std=c++17 -O2 -Iinclude -I$(EIGEN_PATH)
 
 SRC := src\main.cpp \
 src\MNISTLoader.cpp \
@@ -14,6 +16,7 @@ src\Optimizer\Optimizer.cpp \
 src\Optimizer\SGD.cpp \
 src\Regularization\BatchNormalization.cpp \
 src\Regularization\Dropout.cpp
+
 HEADERS_HPP := include/MNISTLoader.hpp \
 include/SimpleCNN.hpp \
 include/Activation/Activation.hpp \
@@ -29,16 +32,17 @@ include/Optimizer/Optimizer.hpp \
 include/Optimizer/SGD.hpp \
 include/Regularization/BatchNormalization.hpp \
 include/Regularization/Dropout.hpp
+
 HEADERS_TPP := include\Activation\ReLU.tpp \
 include\Activation\Softmax.tpp \
 include\Layers\Convolution2D.tpp \
 include\Layers\FullyConnected.tpp \
 include\Optimizer\Optimizer.tpp \
-include\Regularization\Dropout.tpp 
+include\Regularization\Dropout.tpp
+
 HEADERS := $(HEADERS_HPP) $(HEADERS_TPP)
 OBJ     := $(SRC:.cpp=.o)
 TARGET  := SimpleCNN.exe
-
 
 all: $(TARGET)
 
@@ -55,11 +59,11 @@ run: $(TARGET)
 
 clean:
 	-@del /Q $(OBJ) $(TARGET) 2>nul || rm -f $(OBJ) $(TARGET)
- 
+
 format:
 	clang-format -i $(SRC) $(HEADERS)
 
 tidy:
-	clang-tidy $(SRC) -- -Iinclude -IC:/Libraries/Eigen-3.4.0
+	clang-tidy $(SRC) -- $(CXXFLAGS)
 
 .PHONY: all run clean format tidy
