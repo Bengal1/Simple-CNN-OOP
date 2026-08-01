@@ -198,6 +198,23 @@ The training pipeline includes:
 
 ### 🔁 Python/PyTorch vs C++ OOP
 
+This project is based on my earlier **Simple CNN Guide** project, which implements a similar CNN using Python and PyTorch.
+
+| Project | Implementation | Epochs | Test Accuracy |
+|---|---|---:|---:|
+| Simple CNN Guide | Python / PyTorch | 10 | 99.31% |
+| Simple-CNN-OOP | C++ / From Scratch | 15 | 98.55% |
+
+The Python/PyTorch version achieves slightly higher accuracy, as expected from an optimized deep learning framework with automatic differentiation and highly optimized training utilities.
+
+The C++ OOP version reaches **98.55% test accuracy** while implementing the CNN pipeline manually, including forward propagation, backpropagation, loss calculation, optimizer updates, and regularization components.
+
+### 🎯 Key Takeaway
+
+The main result of this project is not only the final accuracy, but the successful implementation of a complete CNN training pipeline from scratch in C++.
+
+The comparison shows that the manually implemented C++ model can achieve strong MNIST performance while exposing the internal mechanics that PyTorch normally abstracts away.
+
 
 
 ------------------
