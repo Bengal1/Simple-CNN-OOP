@@ -75,6 +75,7 @@ On Windows:
 ```bash
 SimpleCNN.exe
 ```
+
 If you are using the provided Makefile, you can run the project with:
 
 ```bash
