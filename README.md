@@ -2,6 +2,7 @@
 
 A from-scratch implementation of a Convolutional Neural Network in modern C++ using Object-Oriented Programming.
 
+
 ## 📌 Overview
 
 Simple-CNN-OOP implements a Convolutional Neural Network for MNIST digit classification without using machine learning frameworks such as PyTorch or TensorFlow.
@@ -127,6 +128,7 @@ The architecture is intentionally compact. It is large enough to demonstrate the
 
 The focus of this project is not on reaching state-of-the-art MNIST accuracy, but on showing how the CNN pipeline can be implemented clearly from scratch in C++.
 
+
 ## 🧱 Object-Oriented Implementation
 
 The CNN is implemented using an object-oriented structure, where each major part of the network is represented as a separate component with a clear responsibility.
@@ -172,7 +174,7 @@ Each component is responsible for a specific part of the CNN pipeline:
 * Regularization components help improve training behavior.
 * Data loading handles the MNIST IDX files.
 
-This design allows individual components to be developed, tested, and extended independently. For example, a new optimizer, activation function, or layer can be added without rewriting the full model pipeline
+This design allows individual components to be developed, tested, and extended independently. For example, a new optimizer, activation function, or layer can be added without rewriting the full model pipeline.
 
 
 ## 📊 Results and Evaluation
@@ -214,7 +216,6 @@ The main result of this project is not only the final accuracy, but the successf
 The comparison shows that the manually implemented C++ model can achieve strong MNIST performance while exposing the internal mechanics that PyTorch normally abstracts away.
 
 
-
 ## 📚 References
 [The Back Propagation Method for CNN](https://ieeexplore.ieee.org/abstract/document/409626)
 
@@ -222,3 +223,9 @@ The comparison shows that the manually implemented C++ model can achieve strong 
 
 [Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift](https://arxiv.org/abs/1502.03167)
 
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+See the [LICENSE](LICENSE) file for more details.
