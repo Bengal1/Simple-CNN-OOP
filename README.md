@@ -32,7 +32,7 @@ This project demonstrates:
 * Integration of Dropout and Batch Normalization
 * A complete training, validation, and testing workflow
 
-## Build and Run
+## 🛠️ Build and Run
 
 This project can be built using either **CMake** or the included **Makefile**.
 
