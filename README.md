@@ -45,6 +45,21 @@ Note: The original MNIST binary files can be downloaded from [Yann LeCun - THE M
 
 ### ▶️ Run
 
+After building the project with CMake, run the generated executable from the `build/` directory:
+
+```bash
+./SimpleCNN
+```
+On Windows:
+
+```bash
+SimpleCNN.exe
+```
+If you are using the provided Makefile, you can run the project with:
+```bash
+make run
+```
+
 ## 🔨 Building the CNN, Not Just Using It
 
 Many CNN projects focus on using existing frameworks to train a model. This project focuses on implementing the model and its training pipeline from the ground up in modern C++.
