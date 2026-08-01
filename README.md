@@ -33,6 +33,18 @@ This project demonstrates:
 * A complete training, validation, and testing workflow
 ****
 
+## Project Architecture
+
+The project combines a simple CNN model architecture with a modular object-oriented C++ implementation.
+
+### Model Architecture
+
+<img width="3967" height="1296" alt="simpleCNNarchitecture" src="https://github.com/user-attachments/assets/5d267466-c0c1-4bf6-8d65-87680788814e" />
+
+The model follows a classic CNN classification pipeline: convolution layers extract spatial features, pooling layers reduce feature-map dimensions, and fully connected layers perform the final classification into 10 MNIST digit classes.
+
+
+
 ------------------
 ------------------
 
@@ -68,7 +80,6 @@ Our Network is consist of 6 layers:
 5. Fully-connected Layer with input layer of 1024 and output layer of 512 and ReLU activation function.
 6. Fully-connected Layer with input layer of 512 and output layer of 10 (classes) and [Softmax](https://en.wikipedia.org/wiki/Softmax_function) activation function.
 
-<img width="3967" height="1296" alt="simpleCNNarchitecture" src="https://github.com/user-attachments/assets/5d267466-c0c1-4bf6-8d65-87680788814e" />
 
 The Simple CNN is implemented in C++ as Object Oriented Programming. In order to implement the network layers and methods [Eigen Library](https://eigen.tuxfamily.org/index.php?title=Main_Page) is being used. Eigen is a C++-based open-source linear algebra library. 
 
