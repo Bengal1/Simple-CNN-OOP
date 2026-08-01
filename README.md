@@ -176,6 +176,30 @@ Each component is responsible for a specific part of the CNN pipeline:
 
 This design allows individual components to be developed, tested, and extended independently. For example, a new optimizer, activation function, or layer can be added without rewriting the full model pipeline
 
+
+## 📊 Results and Evaluation
+
+The model was trained and evaluated on the MNIST handwritten digit classification task.
+
+The purpose of this project is not to outperform optimized machine learning frameworks, but to validate that the from-scratch C++ implementation can successfully learn the CNN training process.
+
+### ⚙️ Training Pipeline
+
+The training pipeline includes:
+
+- Loading the MNIST IDX files
+- Splitting the data into training and validation sets
+- Running forward propagation through the CNN
+- Computing the loss using Cross-Entropy
+- Running backpropagation manually
+- Updating parameters using an optimizer
+- Evaluating the model on validation and test data
+- Exporting training metrics for analysis
+
+### 🔁 Python/PyTorch vs C++ OOP
+
+
+
 ------------------
 ------------------
 
