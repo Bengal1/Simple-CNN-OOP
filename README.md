@@ -31,7 +31,7 @@ This project demonstrates:
 * Loss calculation and optimizer-based parameter updates
 * Integration of Dropout and Batch Normalization
 * A complete training, validation, and testing workflow
-****
+
 
 ## Project Architecture
 
