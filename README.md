@@ -32,6 +32,31 @@ This project demonstrates:
 * Integration of Dropout and Batch Normalization
 * A complete training, validation, and testing workflow
 
+## Build and Run
+
+This project can be built using either **CMake** or the included **Makefile**.
+
+Before running the program, make sure the MNIST dataset files are available in the expected dataset directory.
+
+### Requirements
+
+- C++17 or later
+- CMake
+- Eigen 3.4
+- MNIST IDX dataset files
+
+### Expected MNIST Files
+
+Place the MNIST files in the project’s dataset directory:
+
+```text
+MNIST/
+├── train-images.idx3-ubyte
+├── train-labels.idx1-ubyte
+├── t10k-images.idx3-ubyte
+└── t10k-labels.idx1-ubyte
+
+
 ## Project Architecture
 
 The model is implemented as a compact Convolutional Neural Network designed for MNIST digit classification.
