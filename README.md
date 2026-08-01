@@ -131,6 +131,50 @@ The focus of this project is not on reaching state-of-the-art MNIST accuracy, bu
 
 ## 🧱 Object-Oriented Implementation
 
+The CNN is implemented using an object-oriented structure, where each major part of the network is represented as a separate component with a clear responsibility.
+
+Instead of writing the model as one large procedural script, the project separates the implementation into modules such as layers, activation functions, loss functions, optimizers, regularization components, and data loading.
+
+This structure makes the code easier to read, debug, extend, and reason about.
+
+### Core Components
+
+```text
+SimpleCNN
+├── Layers
+│   ├── Convolution2D
+│   ├── MaxPooling
+│   └── FullyConnected
+│
+├── Activations
+│   ├── ReLU
+│   └── Softmax
+│
+├── Loss
+│   └── CrossEntropy
+│
+├── Optimizers
+│   ├── SGD
+│   └── Adam
+│
+├── Regularization
+│   ├── Dropout
+│   └── BatchNormalization
+│
+└── Data
+    └── MNISTLoader
+```
+
+Each component is responsible for a specific part of the CNN pipeline:
+
+Layers perform the main neural network computations.
+Activations apply non-linear transformations.
+Loss functions measure prediction error.
+Optimizers update trainable parameters.
+Regularization components help improve training behavior.
+Data loading handles the MNIST IDX files.
+
+This design allows individual components to be developed, tested, and extended independently. For example, a new optimizer, activation function, or layer can be added without rewriting the full model pipeline
 
 ------------------
 ------------------
