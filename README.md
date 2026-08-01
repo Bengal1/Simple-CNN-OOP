@@ -181,7 +181,7 @@ This design allows individual components to be developed, tested, and extended i
 
 The model was trained and evaluated on the MNIST handwritten digit classification task.
 
-The purpose of this project is not to outperform optimized machine learning frameworks, but to validate that the from-scratch C++ implementation can successfully learn the CNN training process.
+The purpose of this project is not to outperform optimized machine learning frameworks, but to validate that the from-scratch C++ implementation can successfully train and generalize on a standard image classification task.
 
 ### ⚙️ Training Pipeline
 
