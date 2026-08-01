@@ -53,10 +53,9 @@ After the convolution and pooling stages, the feature maps are flattened into a 
 The fully connected layers use the extracted features to produce the final class scores. The output layer contains 10 values, corresponding to the 10 MNIST digit classes. Softmax is then used to convert these values into class probabilities.
 
 ### Design Goal
+The architecture is intentionally simple and compact. MNIST is used as a controlled classification task so the project can focus on the CNN implementation itself: how the main building blocks are implemented, connected, and used during training and inference.
 
-The architecture is intentionally simple and compact. MNIST provides a controlled classification task, allowing the project to focus on the implementation of the CNN pipeline rather than dataset complexity.
-
-The goal is not to maximize benchmark performance, but to clearly demonstrate how the main CNN building blocks work together during training and inference.
+The goal is not to maximize benchmark performance, but to make the full CNN pipeline clear, traceable, and easy to reason about.
 
 
 ------------------
