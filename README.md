@@ -32,17 +32,31 @@ This project demonstrates:
 * Integration of Dropout and Batch Normalization
 * A complete training, validation, and testing workflow
 
-
 ## Project Architecture
 
-The project combines a simple CNN model architecture with a modular object-oriented C++ implementation.
+The model is implemented as a compact Convolutional Neural Network designed for MNIST digit classification.
 
-### Model Architecture
+The architecture follows a standard image-classification pipeline: convolutional layers extract spatial features from the input image, pooling layers reduce the spatial resolution of the feature maps, and fully connected layers use the extracted representation to produce the final class prediction.
 
 <img width="3967" height="1296" alt="simpleCNNarchitecture" src="https://github.com/user-attachments/assets/5d267466-c0c1-4bf6-8d65-87680788814e" />
 
-The model follows a classic CNN classification pipeline: convolution layers extract spatial features, pooling layers reduce feature-map dimensions, and fully connected layers perform the final classification into 10 MNIST digit classes.
+### Model Breakdown
 
+The network receives a single-channel `28x28` grayscale MNIST image and processes it through two main stages: **feature extraction** and **classification**.
+
+During the feature extraction stage, convolution layers apply learnable filters to detect local visual patterns such as edges, curves, and digit-related shapes. ReLU activation is applied after the convolution operations to introduce non-linearity, allowing the model to learn more complex representations.
+
+Max pooling layers reduce the spatial dimensions of the feature maps while preserving the strongest local activations. This creates a more compact representation and reduces the amount of computation required by the following layers.
+
+After the convolution and pooling stages, the feature maps are flattened into a one-dimensional vector. This vector connects the spatial feature extraction part of the network to the classification part.
+
+The fully connected layers use the extracted features to produce the final class scores. The output layer contains 10 values, corresponding to the 10 MNIST digit classes. Softmax is then used to convert these values into class probabilities.
+
+### Design Goal
+
+The architecture is intentionally simple and compact. MNIST provides a controlled classification task, allowing the project to focus on the implementation of the CNN pipeline rather than dataset complexity.
+
+The goal is not to maximize benchmark performance, but to clearly demonstrate how the main CNN building blocks work together during training and inference.
 
 
 ------------------
