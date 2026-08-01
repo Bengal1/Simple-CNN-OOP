@@ -21,7 +21,7 @@ This project can be built using either **CMake** or the included **Makefile**.
 
 Before running the program, make sure the MNIST dataset files are available in the expected dataset directory.
 
-### Requirements
+### ✅ Requirements
 
 - C++17 or later
 - CMake
