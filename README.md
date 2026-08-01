@@ -2,7 +2,7 @@
 
 A from-scratch implementation of a Convolutional Neural Network in modern C++ using Object-Oriented Programming.
 
-## Overview
+## 📌 Overview
 
 Simple-CNN-OOP implements a Convolutional Neural Network for MNIST digit classification without using machine learning frameworks such as PyTorch or TensorFlow.
 
