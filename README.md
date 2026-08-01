@@ -109,7 +109,7 @@ This project is based on my earlier **Simple CNN Guide** project, which implemen
 
 | Project | Implementation | Epochs | Test Accuracy |
 |---|---|---:|---:|
-| Simple CNN     | Python / PyTorch | 10 | 99.31% |
+| Simple CNN Guide | Python / PyTorch | 10 | 99.31% |
 | Simple-CNN-OOP | C++ / From Scratch | 15 | 98.55% |
 
 The Python/PyTorch version achieves slightly higher accuracy, as expected from an optimized deep learning framework with automatic differentiation and highly optimized training utilities.
