@@ -28,7 +28,7 @@ Before running the program, make sure the MNIST dataset files are available in t
 - Eigen 3.4
 - MNIST IDX dataset files
 
-### Expected MNIST Files
+### 📁 MNIST Dataset Files
 
 Place the MNIST files in the project’s dataset directory:
 
@@ -39,6 +39,10 @@ MNIST/
 ├── t10k-images.idx3-ubyte
 └── t10k-labels.idx1-ubyte
 ```
+
+Note: The original MNIST binary files can be downloaded from [Yann LeCun - THE MNIST DATABASE](http://yann.lecun.com/exdb/mnist/). MNIST is also available through [Kaggle](https://www.kaggle.com/datasets/hojjatk/mnist-dataset?select=t10k-images.idx3-ubyte).
+
+
 ### ▶️ Run
 
 ## 🔨 Building the CNN, Not Just Using It
