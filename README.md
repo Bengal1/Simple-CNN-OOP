@@ -113,6 +113,9 @@ The Python/PyTorch version achieves slightly higher accuracy, as expected from a
 
 The C++ OOP version reaches **98.55% test accuracy** while implementing the CNN pipeline manually, including forward propagation, backpropagation, loss calculation, optimizer updates, and regularization components.
 
+<img width="2872" height="1058" alt="image" src="https://github.com/user-attachments/assets/6a335c55-6b30-4e05-8d90-246463d71161" />
+
+
 ### 🎯 Key Takeaway
 
 The main result of this project is not only the final accuracy, but the successful implementation of a complete CNN training pipeline from scratch in C++.
