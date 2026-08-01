@@ -14,23 +14,6 @@ This project is based on my earlier Simple CNN Guide project in Python/PyTorch. 
 
 For beginners in CNNs and deep learning, I highly recommend my earlier project [*Simple CNN Guide*](https://github.com/Bengal1/Simple-CNN-Guide), which is more beginner-friendly and theoretical, focusing on building intuition and explaining the fundamental concepts of CNNs in a clearer and more accessible way before diving into implementation details.
 
-## Building the CNN, Not Just Using It
-
-Many CNN projects focus on using existing frameworks to train a model. This project focuses on implementing the model and its training pipeline from the ground up in modern C++.
-
-Instead of relying on predefined PyTorch or TensorFlow layers, the project manually implements the core CNN components and organizes them through an object-oriented design. Each major part of the system is separated into clear, reusable components, including layers, activations, loss functions, optimizers, regularization methods, and training logic.
-
-MNIST is used as a controlled classification task, but the main value of the project is the implementation itself: translating neural network concepts into structured, maintainable C++ code.
-
-This project demonstrates:
-
-* Object-Oriented Programming in C++
-* Modular software design
-* Manual implementation of CNN components
-* Forward propagation and backpropagation logic
-* Loss calculation and optimizer-based parameter updates
-* Integration of Dropout and Batch Normalization
-* A complete training, validation, and testing workflow
 
 ## 🛠️ Build and Run
 
@@ -55,9 +38,29 @@ MNIST/
 ├── train-labels.idx1-ubyte
 ├── t10k-images.idx3-ubyte
 └── t10k-labels.idx1-ubyte
+```
 
 
-## Project Architecture
+## 🔨 Building the CNN, Not Just Using It
+
+Many CNN projects focus on using existing frameworks to train a model. This project focuses on implementing the model and its training pipeline from the ground up in modern C++.
+
+Instead of relying on predefined PyTorch or TensorFlow layers, the project manually implements the core CNN components and organizes them through an object-oriented design. Each major part of the system is separated into clear, reusable components, including layers, activations, loss functions, optimizers, regularization methods, and training logic.
+
+MNIST is used as a controlled classification task, but the main value of the project is the implementation itself: translating neural network concepts into structured, maintainable C++ code.
+
+This project demonstrates:
+
+* Object-Oriented Programming in C++
+* Modular software design
+* Manual implementation of CNN components
+* Forward propagation and backpropagation logic
+* Loss calculation and optimizer-based parameter updates
+* Integration of Dropout and Batch Normalization
+* A complete training, validation, and testing workflow
+
+
+## 🏗️ Project Architecture
 
 The model is implemented as a compact Convolutional Neural Network designed for MNIST digit classification.
 
@@ -82,6 +85,8 @@ The final output contains 10 class scores, one for each MNIST digit. Softmax con
 The architecture is intentionally compact. It is large enough to demonstrate the main CNN building blocks, but simple enough to keep the implementation readable and traceable.
 
 The focus of this project is not on reaching state-of-the-art MNIST accuracy, but on showing how the CNN pipeline can be implemented clearly from scratch in C++.
+
+## 🧱 Object-Oriented Implementation
 
 
 ------------------
