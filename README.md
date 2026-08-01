@@ -1,18 +1,18 @@
 # Simple-CNN-OOP
 
-A beginner-friendly Convolutional Neural Network implemented from scratch in modern C++ using Object-Oriented Programming.
+A from-scratch implementation of a Convolutional Neural Network in modern C++ using Object-Oriented Programming.
 
 ## Overview
 
-This project implements a simple Convolutional Neural Network for MNIST digit classification.
+Simple-CNN-OOP implements a Convolutional Neural Network for MNIST digit classification without using machine learning frameworks such as PyTorch or TensorFlow.
 
-Unlike projects that use machine learning frameworks such as PyTorch or TensorFlow, this project implements the main CNN components manually in C++. The goal is to make the internal mechanics of a neural network easier to understand.
+The project focuses on building the main CNN components manually and organizing them through a clear object-oriented design. This includes convolution layers, activation functions, pooling, fully connected layers, loss calculation, optimizers, regularization, forward propagation, and backpropagation.
 
-The project is designed for learning. It focuses on clarity, modularity, and step-by-step implementation rather than maximum performance.
+The goal of this project is to better understand how convolutional neural networks work internally and how their components can be structured in C++ as modular, reusable classes.
 
-If you are new to CNNs, I recommend starting with my **Simple CNN Guide** project first. That project introduces CNN concepts using Python and PyTorch, making it easier to understand the high-level training pipeline before diving into this lower-level C++ implementation.
+This project is based on my earlier Simple CNN Guide project in Python/PyTorch. While that project demonstrates the high-level CNN training pipeline using a machine learning framework, this version takes a lower-level approach by implementing the network logic from scratch.
 
-After going through the Simple CNN Guide, this project can help you understand what happens behind the scenes when a neural network is trained.
+For beginners in CNNs and deep learning, I highly recommend my earlier project [*Simple CNN Guide*](https://github.com/Bengal1/Simple-CNN-Guide), which is more beginner-friendly and theoretical, focusing on building intuition and explaining the fundamental concepts of CNNs in a clearer and more accessible way before diving into implementation details.
 
 
 
