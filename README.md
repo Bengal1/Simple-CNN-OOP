@@ -83,6 +83,46 @@ If you are using the provided Makefile, you can run the project with:
 make run
 ```
 
+
+## 📊 Results and Evaluation
+
+The model was trained and evaluated on the MNIST handwritten digit classification task.
+
+The purpose of this project is not to outperform optimized machine learning frameworks, but to validate that the from-scratch C++ implementation can successfully train and generalize on a standard image classification task.
+
+### ⚙️ Training Pipeline
+
+The training pipeline includes:
+
+- Loading the MNIST IDX files
+- Splitting the data into training and validation sets
+- Running forward propagation through the CNN
+- Computing the loss using Cross-Entropy
+- Running backpropagation manually
+- Updating parameters using an optimizer
+- Evaluating the model on validation and test data
+- Exporting training metrics for analysis
+
+### 🔁 Python/PyTorch vs C++ OOP
+
+This project is based on my earlier **Simple CNN Guide** project, which implements a similar CNN using Python and PyTorch.
+
+| Project | Implementation | Epochs | Test Accuracy |
+|---|---|---:|---:|
+| Simple CNN Guide | Python / PyTorch | 10 | 99.31% |
+| Simple-CNN-OOP | C++ / From Scratch | 15 | 98.55% |
+
+The Python/PyTorch version achieves slightly higher accuracy, as expected from an optimized deep learning framework with automatic differentiation and highly optimized training utilities.
+
+The C++ OOP version reaches **98.55% test accuracy** while implementing the CNN pipeline manually, including forward propagation, backpropagation, loss calculation, optimizer updates, and regularization components.
+
+### 🎯 Key Takeaway
+
+The main result of this project is not only the final accuracy, but the successful implementation of a complete CNN training pipeline from scratch in C++.
+
+The comparison shows that the manually implemented C++ model can achieve strong MNIST performance while exposing the internal mechanics that PyTorch normally abstracts away.
+
+
 ## 🔨 Building the CNN, Not Just Using It
 
 Many CNN projects focus on using existing frameworks to train a model. This project focuses on implementing the model and its training pipeline from the ground up in modern C++.
@@ -175,45 +215,6 @@ Each component is responsible for a specific part of the CNN pipeline:
 * Data loading handles the MNIST IDX files.
 
 This design allows individual components to be developed, tested, and extended independently. For example, a new optimizer, activation function, or layer can be added without rewriting the full model pipeline.
-
-
-## 📊 Results and Evaluation
-
-The model was trained and evaluated on the MNIST handwritten digit classification task.
-
-The purpose of this project is not to outperform optimized machine learning frameworks, but to validate that the from-scratch C++ implementation can successfully train and generalize on a standard image classification task.
-
-### ⚙️ Training Pipeline
-
-The training pipeline includes:
-
-- Loading the MNIST IDX files
-- Splitting the data into training and validation sets
-- Running forward propagation through the CNN
-- Computing the loss using Cross-Entropy
-- Running backpropagation manually
-- Updating parameters using an optimizer
-- Evaluating the model on validation and test data
-- Exporting training metrics for analysis
-
-### 🔁 Python/PyTorch vs C++ OOP
-
-This project is based on my earlier **Simple CNN Guide** project, which implements a similar CNN using Python and PyTorch.
-
-| Project | Implementation | Epochs | Test Accuracy |
-|---|---|---:|---:|
-| Simple CNN Guide | Python / PyTorch | 10 | 99.31% |
-| Simple-CNN-OOP | C++ / From Scratch | 15 | 98.55% |
-
-The Python/PyTorch version achieves slightly higher accuracy, as expected from an optimized deep learning framework with automatic differentiation and highly optimized training utilities.
-
-The C++ OOP version reaches **98.55% test accuracy** while implementing the CNN pipeline manually, including forward propagation, backpropagation, loss calculation, optimizer updates, and regularization components.
-
-### 🎯 Key Takeaway
-
-The main result of this project is not only the final accuracy, but the successful implementation of a complete CNN training pipeline from scratch in C++.
-
-The comparison shows that the manually implemented C++ model can achieve strong MNIST performance while exposing the internal mechanics that PyTorch normally abstracts away.
 
 
 ## 📚 References
