@@ -193,9 +193,8 @@ SimpleCNN
 │   └── Softmax
 │
 ├── Loss
-│   ├── LossFunction
 │   ├── CrossEntropy
-│   └── Additional loss types
+│   └── MSE
 │
 ├── Optimizers
 │   ├── SGD
