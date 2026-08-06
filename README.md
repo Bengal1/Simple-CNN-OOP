@@ -179,7 +179,7 @@ Instead of writing the model as one large procedural script, the project separat
 
 This structure makes the code easier to read, debug, extend, and reason about.
 
-### Core Components
+### Modular Object-Oriented Design
 
 ```text
 SimpleCNN
@@ -193,7 +193,9 @@ SimpleCNN
 │   └── Softmax
 │
 ├── Loss
-│   └── CrossEntropy
+│   ├── LossFunction
+│   ├── CrossEntropy
+│   └── Additional loss types
 │
 ├── Optimizers
 │   ├── SGD
